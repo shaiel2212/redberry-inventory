@@ -1,0 +1,38 @@
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
+// Middleware: אימות JWT
+function requireAuth(req, res, next) {
+  const authHeader = req.header('Authorization');
+  if (!authHeader) {
+    return res.status(401).json({ message: 'No token, authorization denied' });
+  }
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    return res.status(401).json({ message: 'Token format is "Bearer <token>"' });
+  }
+
+  const token = parts[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // מכיל id, username, role
+    next();
+  } catch (err) {
+    console.error('Token verification error:', err.message);
+    res.status(401).json({ message: 'Token is not valid' });
+  }
+}
+
+// Middleware: בדיקת הרשאה למנהל
+function requireAdmin(req, res, next) {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'גישה נדחתה – מנהלים בלבד' });
+  }
+  next();
+}
+
+module.exports = {
+  requireAuth,
+  requireAdmin
+};
