@@ -24,6 +24,12 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "postcss": {
+    "plugins": {
+      "tailwindcss": {},
+      "autoprefixer": {}
+    }
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -43,10 +49,9 @@
     ]
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.8",
     "autoprefixer": "^10.4.21",
     "cypress": "^13.17.0",
     "postcss": "^8.5.4",
-    "tailwindcss": "^4.1.8"
+    "tailwindcss": "^3.3.5"
   }
 }
