@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+// הגדרת כתובת API עם תמיכה ב-CORS כולל credentials
+axios.defaults.withCredentials = true;
+
 const API_URL = `${process.env.REACT_APP_API_URL}/auth`;
 
 const setAuthToken = (token) => {
@@ -11,28 +14,35 @@ const setAuthToken = (token) => {
 };
 
 const register = async (username, email, password, role) => {
-  const response = await axios.post(`${API_URL}/register`, {
-    username,
-    email,
-    password,
-    role
-  });
+  const response = await axios.post(
+    `${API_URL}/register`,
+    { username, email, password, role },
+    { withCredentials: true } // שליחת עוגיות במידת הצורך
+  );
+
   if (response.data.token) {
     localStorage.setItem('user', JSON.stringify(response.data.user));
     localStorage.setItem('token', response.data.token);
     setAuthToken(response.data.token);
   }
+
   return response.data;
 };
 
 const login = async (credentials) => {
   try {
-    const response = await axios.post(`${API_URL}/login`, credentials);
-     const token = response.data.token;
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
+    const response = await axios.post(
+      `${API_URL}/login`,
+      credentials,
+      { withCredentials: true }
+    );
+
+    const token = response.data.token;
+    if (token) {
+      localStorage.setItem('token', token);
       setAuthToken(token);
     }
+
     return response.data;
   } catch (error) {
     console.error('Login failed:', error.response?.data || error.message);
@@ -58,9 +68,8 @@ const getToken = () => {
 // Initialize token if already present
 const token = getToken();
 if (token) {
-    setAuthToken(token);
+  setAuthToken(token);
 }
-
 
 const authService = {
   register,
@@ -68,7 +77,7 @@ const authService = {
   logout,
   getCurrentUser,
   getToken,
-  setAuthToken
+  setAuthToken,
 };
 
 export default authService;

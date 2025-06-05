@@ -14,7 +14,7 @@ const helmet = require('helmet');
 app.use(helmet());
 // Middleware
 app.use(cors({
-  origin: 'https://redberry-inventory.onrender.com/', // החלף ב־Render / Vercel שלך
+  origin: ['https://redberry-inventory-client.onrender.com', 'https://www.redberry-inventory-client.onrender.com'],
   credentials: true
 }));
 app.use(express.json()); // for parsing application/json
