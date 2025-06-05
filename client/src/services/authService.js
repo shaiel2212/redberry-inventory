@@ -3,7 +3,8 @@ import axios from 'axios';
 // הגדרת כתובת API עם תמיכה ב-CORS כולל credentials
 axios.defaults.withCredentials = true;
 
-const API_URL = `${process.env.REACT_APP_API_URL}/auth`;
+const API_URL = process.env.REACT_APP_API_BASE_URL + '/auth';
+console.log('🔍 API URL:', process.env.REACT_APP_API_BASE_URL);
 
 const setAuthToken = (token) => {
   if (token) {
