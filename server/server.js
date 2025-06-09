@@ -1,73 +1,48 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-
-const pool = require('./config/db');
-const reportsRoutes = require('./routes/reportsRoutes');
+const dotenv = require('dotenv');
+const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const salesRoutes = require('./routes/salesRoutes');
-const userRoutes = require('./routes/userRoutes');
+const reportsRoutes = require('./routes/reportsRoutes');
+
+dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5001;
 
-// אבטחה
-app.use(helmet());
-
-// הגדרת CORS ברורה ומדויקת
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://redberry-inventory-client.vercel.app'
-];
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('❌ Blocked CORS from origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+// 🟢 הגדרת CORS בצורה מלאה ובטוחה
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'https://redberry-inventory-client.vercel.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
 
-// תמיכה בבקשות OPTIONS (Preflight)
-app.options('*', cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // תמיכה מלאה ב-preflight
 
-// הגבלת קצב התחברות
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: 'יותר מדי ניסיונות – נסה שוב מאוחר יותר'
-});
-app.use('/api/auth/login', authLimiter);
+// 🧱 Middleware
+app.use(express.json());
+app.use(cookieParser());
 
-// בדיקת חיבור למסד נתונים
-pool.getConnection()
-  .then(conn => {
-    console.log('✅ MySQL connected');
-    conn.release();
-  })
-  .catch(err => console.error('❌ DB connection error:', err.message));
-
-// נתיבים
-app.get('/', (req, res) => res.send('Furniture Store API Running'));
+// 🛣️ Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/sales', salesRoutes);
-app.use('/api/users', userRoutes);
 app.use('/api/reports', reportsRoutes);
 
-// טיפול בשגיאות
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send({ message: 'Something broke!', error: err.message });
+// 🧪 ברירת מחדל
+app.get('/', (req, res) => {
+  res.send('Server is running...');
 });
 
-// הרצת שרת
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
