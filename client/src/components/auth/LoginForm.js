@@ -18,7 +18,7 @@ const LoginForm = () => {
     setError('');
     setLoading(true);
     try {
-      await login(username, password);
+      await login({ username, password });
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'שגיאה בהתחברות. נסה שוב.');
@@ -34,7 +34,6 @@ const LoginForm = () => {
       <div>
         <label htmlFor="username">שם משתמש:</label>
         <input
-        data-testid="username"
           type="text"
           id="username"
           value={username}
@@ -45,7 +44,6 @@ const LoginForm = () => {
       <div>
         <label htmlFor="password">סיסמה:</label>
         <input
-         data-testid="password"
           type="password"
           id="password"
           value={password}

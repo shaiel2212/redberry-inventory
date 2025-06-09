@@ -1,6 +1,7 @@
 import axios from 'axios';
+import config from '../config'
 
-const API_URL = process.env.REACT_APP_API_URL + '/api/products';
+const API_URL = process.env.REACT_APP_API_BASE_URL + '/products';
 
 // No auth header needed for getAll if it's public on backend
 const getAllProducts = async () => {

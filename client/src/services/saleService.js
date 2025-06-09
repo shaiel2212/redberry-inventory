@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL + '/api/sales';
+const API_URL = process.env.REACT_APP_API_BASE_URL + '/sales';
 
 // Auth token is expected to be set globally by authService for these requests
 const createSale = async (saleData) => {

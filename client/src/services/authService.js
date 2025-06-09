@@ -1,10 +1,7 @@
 import axios from 'axios';
 
-// הגדרת כתובת API עם תמיכה ב-CORS כולל credentials
 axios.defaults.withCredentials = true;
-
-const API_URL = process.env.REACT_APP_API_BASE_URL + '/auth';
-console.log('🔍 API URL:', process.env.REACT_APP_API_BASE_URL);
+ const API_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
 
 const setAuthToken = (token) => {
   if (token) {
@@ -12,41 +9,70 @@ const setAuthToken = (token) => {
   } else {
     delete axios.defaults.headers.common['Authorization'];
   }
-};
+}; 
 
-const register = async (username, email, password, role) => {
-  const response = await axios.post(
-    `${API_URL}/register`,
-    { username, email, password, role },
-    { withCredentials: true } // שליחת עוגיות במידת הצורך
-  );
-
-  if (response.data.token) {
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-    localStorage.setItem('token', response.data.token);
-    setAuthToken(response.data.token);
-  }
-
-  return response.data;
-};
 
 const login = async (credentials) => {
+  console.log("🔁 API_URL (login):", API_URL);
+
   try {
     const response = await axios.post(
       `${API_URL}/login`,
-      credentials,
-      { withCredentials: true }
+      {
+        username: credentials.username,
+        password: credentials.password
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
+      }
     );
 
-    const token = response.data.token;
+    const { token, user } = response.data;
+
     if (token) {
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       setAuthToken(token);
     }
 
     return response.data;
   } catch (error) {
-    console.error('Login failed:', error.response?.data || error.message);
+    console.error('❌ Login failed:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+const register = async (username, email, password) => {
+  const API_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
+  console.log("🔁 API_URL (register):", API_URL);
+
+  try {
+    const response = await axios.post(
+      `${API_URL}/register`,
+      {
+        username,
+        email,
+        password,
+        role: 'user' // ברירת מחדל
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
+      }
+    );
+
+    const { token, user } = response.data;
+
+    if (token) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      setAuthToken(token);
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('❌ Registration failed:', error.response?.data || error.message);
     throw error;
   }
 };
@@ -66,7 +92,6 @@ const getToken = () => {
   return localStorage.getItem('token');
 };
 
-// Initialize token if already present
 const token = getToken();
 if (token) {
   setAuthToken(token);
@@ -78,7 +103,7 @@ const authService = {
   logout,
   getCurrentUser,
   getToken,
-  setAuthToken,
+  setAuthToken
 };
 
 export default authService;

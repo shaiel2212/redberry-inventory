@@ -7,6 +7,8 @@ import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+console.log('✔️ Loaded ENV:', process.env.REACT_APP_API_BASE_URL);
+
 root.render(
   <React.StrictMode>
     <BrowserRouter>

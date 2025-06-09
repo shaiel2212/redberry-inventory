@@ -13,9 +13,10 @@ import UsersAdminPage from './pages/UsersAdminPage';
 import MainLayout from './components/layout/MainLayout';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import config from '../src/config'
 function App() {
-  const { user } = useAuth(); // קבלת המשתמש מהקונטקסט
 
+  const { user } = useAuth(); // קבלת המשתמש מהקונטקסט
   return (
     <>
    

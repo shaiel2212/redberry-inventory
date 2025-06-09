@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL + '/api/users';
+const API_URL = process.env.REACT_APP_API_BASE_URL + '/users';
 
 const getAllUsers = async () => {
   const response = await axios.get(API_URL);

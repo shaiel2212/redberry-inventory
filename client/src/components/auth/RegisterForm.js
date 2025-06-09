@@ -7,7 +7,6 @@ const RegisterForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  // const [role, setRole] = useState('user'); // Default role
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -22,9 +21,8 @@ const RegisterForm = () => {
     setError('');
     setLoading(true);
     try {
-      // await register(username, email, password, role);
-      await register(username, email, password); // Role might be set on server or not exposed here
-      navigate('/dashboard'); // Or to login page for them to login
+      await register(username, email, password);
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'שגיאה בהרשמה. נסה שוב.');
     } finally {
@@ -38,7 +36,6 @@ const RegisterForm = () => {
       <div>
         <label htmlFor="username">שם משתמש:</label>
         <input
-          data-testid="username"
           type="text"
           id="username"
           value={username}
@@ -49,7 +46,6 @@ const RegisterForm = () => {
       <div>
         <label htmlFor="email">אימייל:</label>
         <input
-          data-testid="email"
           type="email"
           id="email"
           value={email}
@@ -60,7 +56,6 @@ const RegisterForm = () => {
       <div>
         <label htmlFor="password">סיסמה:</label>
         <input
-          data-testid="password"
           type="password"
           id="password"
           value={password}
@@ -71,7 +66,6 @@ const RegisterForm = () => {
       <div>
         <label htmlFor="confirmPassword">אימות סיסמה:</label>
         <input
-          data-testid="confirmPassword"
           type="password"
           id="confirmPassword"
           value={confirmPassword}
@@ -79,15 +73,6 @@ const RegisterForm = () => {
           required
         />
       </div>
-      {/* Optional: Role selection if allowed during registration
-      <div>
-        <label htmlFor="role">תפקיד:</label>
-        <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="user">משתמש</option>
-          <option value="manager">מנהל</option>
-        </select>
-      </div>
-      */}
       <button type="submit" disabled={loading}>
         {loading ? 'רושם...' : 'הירשם'}
       </button>

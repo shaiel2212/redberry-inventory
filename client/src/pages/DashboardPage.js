@@ -18,9 +18,9 @@ const DashboardPage = () => {
     const fetchData = async () => {
       try {
         const [salesSummary, lowStockRes, salesGraphRes] = await Promise.all([
-          axios.get(`${process.env.REACT_APP_API_URL}/api/reports/sales_summary`),
-          axios.get(`${process.env.REACT_APP_API_URL}/api/reports/low_stock`),
-          axios.get(`${process.env.REACT_APP_API_URL}/api/reports/sales_by_day`)
+          axios.get(`${process.env.REACT_APP_API_BASE_URL}/reports/sales_summary`),
+          axios.get(`${process.env.REACT_APP_API_BASE_URL}/reports/low_stock`),
+          axios.get(`${process.env.REACT_APP_API_BASE_URL}/reports/sales_by_day`)
         ]);
         setSummary(salesSummary.data);
         setLowStock(lowStockRes.data);
