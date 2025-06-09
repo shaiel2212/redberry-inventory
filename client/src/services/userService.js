@@ -1,4 +1,4 @@
-import api from '../utils/api';
+import api from './api';
 
 const API_URL = process.env.REACT_APP_API_BASE_URL + '/users';
 
