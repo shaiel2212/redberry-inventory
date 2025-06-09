@@ -14,6 +14,9 @@ import MainLayout from './components/layout/MainLayout';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import config from '../src/config'
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 function App() {
 
   const { user } = useAuth(); // קבלת המשתמש מהקונטקסט
@@ -43,6 +46,8 @@ function App() {
           {/* Fallback for non-existing routes */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
+          <ToastContainer position="top-right" autoClose={4000} />
+
       </div>
      
     </>

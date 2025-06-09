@@ -1,13 +1,13 @@
-import axios from 'axios';
+import api from '../utils/api';
 
-axios.defaults.withCredentials = true;
+api.defaults.withCredentials = true;
  const API_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
 
 const setAuthToken = (token) => {
   if (token) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
-    delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
   }
 }; 
 
@@ -16,7 +16,7 @@ const login = async (credentials) => {
   console.log("🔁 API_URL (login):", API_URL);
 
   try {
-    const response = await axios.post(
+    const response = await api.post(
       `${API_URL}/login`,
       {
         username: credentials.username,
@@ -48,7 +48,7 @@ const register = async (username, email, password) => {
   console.log("🔁 API_URL (register):", API_URL);
 
   try {
-    const response = await axios.post(
+    const response = await api.post(
       `${API_URL}/register`,
       {
         username,
