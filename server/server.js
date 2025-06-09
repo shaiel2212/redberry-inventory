@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -26,20 +27,17 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // תמיכה מלאה ב-preflight
+app.options('*', cors(corsOptions));
 
-// 🧱 Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// 🛣️ Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/reports', reportsRoutes);
 
-// 🧪 ברירת מחדל
 app.get('/', (req, res) => {
   res.send('Server is running...');
 });
