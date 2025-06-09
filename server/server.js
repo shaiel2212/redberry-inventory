@@ -17,14 +17,16 @@ const app = express();
 app.use(helmet());
 
 // הגדרת CORS ברורה ומדויקת
-const allowedOrigins = ['http://localhost:3000'];
-
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://redberry-inventory-client.vercel.app'
+];
 app.use(cors({
   origin: function (origin, callback) {
-    // מאפשר גם עבודה בלי Origin (Postman, curl וכו')
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log('❌ Blocked CORS from origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -33,8 +35,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// תמיכה בבקשות OPTIONS (Preflight)
+app.options('*', cors());
 
 // הגבלת קצב התחברות
 const authLimiter = rateLimit({
