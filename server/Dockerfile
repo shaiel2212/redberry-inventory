@@ -2,10 +2,11 @@ FROM node:18
 
 WORKDIR /app
 
-COPY . .
-
+COPY package*.json ./
 RUN npm install
 
-EXPOSE 5001
+COPY . .
+
+EXPOSE $PORT
 
 CMD ["npm", "start"]
