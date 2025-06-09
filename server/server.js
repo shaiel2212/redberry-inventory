@@ -13,7 +13,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT;
 
-// 🟢 הגדרת CORS בצורה מלאה ובטוחה
 const corsOptions = {
   origin: [
     'http://localhost:3000',
