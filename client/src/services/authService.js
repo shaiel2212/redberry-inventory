@@ -3,7 +3,8 @@ import api from './api';
 api.defaults.withCredentials = true;
 
 // תיקון: השתמש בכתובת המלאה עם /api/auth
-const API_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
+const API_URL = process.env.REACT_APP_API_BASE_URL + '/auth'.replace('//', '/')
+
 
 console.log("🔧 Base URL:", process.env.REACT_APP_API_BASE_URL);
 console.log("🔧 API_URL:", API_URL);
