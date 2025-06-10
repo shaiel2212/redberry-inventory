@@ -16,8 +16,8 @@ console.log("ENV PORT:", process.env.PORT);
 console.log("Final PORT:", PORT);
 
 const allowedOrigins = [
-   'https://redberry-inventory-client.vercel.app',
-  'https://redberry-inventory-client-4ahsvty6p-shaiel2212s-projects.vercel.app', // <- תוסיף את זה!
+  'https://redberry-inventory-client.vercel.app',
+  'https://redberry-inventory-client-4ahsvty6p-shaiel2212s-projects.vercel.app',
   'http://localhost:3000',
 ];
 
@@ -26,8 +26,7 @@ console.log("🔧 Allowed origins:", allowedOrigins);
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('🔍 Request from origin:', origin);
-    
-    // אפשר בקשות ללא origin (כמו Postman) או מדומיינים מורשים
+
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       console.log('✅ Origin allowed');
       callback(null, true);
@@ -45,40 +44,35 @@ const corsOptions = {
     'Accept',
     'Origin'
   ],
-  optionsSuccessStatus: 200 // תמיכה בדפדפנים ישנים
+  optionsSuccessStatus: 200
 };
 
-// הגדרת CORS
 app.use(cors(corsOptions));
-
-// טיפול מפורש ב-OPTIONS preflight
 app.options('*', cors(corsOptions));
 
-// Middleware נוסף לכותרות CORS (גיבוי)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
+
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
-  
+
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  
+
   if (req.method === 'OPTIONS') {
     console.log('✅ OPTIONS request handled for:', req.path);
     res.status(200).end();
     return;
   }
-  
+
   next();
 });
 
 app.use(express.json());
 app.use(cookieParser());
 
-// הוספת לוגינג לכל בקשה
 app.use((req, res, next) => {
   console.log(`📥 ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
   next();
@@ -98,7 +92,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// טיפול בשגיאות CORS
 app.use((err, req, res, next) => {
   if (err.message === 'Not allowed by CORS') {
     console.error('❌ CORS Error for origin:', req.headers.origin);
