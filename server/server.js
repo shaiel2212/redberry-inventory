@@ -15,7 +15,6 @@ const PORT = process.env.PORT || 5001;
 console.log("ENV PORT:", process.env.PORT);
 console.log("Final PORT:", PORT);
 
-// רשימת דומיינים מורשים
 const allowedOrigins = [
    'https://redberry-inventory-client.vercel.app',
   'https://redberry-inventory-client-4ahsvty6p-shaiel2212s-projects.vercel.app', // <- תוסיף את זה!
@@ -24,7 +23,6 @@ const allowedOrigins = [
 
 console.log("🔧 Allowed origins:", allowedOrigins);
 
-// הגדרות CORS משופרות
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('🔍 Request from origin:', origin);
