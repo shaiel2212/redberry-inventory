@@ -1,7 +1,12 @@
 import api from './api';
 
-// כבר יש /api ב-BASE_URL, רק צריך להוסיף /auth
-const AUTH_ENDPOINT = '/auth';
+api.defaults.withCredentials = true;
+
+// תיקון: השתמש בכתובת המלאה עם /api/auth
+const API_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
+
+console.log("🔧 Base URL:", process.env.REACT_APP_API_BASE_URL);
+console.log("🔧 API_URL:", API_URL);
 
 const setAuthToken = (token) => {
   if (token) {
@@ -12,11 +17,12 @@ const setAuthToken = (token) => {
 }; 
 
 const login = async (credentials) => {
-  console.log("🔁 Login endpoint:", `${process.env.REACT_APP_API_BASE_URL}${AUTH_ENDPOINT}/login`);
+  console.log("🔁 API_URL (login):", API_URL);
+  console.log("🔁 Full login URL:", `${API_URL}/login`);
 
   try {
     const response = await api.post(
-      `${AUTH_ENDPOINT}/login`, // זה יהיה /auth/login, ועם הbase זה יהיה /api/auth/login
+      `${API_URL}/login`,
       {
         username: credentials.username,
         password: credentials.password
@@ -38,7 +44,6 @@ const login = async (credentials) => {
       setAuthToken(token);
     }
 
-    console.log('✅ Login successful');
     return response.data;
   } catch (error) {
     console.error('❌ Login failed:', error);
@@ -49,16 +54,17 @@ const login = async (credentials) => {
 };
 
 const register = async (username, email, password) => {
-  console.log("🔁 Register endpoint:", `${process.env.REACT_APP_API_BASE_URL}${AUTH_ENDPOINT}/register`);
+  console.log("🔁 API_URL (register):", API_URL);
+  console.log("🔁 Full register URL:", `${API_URL}/register`);
 
   try {
     const response = await api.post(
-      `${AUTH_ENDPOINT}/register`, // זה יהיה /auth/register, ועם הbase זה יהיה /api/auth/register
+      `${API_URL}/register`,
       {
         username,
         email,
         password,
-        role: 'user' // ברירת מחדל
+        role: 'user'
       },
       {
         headers: { 
@@ -77,7 +83,6 @@ const register = async (username, email, password) => {
       setAuthToken(token);
     }
 
-    console.log('✅ Registration successful');
     return response.data;
   } catch (error) {
     console.error('❌ Registration failed:', error);
@@ -91,7 +96,6 @@ const logout = () => {
   localStorage.removeItem('user');
   localStorage.removeItem('token');
   setAuthToken(null);
-  console.log('✅ Logout successful');
 };
 
 const getCurrentUser = () => {
@@ -103,11 +107,10 @@ const getToken = () => {
   return localStorage.getItem('token');
 };
 
-// טען טוכן בהתחלה אם קיים
+// טען טוקן בהתחלה
 const token = getToken();
 if (token) {
   setAuthToken(token);
-  console.log('🔑 Token loaded from storage');
 }
 
 const authService = {
