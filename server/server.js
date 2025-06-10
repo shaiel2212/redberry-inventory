@@ -17,10 +17,9 @@ console.log("Final PORT:", PORT);
 
 // רשימת דומיינים מורשים
 const allowedOrigins = [
+   'https://redberry-inventory-client.vercel.app',
+  'https://redberry-inventory-client-4ahsvty6p-shaiel2212s-projects.vercel.app', // <- תוסיף את זה!
   'http://localhost:3000',
-  'https://redberry-inventory-client.vercel.app',
-  'https://redberry-inventory-client-o9hgkf891-shaie12212s-projects.vercel.app',
-  'https://redberry-inventory-client-bzj4bd2y6-shaie12212s-projects.vercel.app'
 ];
 
 console.log("🔧 Allowed origins:", allowedOrigins);
