@@ -1,7 +1,7 @@
 import api from './api';
 
-api.defaults.withCredentials = true;
-const API_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
+// כבר יש /api ב-BASE_URL, רק צריך להוסיף /auth
+const AUTH_ENDPOINT = '/auth';
 
 const setAuthToken = (token) => {
   if (token) {
@@ -12,12 +12,11 @@ const setAuthToken = (token) => {
 }; 
 
 const login = async (credentials) => {
-  console.log("🔁 API_URL (login):", API_URL);
-  console.log("🔁 Base URL:", process.env.REACT_APP_API_BASE_URL);
+  console.log("🔁 Login endpoint:", `${process.env.REACT_APP_API_BASE_URL}${AUTH_ENDPOINT}/login`);
 
   try {
     const response = await api.post(
-      `${API_URL}/login`,
+      `${AUTH_ENDPOINT}/login`, // זה יהיה /auth/login, ועם הbase זה יהיה /api/auth/login
       {
         username: credentials.username,
         password: credentials.password
@@ -39,6 +38,7 @@ const login = async (credentials) => {
       setAuthToken(token);
     }
 
+    console.log('✅ Login successful');
     return response.data;
   } catch (error) {
     console.error('❌ Login failed:', error);
@@ -49,17 +49,16 @@ const login = async (credentials) => {
 };
 
 const register = async (username, email, password) => {
-  console.log("🔁 API_URL (register):", API_URL);
-  console.log("🔁 Base URL:", process.env.REACT_APP_API_BASE_URL);
+  console.log("🔁 Register endpoint:", `${process.env.REACT_APP_API_BASE_URL}${AUTH_ENDPOINT}/register`);
 
   try {
     const response = await api.post(
-      `${API_URL}/register`,
+      `${AUTH_ENDPOINT}/register`, // זה יהיה /auth/register, ועם הbase זה יהיה /api/auth/register
       {
         username,
         email,
         password,
-        role: 'user'
+        role: 'user' // ברירת מחדל
       },
       {
         headers: { 
@@ -78,6 +77,7 @@ const register = async (username, email, password) => {
       setAuthToken(token);
     }
 
+    console.log('✅ Registration successful');
     return response.data;
   } catch (error) {
     console.error('❌ Registration failed:', error);
@@ -91,6 +91,7 @@ const logout = () => {
   localStorage.removeItem('user');
   localStorage.removeItem('token');
   setAuthToken(null);
+  console.log('✅ Logout successful');
 };
 
 const getCurrentUser = () => {
@@ -102,10 +103,11 @@ const getToken = () => {
   return localStorage.getItem('token');
 };
 
-// טען טוקן בהתחלה
+// טען טוכן בהתחלה אם קיים
 const token = getToken();
 if (token) {
   setAuthToken(token);
+  console.log('🔑 Token loaded from storage');
 }
 
 const authService = {

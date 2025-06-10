@@ -15,19 +15,25 @@ const PORT = process.env.PORT || 5001;
 console.log("ENV PORT:", process.env.PORT);
 console.log("Final PORT:", PORT);
 
+// רשימת דומיינים מורשים
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://redberry-inventory-client.vercel.app',
+];
+
+console.log("🔧 Allowed origins:", allowedOrigins);
+
 // הגדרות CORS משופרות
 const corsOptions = {
   origin: function (origin, callback) {
-    // רשימת דומיינים מורשים
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'https://redberry-inventory-client.vercel.app',
-    ];
+    console.log('🔍 Request from origin:', origin);
     
     // אפשר בקשות ללא origin (כמו Postman) או מדומיינים מורשים
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ Origin allowed');
       callback(null, true);
     } else {
+      console.log('❌ Origin blocked:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -52,10 +58,6 @@ app.options('*', cors(corsOptions));
 // Middleware נוסף לכותרות CORS (גיבוי)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'https://redberry-inventory-client.vercel.app'
-  ];
   
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -66,6 +68,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
   
   if (req.method === 'OPTIONS') {
+    console.log('✅ OPTIONS request handled for:', req.path);
     res.status(200).end();
     return;
   }
@@ -76,6 +79,12 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(cookieParser());
 
+// הוספת לוגינג לכל בקשה
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
@@ -83,21 +92,29 @@ app.use('/api/sales', salesRoutes);
 app.use('/api/reports', reportsRoutes);
 
 app.get('/', (req, res) => {
-  res.send('Server is running...');
+  res.json({
+    message: 'Server is running...',
+    cors: 'enabled',
+    allowedOrigins: allowedOrigins
+  });
 });
 
 // טיפול בשגיאות CORS
 app.use((err, req, res, next) => {
   if (err.message === 'Not allowed by CORS') {
+    console.error('❌ CORS Error for origin:', req.headers.origin);
     res.status(403).json({ 
       message: 'CORS policy violation',
-      origin: req.headers.origin 
+      origin: req.headers.origin,
+      allowedOrigins: allowedOrigins
     });
   } else {
+    console.error('❌ Server Error:', err.message);
     next(err);
   }
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log('✅ CORS configured for origins:', allowedOrigins);
 });
