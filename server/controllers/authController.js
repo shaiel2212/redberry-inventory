@@ -10,6 +10,8 @@ exports.registerUser = async (req, res) => {
   const email = xss(req.body.email);
   const password = req.body.password;
   const role = xss(req.body.role || 'user');
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('API Base URL:', process.env.REACT_APP_API_BASE_URL);
 
   if (!username || !email || !password) {
     return res.status(400).json({ message: 'Please enter all required fields' });
@@ -17,7 +19,7 @@ exports.registerUser = async (req, res) => {
 
   try {
     const [existingUsers] = await pool.query(
-      'SELECT * FROM users WHERE username = ? OR email = ?', 
+      'SELECT * FROM users WHERE username = ? OR email = ?',
       [username, email]
     );
 
@@ -71,7 +73,8 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   const username = xss(req.body.username);
   const password = req.body.password;
-
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('API Base URL:', process.env.REACT_APP_API_BASE_URL);
   if (!username || !password) {
     return res.status(400).json({ message: 'Please enter username and password' });
   }
@@ -121,7 +124,7 @@ exports.loginUser = async (req, res) => {
 exports.getLoggedInUser = async (req, res) => {
   try {
     const [users] = await pool.query(
-      'SELECT id, username, email, role, created_at FROM users WHERE id = ?', 
+      'SELECT id, username, email, role, created_at FROM users WHERE id = ?',
       [req.user.id]
     );
 

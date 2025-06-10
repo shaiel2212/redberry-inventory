@@ -1,7 +1,7 @@
 import api from './api';
 
 api.defaults.withCredentials = true;
- const API_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
+const API_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
 
 const setAuthToken = (token) => {
   if (token) {
@@ -11,9 +11,9 @@ const setAuthToken = (token) => {
   }
 }; 
 
-
 const login = async (credentials) => {
   console.log("🔁 API_URL (login):", API_URL);
+  console.log("🔁 Base URL:", process.env.REACT_APP_API_BASE_URL);
 
   try {
     const response = await api.post(
@@ -23,7 +23,10 @@ const login = async (credentials) => {
         password: credentials.password
       },
       {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         withCredentials: true
       }
     );
@@ -38,14 +41,16 @@ const login = async (credentials) => {
 
     return response.data;
   } catch (error) {
-    console.error('❌ Login failed:', error.response?.data || error.message);
+    console.error('❌ Login failed:', error);
+    console.error('❌ Error response:', error.response?.data);
+    console.error('❌ Error status:', error.response?.status);
     throw error;
   }
 };
 
 const register = async (username, email, password) => {
-  const API_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
   console.log("🔁 API_URL (register):", API_URL);
+  console.log("🔁 Base URL:", process.env.REACT_APP_API_BASE_URL);
 
   try {
     const response = await api.post(
@@ -54,10 +59,13 @@ const register = async (username, email, password) => {
         username,
         email,
         password,
-        role: 'user' // ברירת מחדל
+        role: 'user'
       },
       {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         withCredentials: true
       }
     );
@@ -72,7 +80,9 @@ const register = async (username, email, password) => {
 
     return response.data;
   } catch (error) {
-    console.error('❌ Registration failed:', error.response?.data || error.message);
+    console.error('❌ Registration failed:', error);
+    console.error('❌ Error response:', error.response?.data);
+    console.error('❌ Error status:', error.response?.status);
     throw error;
   }
 };
@@ -92,6 +102,7 @@ const getToken = () => {
   return localStorage.getItem('token');
 };
 
+// טען טוקן בהתחלה
 const token = getToken();
 if (token) {
   setAuthToken(token);
