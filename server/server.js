@@ -22,8 +22,7 @@ const corsOptions = {
     const isAllowed =
       !origin ||
       origin === 'http://localhost:3000' ||
-      origin === 'https://redberry-inventory-client.vercel.app' ||
-      /^https:\/\/redberry-inventory-client-[\w-]+\.shaiel2212s-projects\.vercel\.app$/.test(origin);
+      origin === 'https://redberry-inventory-client.vercel.app' || /^https:\/\/redberry-inventory-client-[\w-]+\.shaiel2212s-projects\.vercel\.app$/.test(origin);
 
     if (isAllowed) {
       console.log('✅ Origin allowed');
