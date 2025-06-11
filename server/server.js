@@ -14,16 +14,17 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 console.log("ENV PORT:", process.env.PORT);
 console.log("Final PORT:", PORT);
-console.log('ENV JWT_SECRET:', process.env.JWT_SECRET);
 
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('🔍 Request from origin:', origin);
 
     const isAllowed =
-      !origin ||
-      origin === 'http://localhost:3000' ||
-      origin === 'https://redberry-inventory-client.vercel.app' || /^https:\/\/redberry-inventory-client-[\w-]+\.shaiel2212s-projects\.vercel\.app$/.test(origin);
+    !origin ||
+    origin === 'http://localhost:3000' ||
+    origin === 'https://redberry-inventory-client.vercel.app' ||
+    /^https:\/\/redberry-inventory-client-[\w-]+\.shaiel2212s-projects\.vercel\.app$/.test(origin) ||
+    origin === 'https://redberry-inventory-production.up.railway.app';
 
     if (isAllowed) {
       console.log('✅ Origin allowed');
@@ -81,6 +82,7 @@ app.use((err, req, res, next) => {
     next(err);
   }
 });
+console.log('ENV JWT_SECRET:', process.env.JWT_SECRET);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
