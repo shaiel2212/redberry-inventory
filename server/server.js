@@ -15,19 +15,17 @@ const PORT = process.env.PORT || 5001;
 console.log("ENV PORT:", process.env.PORT);
 console.log("Final PORT:", PORT);
 
-const allowedOrigins = [
-  'https://redberry-inventory-client.vercel.app',
-  'https://redberry-inventory-client-2vkixuth7-shaiel2212s-projects.vercel.app',
-  'http://localhost:3000',
-];
-
-console.log("🔧 Allowed origins:", allowedOrigins);
-
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('🔍 Request from origin:', origin);
 
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    const isAllowed =
+      !origin ||
+      origin === 'http://localhost:3000' ||
+      origin === 'https://redberry-inventory-client.vercel.app' ||
+      /^https:\/\/redberry-inventory-client-[\w-]+\.shaiel2212s-projects\.vercel\.app$/.test(origin);
+
+    if (isAllowed) {
       console.log('✅ Origin allowed');
       callback(null, true);
     } else {
@@ -38,8 +36,8 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
+    'Content-Type',
+    'Authorization',
     'X-Requested-With',
     'Accept',
     'Origin'
@@ -49,26 +47,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-
-  if (req.method === 'OPTIONS') {
-    console.log('✅ OPTIONS request handled for:', req.path);
-    res.status(200).end();
-    return;
-  }
-
-  next();
-});
 
 app.use(express.json());
 app.use(cookieParser());
@@ -87,8 +65,7 @@ app.use('/api/reports', reportsRoutes);
 app.get('/', (req, res) => {
   res.json({
     message: 'Server is running...',
-    cors: 'enabled',
-    allowedOrigins: allowedOrigins
+    cors: 'enabled'
   });
 });
 
@@ -97,8 +74,7 @@ app.use((err, req, res, next) => {
     console.error('❌ CORS Error for origin:', req.headers.origin);
     res.status(403).json({ 
       message: 'CORS policy violation',
-      origin: req.headers.origin,
-      allowedOrigins: allowedOrigins
+      origin: req.headers.origin
     });
   } else {
     console.error('❌ Server Error:', err.message);
@@ -106,7 +82,6 @@ app.use((err, req, res, next) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0',() => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log('✅ CORS configured for origins:', allowedOrigins);
 });
