@@ -17,7 +17,7 @@ console.log("Final PORT:", PORT);
 
 const allowedOrigins = [
   'https://redberry-inventory-client.vercel.app',
-  'https://redberry-inventory-client-4ahsvty6p-shaiel2212s-projects.vercel.app',
+  'https://redberry-inventory-client-2vkixuth7-shaiel2212s-projects.vercel.app',
   'http://localhost:3000',
 ];
 
