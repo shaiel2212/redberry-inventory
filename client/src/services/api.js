@@ -1,9 +1,8 @@
 import axios from 'axios';
 
-console.log("🔧 REACT_APP_API_BASE_URL:", import.meta.env.VITE_API_URL);
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: process.env.REACT_APP_API_BASE_URL,
   withCredentials: true,
   timeout: 10000
 });
