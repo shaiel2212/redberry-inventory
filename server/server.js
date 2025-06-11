@@ -17,7 +17,6 @@ console.log("Final PORT:", PORT);
 
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log('🔍 Request from origin:', origin);
 
     const isAllowed =
     !origin ||
