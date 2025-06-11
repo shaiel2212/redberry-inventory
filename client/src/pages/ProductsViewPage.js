@@ -27,14 +27,14 @@ const ProductsViewPage = () => {
   }, []);
 
   if (loading) return <p>טוען מוצרים...</p>;
-  if (error) return <p className="error-message">{error}</p>;
+  if (error) return <p className="p-4 sm:p-6 error-message">{error}</p>;
 
   return (
     <MainLayout>
     <div>
       <h2>קטלוג מוצרים</h2>
       {products.length === 0 && !loading && <p>לא נמצאו מוצרים.</p>}
-      <div className="product-list">
+      <div className="p-4 sm:p-6 product-list">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

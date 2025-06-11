@@ -36,34 +36,34 @@ const DashboardPage = () => {
     fetchData();
   }, []);
 
-  if (loading) return <MainLayout><p className="text-center mt-10">טוען נתונים...</p></MainLayout>;
-  if (error) return <MainLayout><p className="text-red-500 text-center">{error}</p></MainLayout>;
+  if (loading) return <MainLayout><p className="p-4 sm:p-6 text-center mt-10">טוען נתונים...</p></MainLayout>;
+  if (error) return <MainLayout><p className="p-4 sm:p-6 text-red-500 text-center">{error}</p></MainLayout>;
 
   return (
     <MainLayout>
-      <div className="p-6 space-y-8 text-right bg-[#e7fafd] min-h-screen" dir="rtl">
+      <div className="p-4 sm:p-6 p-6 space-y-8 text-right bg-[#e7fafd] min-h-screen" dir="rtl">
         {/* ברכה */}
-        <div className="text-xl font-semibold text-gray-700 text-right">בוקר טוב, {user?.username || 'מנהל'} 👋</div>
+        <div className="p-4 sm:p-6 text-xl font-semibold text-gray-700 text-right">בוקר טוב, {user?.username || 'מנהל'} 👋</div>
 
         {/* כרטיסי מידע */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl shadow p-4">
-            <p className="text-sm text-gray-500">מכירות יומיות</p>
-            <p className="text-2xl font-bold text-green-600">₪{summary.daily}</p>
+        <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 sm:p-6 bg-white rounded-xl shadow p-4">
+            <p className="p-4 sm:p-6 text-sm text-gray-500">מכירות יומיות</p>
+            <p className="p-4 sm:p-6 text-2xl font-bold text-green-600">₪{summary.daily}</p>
           </div>
-          <div className="bg-white rounded-xl shadow p-4">
-            <p className="text-sm text-gray-500">מכירות שבועיות</p>
-            <p className="text-2xl font-bold text-blue-600">₪{summary.weekly}</p>
+          <div className="p-4 sm:p-6 bg-white rounded-xl shadow p-4">
+            <p className="p-4 sm:p-6 text-sm text-gray-500">מכירות שבועיות</p>
+            <p className="p-4 sm:p-6 text-2xl font-bold text-blue-600">₪{summary.weekly}</p>
           </div>
-          <div className="bg-white rounded-xl shadow p-4">
-            <p className="text-sm text-gray-500">מכירות חודשיות</p>
-            <p className="text-2xl font-bold text-purple-600">₪{summary.monthly}</p>
+          <div className="p-4 sm:p-6 bg-white rounded-xl shadow p-4">
+            <p className="p-4 sm:p-6 text-sm text-gray-500">מכירות חודשיות</p>
+            <p className="p-4 sm:p-6 text-2xl font-bold text-purple-600">₪{summary.monthly}</p>
           </div>
         </div>
 
         {/* גרף מכירות */}
-        <div className="bg-white rounded-xl shadow p-4">
-          <h3 className="text-lg font-semibold mb-4">סטטיסטיקות מכירות</h3>
+        <div className="p-4 sm:p-6 bg-white rounded-xl shadow p-4">
+          <h3 className="p-4 sm:p-6 text-lg font-semibold mb-4">סטטיסטיקות מכירות</h3>
           <div style={{ width: '100%', height: 300 }}>
             <ResponsiveContainer>
               <BarChart data={salesByDay}>
@@ -78,28 +78,30 @@ const DashboardPage = () => {
         </div>
 
         {/* טבלת מוצרים במלאי נמוך */}
-        <div className="bg-white rounded-xl shadow p-4">
-          <h3 className="text-lg font-semibold mb-4">פריטים במלאי נמוך</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto text-sm text-right">
-              <thead className="bg-gray-100">
+        <div className="p-4 sm:p-6 bg-white rounded-xl shadow p-4">
+          <h3 className="p-4 sm:p-6 text-lg font-semibold mb-4">פריטים במלאי נמוך</h3>
+          <div className="p-4 sm:p-6 overflow-x-auto">
+            <div className="overflow-x-auto">
+<table className="p-4 sm:p-6 w-full table-auto text-sm text-right">
+              <thead className="p-4 sm:p-6 bg-gray-100">
                 <tr>
                
-                  <th className="p-2">שם</th>
-                  <th className="p-2">כמות</th>
-                  <th className="p-2">מחיר</th>
+                  <th className="p-4 sm:p-6 p-2">שם</th>
+                  <th className="p-4 sm:p-6 p-2">כמות</th>
+                  <th className="p-4 sm:p-6 p-2">מחיר</th>
                 </tr>
               </thead>
               <tbody>
                 {lowStock.map((item) => (
-                  <tr key={item.id} className="border-b">
-                    <td className="p-2">{item.name}</td>
-                    <td className="p-2 text-red-600 font-semibold">{item.stock_quantity}</td>
-                    <td className="p-2">₪{item.sale_price || '---'}</td>
+                  <tr key={item.id} className="p-4 sm:p-6 border-b">
+                    <td className="p-4 sm:p-6 p-2">{item.name}</td>
+                    <td className="p-4 sm:p-6 p-2 text-red-600 font-semibold">{item.stock_quantity}</td>
+                    <td className="p-4 sm:p-6 p-2">₪{item.sale_price || '---'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+</div>
           </div>
         </div>
       </div>

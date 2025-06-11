@@ -54,7 +54,7 @@ const ProductsAdminPage = () => {
   };
 
   if (loading) return <p>טוען מוצרים...</p>;
-  if (error && !showForm) return <p className="error-message">{error}</p>; // הצג שגיאה רק אם הטופס לא פתוח (כי בטופס יש טיפול משלו)
+  if (error && !showForm) return <p className="p-4 sm:p-6 error-message">{error}</p>; // הצג שגיאה רק אם הטופס לא פתוח (כי בטופס יש טיפול משלו)
 
   return (
     <MainLayout>
@@ -67,7 +67,8 @@ const ProductsAdminPage = () => {
 
       <h3>רשימת מוצרים</h3>
       {products.length === 0 && !loading && <p>לא נמצאו מוצרים.</p>}
-      <table>
+      <div className="overflow-x-auto">
+<table>
         <thead>
           <tr>
             <th>שם</th>
@@ -92,6 +93,7 @@ const ProductsAdminPage = () => {
           ))}
         </tbody>
       </table>
+</div>
     </div>
     </MainLayout>
   );

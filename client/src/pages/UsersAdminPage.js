@@ -44,8 +44,9 @@ const UsersAdminPage = () => {
     <MainLayout>
     <div>
       <h2>ניהול משתמשים</h2>
-      {error && <p className="error-message">{error}</p>}
-      <table>
+      {error && <p className="p-4 sm:p-6 error-message">{error}</p>}
+      <div className="overflow-x-auto">
+<table>
         <thead>
           <tr>
             <th>שם משתמש</th>
@@ -79,6 +80,7 @@ const UsersAdminPage = () => {
           ))}
         </tbody>
       </table>
+</div>
     </div>
     </MainLayout>
   );

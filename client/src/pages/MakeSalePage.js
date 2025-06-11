@@ -119,7 +119,7 @@ const MakeSalePage = () => {
     <MainLayout>
     <div>
       <h2>ביצוע מכירה</h2>
-      {error && <p className="error-message">{error}</p>}
+      {error && <p className="p-4 sm:p-6 error-message">{error}</p>}
 
       <div>
         <label htmlFor="customerName">שם לקוח (אופציונלי):</label>
@@ -156,7 +156,8 @@ const MakeSalePage = () => {
       {cart.length === 0 ? (
         <p>העגלה ריקה.</p>
       ) : (
-        <table style={{width: '100%', marginTop: '10px'}}>
+        <div className="overflow-x-auto">
+<table style={{width: '100%', marginTop: '10px'}}>
           <thead>
             <tr>
               <th>מוצר</th>
@@ -189,6 +190,7 @@ const MakeSalePage = () => {
             ))}
           </tbody>
         </table>
+</div>
       )}
       <h3>סה"כ לתשלום: ₪{calculateTotal()}</h3>
       <button onClick={handleSubmitSale} disabled={loading || cart.length === 0}>

@@ -38,14 +38,15 @@ const SalesAdminPage = () => {
   }
 
   if (loading) return <p>טוען היסטוריית מכירות...</p>;
-  if (error) return <p className="error-message">{error}</p>;
+  if (error) return <p className="p-4 sm:p-6 error-message">{error}</p>;
 
   return (
     <MainLayout>
     <div>
       <h2>היסטוריית מכירות</h2>
       {sales.length === 0 && !loading && <p>לא נמצאו מכירות.</p>}
-      <table>
+      <div className="overflow-x-auto">
+<table>
         <thead>
           <tr>
             <th>מספר מכירה</th>
@@ -71,6 +72,7 @@ const SalesAdminPage = () => {
           ))}
         </tbody>
       </table>
+</div>
 
       {selectedSaleDetails && (
         <div style={{marginTop: '20px', border: '1px solid #ccc', padding: '15px'}}>
