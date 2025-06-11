@@ -6,6 +6,7 @@ const API_URL = process.env.REACT_APP_API_BASE_URL + '/products';
 // No auth header needed for getAll if it's public on backend
 const getAllProducts = async () => {
   const response = await api.get(API_URL);
+  
   return response.data;
 };
 
