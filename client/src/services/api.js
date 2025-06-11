@@ -2,14 +2,12 @@ import axios from 'axios';
 
 console.log("🔧 REACT_APP_API_BASE_URL:", process.env.REACT_APP_API_BASE_URL);
 
-// יצירת אינסטנס עם baseURL מה־env
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL,
   withCredentials: true,
   timeout: 10000
 });
 
-// Interceptor לפני שליחת הבקשה
 api.interceptors.request.use(
   (config) => {
     console.log("📤 Sending request to:", config.baseURL + config.url);
