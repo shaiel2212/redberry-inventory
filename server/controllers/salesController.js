@@ -2,8 +2,6 @@ const pool = require('../config/db');
 const xss = require('xss');
 
 // Create a new sale
-const pool = require('../config/db');
-const xss = require('xss');
 
 // Create a new sale
 exports.createSale = async (req, res) => {
