@@ -17,7 +17,6 @@ const SalesList = ({ sales }) => {
             <tr key={sale.id}>
               <td>{new Date(sale.sale_date).toLocaleDateString()}</td>
               <td>{sale.customer_name || '—'}</td>
-              <td>{sale.payment_method === 'cash' ? 'מזומן' : 'אשראי'}</td>
               <td>{sale.total_amount} ₪</td>
             </tr>
           ))}

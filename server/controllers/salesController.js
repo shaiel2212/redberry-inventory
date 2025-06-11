@@ -2,14 +2,16 @@ const pool = require('../config/db');
 const xss = require('xss');
 
 // Create a new sale
+const pool = require('../config/db');
+const xss = require('xss');
+
+// Create a new sale
 exports.createSale = async (req, res) => {
   const items = req.body.items.map(item => ({
     product_id: parseInt(item.product_id),
     quantity: parseInt(item.quantity)
   }));
 
-  const payment_method = xss(req.body.payment_method || '');
-  const discount = parseFloat(req.body.discount || 0);
   const total_amount = parseFloat(req.body.total_amount || 0);
   const customer_name = xss(req.body.customer_name || '');
 
@@ -18,8 +20,8 @@ exports.createSale = async (req, res) => {
     await connection.beginTransaction();
 
     const [saleResult] = await connection.query(
-      'INSERT INTO sales (total_amount, payment_method, discount, customer_name) VALUES (?, ?, ?, ?)',
-      [total_amount, payment_method, discount, customer_name]
+      'INSERT INTO sales (total_amount, customer_name) VALUES (?, ?)',
+      [total_amount, customer_name]
     );
     const saleId = saleResult.insertId;
 
@@ -48,9 +50,6 @@ exports.createSale = async (req, res) => {
     }
 
     await connection.commit();
-    console.error('❌ Create sale error:', err.message);   // ← חשוב
-    console.error('📦 Full error object:', err);           // ← ניתוח מלא
-    res.status(500).json({ error: 'Error creating sale', details: err.message });
     res.status(201).json({ sale_id: saleId });
   } catch (err) {
     await connection.rollback();
