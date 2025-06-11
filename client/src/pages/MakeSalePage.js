@@ -7,7 +7,7 @@ import MainLayout from '../components/layout/MainLayout';
 
 const MakeSalePage = () => {
   const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState([]); // { productId, name, quantity, price_per_unit, stock_quantity }
+  const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [error, setError] = useState('');
@@ -18,8 +18,7 @@ const MakeSalePage = () => {
     const fetchProducts = async () => {
       try {
         const data = await productService.getAllProducts();
-        setProducts(data);
-; // הצג רק מוצרים במלאי
+        setProducts(data.filter(p => p.stock_quantity > 0));
       } catch (err) {
         setError('שגיאה בטעינת מוצרים.');
       }
@@ -29,174 +28,169 @@ const MakeSalePage = () => {
 
   const handleAddToCart = (product) => {
     setError('');
-    const existingItem = cart.find(item => item.productId === product.id);
+    const existingItem = cart.find(item => item.product_id === product.id);
     if (existingItem) {
       if (existingItem.quantity < product.stock_quantity) {
         setCart(cart.map(item =>
-          item.productId === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.product_id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         ));
       } else {
-        setError(`לא ניתן להוסיף עוד '${product.name}'. הכמות במלאי היא ${product.stock_quantity}.`);
+        setError(`לא ניתן להוסיף עוד '${product.name}'. במלאי ${product.stock_quantity}.`);
       }
     } else {
       if (product.stock_quantity > 0) {
         setCart([...cart, {
-            productId: product.id,
-            name: product.name,
-            quantity: 1,
-            price_per_unit: parseFloat(product.sale_price),
-            stock_quantity: product.stock_quantity
+          product_id: product.id,
+          name: product.name,
+          quantity: 1,
+          price_per_unit: parseFloat(product.sale_price),
+          stock_quantity: product.stock_quantity
         }]);
       } else {
-         setError(`המוצר '${product.name}' אזל מהמלאי.`);
+        setError(`המוצר '${product.name}' אזל מהמלאי.`);
       }
     }
   };
 
   const handleUpdateQuantity = (productId, newQuantity) => {
-    setError('');
-    const itemInCart = cart.find(item => item.productId === productId);
-    if (!itemInCart) return;
+    const item = cart.find(item => item.product_id === productId);
+    if (!item) return;
 
     if (newQuantity <= 0) {
-      setCart(cart.filter(item => item.productId !== productId));
-    } else if (newQuantity > itemInCart.stock_quantity) {
-        setError(`הכמות המבוקשת עבור '${itemInCart.name}' חורגת מהמלאי (${itemInCart.stock_quantity}).`);
-        setCart(cart.map(item =>
-            item.productId === productId ? { ...item, quantity: itemInCart.stock_quantity } : item
-        ));
-    }
-    else {
+      setCart(cart.filter(item => item.product_id !== productId));
+    } else if (newQuantity > item.stock_quantity) {
+      setError(`הכמות חורגת מהמלאי (${item.stock_quantity})`);
+    } else {
       setCart(cart.map(item =>
-        item.productId === productId ? { ...item, quantity: newQuantity } : item
+        item.product_id === productId ? { ...item, quantity: newQuantity } : item
       ));
     }
   };
 
   const calculateTotal = () => {
-    return cart.reduce((total, item) => total + (item.quantity * item.price_per_unit), 0).toFixed(2);
+    return cart.reduce((total, item) => total + item.quantity * item.price_per_unit, 0);
   };
 
   const handleSubmitSale = async () => {
-    if (cart.length === 0) {
-      setError('עגלת הקניות ריקה.');
-      return;
-    }
-    setError('');
-    setLoading(true);
+    const totalAmount = calculateTotal();
+
+    if (cart.length === 0) return setError('עגלת הקניות ריקה.');
+    if (isNaN(totalAmount) || totalAmount <= 0) return setError('סכום לתשלום אינו חוקי.');
+
     const saleData = {
-      items: cart.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        price_per_unit: item.price_per_unit
-      })),
-      customer_name: customerName,
-      total_amount: parseFloat(calculateTotal())
+      items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
+      customer_name: customerName.trim(),
+      total_amount: Number(totalAmount.toFixed(2)),
+      payment_method: '',
+      discount: 0
     };
 
     try {
+      setLoading(true);
       const result = await saleService.createSale(saleData);
-      alert(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.saleId}`);
+      alert(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.sale_id}`);
       setCart([]);
       setCustomerName('');
-      // רענון מלאי מוצרים (אופציונלי כאן, או שהמשתמש ינווט לדף אחר)
-       const updatedProducts = await productService.getAllProducts();
-       setProducts(updatedProducts.filter(p => p.stock_quantity > 0));
-      // navigate('/admin/sales'); // או לדף אחר
+      const updatedProducts = await productService.getAllProducts();
+      setProducts(updatedProducts.filter(p => p.stock_quantity > 0));
     } catch (err) {
+      console.error('❌ Create sale error:', err);
       setError(err.response?.data?.message || 'שגיאה בביצוע המכירה.');
-      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <MainLayout>
-    <div>
-      <h2>ביצוע מכירה</h2>
-      {error && <p className="p-4 sm:p-6 error-message">{error}</p>}
+      <div className="p-4 max-w-4xl mx-auto space-y-4">
+        <h2 className="text-xl font-bold">ביצוע מכירה</h2>
+        {error && <p className="text-red-500 border border-red-300 bg-red-100 p-2 rounded">{error}</p>}
 
-      <div>
-        <label htmlFor="customerName">שם לקוח (אופציונלי):</label>
-        <input
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <label htmlFor="customerName" className="font-semibold">שם לקוח (אופציונלי):</label>
+          <input
             type="text"
             id="customerName"
+            className="border p-2 rounded w-full sm:max-w-sm"
             value={customerName}
             onChange={(e) => setCustomerName(DOMPurify.sanitize(e.target.value))}
-        />
-      </div>
+          />
+        </div>
 
-      <h3>בחר מוצרים:</h3>
-      <input
-        type="text"
-        placeholder="חפש מוצר..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{marginBottom: '10px', padding: '8px', width: '300px'}}
-      />
-      <div style={{ display: 'flex', maxHeight: '300px', overflowY: 'auto', border: '1px solid #ccc' }}>
-        <ul style={{ listStyleType: 'none', padding: 0, width: '100%' }}>
-          {filteredProducts.map(product => (
-            <li key={product.id} style={{ padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>{product.name} (₪{parseFloat(product.sale_price).toFixed(2)}) - מלאי: {product.stock_quantity}</span>
-              <button onClick={() => handleAddToCart(product)} disabled={product.stock_quantity <= 0}>הוסף לעגלה</button>
-            </li>
-          ))}
-           {filteredProducts.length === 0 && <p>לא נמצאו מוצרים התואמים לחיפוש.</p>}
-        </ul>
-      </div>
+        <div className="space-y-2">
+          <label className="font-semibold">בחר מוצרים:</label>
+          <input
+            type="text"
+            placeholder="חפש מוצר..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border p-2 rounded w-full sm:max-w-md"
+          />
 
-
-      <h3>עגלת קניות:</h3>
-      {cart.length === 0 ? (
-        <p>העגלה ריקה.</p>
-      ) : (
-        <div className="overflow-x-auto">
-<table style={{width: '100%', marginTop: '10px'}}>
-          <thead>
-            <tr>
-              <th>מוצר</th>
-              <th>כמות</th>
-              <th>מחיר ליחידה</th>
-              <th>סה"כ לפריט</th>
-              <th>פעולות</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cart.map(item => (
-              <tr key={item.productId}>
-                <td>{item.name}</td>
-                <td>
-                  <input
-                    type="number"
-                    value={item.quantity}
-                    onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value))}
-                    min="1"
-                    max={item.stock_quantity} // Set max to available stock
-                    style={{width: '60px'}}
-                  />
-                </td>
-                <td>₪{item.price_per_unit.toFixed(2)}</td>
-                <td>₪{(item.quantity * item.price_per_unit).toFixed(2)}</td>
-                <td>
-                  <button onClick={() => handleUpdateQuantity(item.productId, 0)} style={{backgroundColor: 'salmon'}}>הסר</button>
-                </td>
-              </tr>
+          <ul className="border rounded divide-y max-h-60 overflow-y-auto">
+            {products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).map(product => (
+              <li key={product.id} className="flex justify-between items-center p-2 text-sm">
+                <span>{product.name} (₪{parseFloat(product.sale_price).toFixed(2)}) - מלאי: {product.stock_quantity}</span>
+                <button
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                  onClick={() => handleAddToCart(product)}
+                >הוסף לעגלה</button>
+              </li>
             ))}
-          </tbody>
-        </table>
-</div>
-      )}
-      <h3>סה"כ לתשלום: ₪{calculateTotal()}</h3>
-      <button onClick={handleSubmitSale} disabled={loading || cart.length === 0}>
-        {loading ? 'מעבד...' : 'בצע מכירה'}
-      </button>
-    </div>
+          </ul>
+        </div>
+
+        <h3 className="text-lg font-bold mt-4">עגלת קניות:</h3>
+        {cart.length === 0 ? <p className="text-gray-500">העגלה ריקה.</p> : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border">
+              <thead className="bg-gray-100">
+                <tr className="text-right">
+                  <th className="p-2">מוצר</th>
+                  <th className="p-2">כמות</th>
+                  <th className="p-2">מחיר ליחידה</th>
+                  <th className="p-2">סה"כ לפריט</th>
+                  <th className="p-2">פעולות</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map(item => (
+                  <tr key={item.product_id} className="border-t text-right">
+                    <td className="p-2">{item.name}</td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        className="w-16 border rounded p-1"
+                        value={item.quantity}
+                        onChange={(e) => handleUpdateQuantity(item.product_id, parseInt(e.target.value))}
+                      />
+                    </td>
+                    <td className="p-2">₪{item.price_per_unit.toFixed(2)}</td>
+                    <td className="p-2">₪{(item.price_per_unit * item.quantity).toFixed(2)}</td>
+                    <td className="p-2">
+                      <button
+                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                        onClick={() => handleUpdateQuantity(item.product_id, 0)}
+                      >הסר</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="text-right font-semibold text-lg mt-4">
+          סה"כ לתשלום: ₪{calculateTotal().toFixed(2)}
+        </div>
+
+        <button
+          onClick={handleSubmitSale}
+          disabled={loading || cart.length === 0}
+          className="mt-4 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2 rounded disabled:opacity-50"
+        >{loading ? 'מעבד...' : 'בצע מכירה'}</button>
+      </div>
     </MainLayout>
   );
 };
