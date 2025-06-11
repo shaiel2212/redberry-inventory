@@ -81,8 +81,9 @@ const MakeSalePage = () => {
       items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
       customer_name: customerName.trim(),
       total_amount: Number(totalAmount.toFixed(2)),
-      payment_method: '',
-      discount: 0
+      customer_name: '',
+      total_amount: '',
+      items: [ { "product_id": number, "quantity": number }]
     };
 
     try {
