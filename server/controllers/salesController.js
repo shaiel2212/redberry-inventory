@@ -48,6 +48,9 @@ exports.createSale = async (req, res) => {
     }
 
     await connection.commit();
+    console.error('❌ Create sale error:', err.message);   // ← חשוב
+    console.error('📦 Full error object:', err);           // ← ניתוח מלא
+    res.status(500).json({ error: 'Error creating sale', details: err.message });
     res.status(201).json({ sale_id: saleId });
   } catch (err) {
     await connection.rollback();
