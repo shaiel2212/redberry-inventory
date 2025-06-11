@@ -2,7 +2,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const xss = require('xss');
 const pool = require('../config/db');
-require('dotenv').config();
 
 // Register User
 exports.registerUser = async (req, res) => {
@@ -15,6 +14,11 @@ exports.registerUser = async (req, res) => {
 
   if (!username || !email || !password) {
     return res.status(400).json({ message: 'Please enter all required fields' });
+  }
+
+  if (!process.env.JWT_SECRET) {
+    console.error('Missing JWT_SECRET!');
+    return res.status(500).json({ message: 'Server misconfiguration: JWT_SECRET is not defined' });
   }
 
   try {
@@ -46,23 +50,17 @@ exports.registerUser = async (req, res) => {
       role: newUser.role
     };
 
-    jwt.sign(
-      payload,
-      process.env.JWT_SECRET,
-      { expiresIn: '5h' },
-      (err, token) => {
-        if (err) throw err;
-        res.status(201).json({
-          token,
-          user: {
-            id: userId,
-            username: newUser.username,
-            email: newUser.email,
-            role: newUser.role
-          }
-        });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });
+
+    res.status(201).json({
+      token,
+      user: {
+        id: userId,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role
       }
-    );
+    });
   } catch (err) {
     console.error('Register error:', err.message);
     res.status(500).send('Server error during registration');
@@ -77,6 +75,11 @@ exports.loginUser = async (req, res) => {
   console.log('API Base URL:', process.env.REACT_APP_API_BASE_URL);
   if (!username || !password) {
     return res.status(400).json({ message: 'Please enter username and password' });
+  }
+
+  if (!process.env.JWT_SECRET) {
+    console.error('Missing JWT_SECRET!');
+    return res.status(500).json({ message: 'Server misconfiguration: JWT_SECRET is not defined' });
   }
 
   try {
@@ -97,23 +100,17 @@ exports.loginUser = async (req, res) => {
       role: user.role
     };
 
-    jwt.sign(
-      payload,
-      process.env.JWT_SECRET,
-      { expiresIn: '5h' },
-      (err, token) => {
-        if (err) throw err;
-        res.json({
-          token,
-          user: {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            role: user.role
-          }
-        });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
       }
-    );
+    });
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(500).send('Server error during login');
