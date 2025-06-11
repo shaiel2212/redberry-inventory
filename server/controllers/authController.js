@@ -9,10 +9,10 @@ exports.registerUser = async (req, res) => {
   const email = xss(req.body.email);
   const password = req.body.password;
   const role = xss(req.body.role || 'user');
-  console.log('Environment:', process.env.NODE_ENV);
-  console.log('API Base URL:', process.env.REACT_APP_API_BASE_URL);
+
 
   if (!username || !email || !password) {
+    
     return res.status(400).json({ message: 'Please enter all required fields' });
   }
 
@@ -22,17 +22,27 @@ exports.registerUser = async (req, res) => {
   }
 
   try {
+    console.log('Checking existing users...');
+
     const [existingUsers] = await pool.query(
       'SELECT * FROM users WHERE username = ? OR email = ?',
       [username, email]
     );
 
+    console.log('Existing users checked.');
+
     if (existingUsers.length > 0) {
+      console.log('User already exists');
       return res.status(400).json({ message: 'User already exists with this username or email' });
     }
+    console.log('Hashing password...');
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    console.log('Password hashed');
+
+
+    console.log('Inserting user...');
 
     const newUser = {
       username,
@@ -49,6 +59,10 @@ exports.registerUser = async (req, res) => {
       username: newUser.username,
       role: newUser.role
     };
+    console.log('User inserted');
+
+
+    console.log('Creating token...');
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });
 
@@ -65,6 +79,8 @@ exports.registerUser = async (req, res) => {
     console.error('Register error:', err.message);
     res.status(500).send('Server error during registration');
   }
+  console.log('Token created');
+
 };
 
 // Login User
