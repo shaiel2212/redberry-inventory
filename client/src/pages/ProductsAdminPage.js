@@ -1,13 +1,13 @@
+
 import DOMPurify from 'dompurify';
 import React, { useState, useEffect } from 'react';
 import productService from '../services/productService';
-import ProductForm from '../components/products/ProductForm'; // טופס להוספה/עריכה
+import ProductForm from '../components/products/ProductForm';
 import MainLayout from '../components/layout/MainLayout';
-// import ProductListForAdmin from '../components/products/ProductListForAdmin'; // רשימת מוצרים עם כפתורי עריכה/מחיקה
 
 const ProductsAdminPage = () => {
   const [products, setProducts] = useState([]);
-  const [editingProduct, setEditingProduct] = useState(null); // מוצר נוכחי לעריכה
+  const [editingProduct, setEditingProduct] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,7 +39,7 @@ const ProductsAdminPage = () => {
     if (window.confirm('האם אתה בטוח שברצונך למחוק מוצר זה?')) {
       try {
         await productService.deleteProduct(productId);
-        fetchProducts(); // רענון הרשימה
+        fetchProducts();
       } catch (err) {
         setError(err.response?.data?.message || 'שגיאה במחיקת המוצר.');
         console.error(err);
@@ -48,53 +48,75 @@ const ProductsAdminPage = () => {
   };
 
   const handleFormSubmit = async () => {
-    fetchProducts(); // רענון הרשימה לאחר הוספה/עריכה
+    fetchProducts();
     setShowForm(false);
     setEditingProduct(null);
   };
 
   if (loading) return <p>טוען מוצרים...</p>;
-  if (error && !showForm) return <p className="p-4 sm:p-6 error-message">{error}</p>; // הצג שגיאה רק אם הטופס לא פתוח (כי בטופס יש טיפול משלו)
+  if (error && !showForm) return <p className="p-4 sm:p-6 error-message">{error}</p>;
 
   return (
     <MainLayout>
-    <div>
-      <h2>ניהול מלאי מוצרים</h2>
-      <button onClick={() => { setEditingProduct(null); setShowForm(!showForm); }}>
-        {showForm && !editingProduct ? 'בטל הוספה' : 'הוסף מוצר חדש'}
-      </button>
-      {showForm && <ProductForm productToEdit={editingProduct} onFormSubmit={handleFormSubmit} setErrorParent={setError} />}
+      <div dir="rtl" className="p-4 max-w-6xl mx-auto space-y-4">
+        <h2 className="text-2xl font-bold">ניהול מלאי מוצרים</h2>
 
-      <h3>רשימת מוצרים</h3>
-      {products.length === 0 && !loading && <p>לא נמצאו מוצרים.</p>}
-      <div className="overflow-x-auto">
-<table>
-        <thead>
-          <tr>
-            <th>שם</th>
-            <th>קטגוריה</th>
-            <th>מחיר מכירה</th>
-            <th>כמות במלאי</th>
-            <th>פעולות</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product) => (
-            <tr key={product.id}>
-              <td>{product.name}</td>
-              <td>{product.category}</td>
-              <td>₪{parseFloat(product.sale_price).toFixed(2)}</td>
-              <td>{product.stock_quantity}</td>
-              <td>
-                <button onClick={() => handleEdit(product)}>ערוך</button>
-                <button onClick={() => handleDelete(product.id)} style={{marginLeft: '5px', backgroundColor: 'darkred'}}>מחק</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-</div>
-    </div>
+        <button
+          onClick={() => { setEditingProduct(null); setShowForm(!showForm); }}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold"
+        >
+          {showForm && !editingProduct ? 'בטל הוספה' : 'הוסף מוצר חדש'}
+        </button>
+
+        {showForm && (
+          <ProductForm
+            productToEdit={editingProduct}
+            onFormSubmit={handleFormSubmit}
+            setErrorParent={setError}
+          />
+        )}
+
+        <h3 className="text-xl font-semibold mt-6">רשימת מוצרים</h3>
+        {products.length === 0 && !loading && <p>לא נמצאו מוצרים.</p>}
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-right border-collapse">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-2 border">שם</th>
+                <th className="p-2 border">קטגוריה</th>
+                <th className="p-2 border">מחיר מכירה</th>
+                <th className="p-2 border">כמות במלאי</th>
+                <th className="p-2 border">פעולות</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => (
+                <tr key={product.id} className="border-t hover:bg-gray-50">
+                  <td className="p-2 border">{product.name}</td>
+                  <td className="p-2 border">{product.category}</td>
+                  <td className="p-2 border">₪{parseFloat(product.sale_price).toFixed(2)}</td>
+                  <td className="p-2 border">{product.stock_quantity}</td>
+                  <td className="p-2 border space-x-2 space-x-reverse">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-1 rounded"
+                    >
+                      ערוך
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+                    >
+                      מחק
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </MainLayout>
   );
 };
