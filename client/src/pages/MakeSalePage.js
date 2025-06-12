@@ -1,3 +1,4 @@
+
 import DOMPurify from 'dompurify';
 import React, { useState, useEffect } from 'react';
 import productService from '../services/productService';
@@ -78,15 +79,12 @@ const MakeSalePage = () => {
     if (isNaN(totalAmount) || totalAmount <= 0) return setError('סכום לתשלום אינו חוקי.');
 
     const saleData = {
-      items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
       customer_name: customerName.trim(),
       total_amount: Number(totalAmount.toFixed(2)),
-      customer_name: '',
-      total_amount: '',
       items: cart.map(item => ({
-      product_id: item.product_id,
-      quantity: item.quantity
-    })),
+        product_id: item.product_id,
+        quantity: item.quantity
+      })),
     };
 
     try {
