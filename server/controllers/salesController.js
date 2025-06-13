@@ -76,10 +76,16 @@ exports.getAllSales = async (req, res) => {
 exports.getSaleById = async (req, res) => {
   const id = parseInt(req.params.id);
   try {
-    const [sales] = await pool.query(`SELECT s.id, s.sale_date, s.customer_name, s.total_amount, u.username AS sold_by 
-   FROM sales s 
-   LEFT JOIN users u ON s.sold_by = u.id 
-   WHERE s.id = ?`,
+    const [sales] = await pool.query(`SELECT 
+  s.id, 
+  s.sale_date, 
+  s.customer_name, 
+  s.total_amount, 
+  u.username AS sold_by
+FROM sales s
+LEFT JOIN users u ON s.user_id = u.id
+WHERE s.id = ?;
+`,
       [id]);
     if (sales.length === 0) {
       return res.status(404).json({ message: 'Sale not found' });
