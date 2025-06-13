@@ -21,7 +21,7 @@ exports.createSale = async (req, res) => {
     await connection.beginTransaction();
 
     const [saleResult] = await connection.query(
-      'INSERT INTO sales (total_amount, customer_name, user_id) VALUES (?, ?, ?)',
+      'INSERT INTO sales (total_amount, customer_name, user_id ) VALUES (?, ?, ?)',
       [total_amount, customer_name, userId]
     );
     const saleId = saleResult.insertId;
