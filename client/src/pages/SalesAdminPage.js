@@ -11,6 +11,9 @@ const SalesAdminPage = () => {
   const [selectedSaleDetails, setSelectedSaleDetails] = useState(null);
 
   useEffect(() => {
+
+      console.log("📦 selectedSaleDetails", selectedSaleDetails);
+
     const fetchSales = async () => {
       try {
         setLoading(true);
@@ -31,6 +34,7 @@ const SalesAdminPage = () => {
     try {
       setSelectedSaleDetails(null);
       const data = await saleService.getSaleById(saleId);
+      console.log("🎯 fetched sale detail from API:", data); // <== תראה אם יש sold_by
       setSelectedSaleDetails(data);
     } catch (err) {
       setError(`שגיאה בטעינת פרטי מכירה ${saleId}.`);
