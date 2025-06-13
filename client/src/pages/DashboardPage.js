@@ -1,87 +1,99 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import MainLayout from '../components/layout/MainLayout';
 import axios from 'axios';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
+import api from '../services/api';
 
 const DashboardPage = () => {
-  const navigate = useNavigate();
-  const [salesSummary, setSalesSummary] = useState({ daily: 0, weekly: 0, monthly: 0 });
+  const { user } = useAuth();
+  const [summary, setSummary] = useState(null);
   const [lowStock, setLowStock] = useState([]);
+  const [salesByDay, setSalesByDay] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchDashboardData();
+    const fetchData = async () => {
+      try {
+        const [salesSummary, lowStockRes, salesGraphRes] = await Promise.all([
+          api.get(`${process.env.REACT_APP_API_BASE_URL}/reports/sales_summary`),
+          api.get(`${process.env.REACT_APP_API_BASE_URL}/reports/low_stock`),
+          api.get(`${process.env.REACT_APP_API_BASE_URL}/reports/sales_by_day`)
+        ]);
+        setSummary(salesSummary.data);
+        setLowStock(lowStockRes.data.slice(0, 3)); // רק שלושה פריטים
+        setSalesByDay(salesGraphRes.data);
+      } catch (err) {
+        setError('שגיאה בטעינת נתונים');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      setError('');
-      const [salesRes, stockRes] = await Promise.all([
-        axios.get('/api/reports/sales_summary'),
-        axios.get('/api/reports/low_stock')
-        
-      ]);
-      console.log("lowStock API:", stockRes.data);
-
-      setSalesSummary(salesRes.data);
-      setLowStock(stockRes.data.slice(0, 3));
-    } catch (err) {
-      setError('שגיאה בטעינת נתוני לוח הבקרה');
-      console.error(err);
-    }
-  };
+  if (loading) return <MainLayout><p className="p-6 text-center mt-10">טוען נתונים...</p></MainLayout>;
+  if (error) return <MainLayout><p className="p-6 text-red-500 text-center">{error}</p></MainLayout>;
 
   return (
     <MainLayout>
-      <div dir="rtl" className="p-4 max-w-5xl mx-auto space-y-6">
-        <h2 className="text-2xl font-bold text-center">לוח בקרה</h2>
+      <div className="p-4 sm:p-6 space-y-6 text-right bg-[#e7fafd] min-h-screen" dir="rtl">
+        {/* ברכה */}
+        <div className="text-xl font-semibold text-gray-700">בוקר טוב, {user?.username || 'מנהל'} 👋</div>
 
-        {error && <p className="text-red-600 text-center">{error}</p>}
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white border rounded shadow p-4 text-right">
-            <p className="text-sm text-gray-500">סה"כ היום</p>
-            <p className="text-2xl font-bold text-green-600">₪{salesSummary.daily?.toLocaleString()}</p>
+        {/* כרטיסי מידע */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl shadow p-4">
+            <p className="text-sm text-gray-500">מכירות יומיות</p>
+            <p className="text-2xl font-bold text-green-600">₪{summary.daily}</p>
           </div>
-          <div className="bg-white border rounded shadow p-4 text-right">
-            <p className="text-sm text-gray-500">סה"כ השבוע</p>
-            <p className="text-2xl font-bold text-blue-600">₪{salesSummary.weekly?.toLocaleString()}</p>
+          <div className="bg-white rounded-xl shadow p-4">
+            <p className="text-sm text-gray-500">מכירות שבועיות</p>
+            <p className="text-2xl font-bold text-blue-600">₪{summary.weekly}</p>
           </div>
-          <div className="bg-white border rounded shadow p-4 text-right">
-            <p className="text-sm text-gray-500">סה"כ החודש</p>
-            <p className="text-2xl font-bold text-purple-600">₪{salesSummary.monthly?.toLocaleString()}</p>
+          <div className="bg-white rounded-xl shadow p-4">
+            <p className="text-sm text-gray-500">מכירות חודשיות</p>
+            <p className="text-2xl font-bold text-purple-600">₪{summary.monthly}</p>
           </div>
         </div>
 
-        <div className="bg-white border rounded shadow p-4">
-          <h3 className="text-lg font-semibold mb-2">מוצרים עם מלאי נמוך</h3>
+        {/* גרף מכירות */}
+        <div className="bg-white rounded-xl shadow p-4">
+          <h3 className="text-lg font-semibold mb-4">סטטיסטיקות מכירות</h3>
+          <div style={{ width: '100%', height: 280 }}>
+            <ResponsiveContainer>
+              <BarChart data={salesByDay}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="total" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* מוצרים במלאי נמוך - גרסת מובייל */}
+        <div className="bg-white rounded-xl shadow p-4 space-y-4">
+          <h3 className="text-lg font-semibold mb-2">פריטים במלאי נמוך</h3>
           {lowStock.length === 0 ? (
-            <p className="text-gray-500">אין מוצרים במלאי נמוך</p>
+            <p className="text-gray-500 text-sm">אין מוצרים במלאי נמוך</p>
           ) : (
-            <ul className="space-y-1 text-sm text-right">
-             {Array.isArray(lowStock) && lowStock.map(product => (
-              
-                <li key={product.id}>
-                  <span className="font-semibold">{product.name}</span> - כמות: {product.stock_quantity}
-                </li>
+            <div className="space-y-3">
+              {lowStock.map((item) => (
+                <div key={item.id} className="border rounded-lg p-3 text-sm space-y-1 bg-gray-50">
+                  <div><span className="font-semibold">שם:</span> {item.name}</div>
+                  <div><span className="font-semibold">כמות:</span> <span className="text-red-600 font-bold">{item.stock_quantity}</span></div>
+                  <div><span className="font-semibold">מחיר:</span> ₪{item.sale_price || '---'}</div>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
-        </div>
-
-        <div className="bg-white border rounded shadow p-4">
-          <h3 className="text-lg font-semibold mb-2">גרף מכירות</h3>
-          <div className="h-40 flex items-center justify-center text-gray-400 text-sm">
-            (כאן ניתן להטמיע גרף בעזרת Chart.js על סמך /api/reports/sales_by_day)
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-sm font-semibold">
-          <button onClick={() => navigate('/products')} className="bg-blue-500 hover:bg-blue-600 text-white py-3 rounded">ניהול מוצרים</button>
-          <button onClick={() => navigate('/sales')} className="bg-indigo-500 hover:bg-indigo-600 text-white py-3 rounded">צפייה במכירות</button>
-          <button onClick={() => navigate('/sale')} className="bg-green-600 hover:bg-green-700 text-white py-3 rounded">ביצוע מכירה</button>
-          <button onClick={() => navigate('/users')} className="bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded">משתמשים</button>
         </div>
       </div>
     </MainLayout>
