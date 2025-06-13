@@ -15,14 +15,15 @@ exports.createSale = async (req, res) => {
   const total_amount = parseFloat(req.body.total_amount || 0);
   const customer_name = xss(req.body.customer_name || '');
   const userId = req.user?.id; // ודא שזה מגיע מהמזהה המאומת
+  const address = xss(req.body.address || '');
 
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
     const [saleResult] = await connection.query(
-      'INSERT INTO sales (total_amount, customer_name, user_id ) VALUES (?, ?, ?)',
-      [total_amount, customer_name, userId]
+      'INSERT INTO sales (total_amount, customer_name, user_id , address) VALUES (?, ?, ?, ?)',
+      [total_amount, customer_name, userId,address]
     );
 
     const saleId = saleResult.insertId;

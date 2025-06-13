@@ -26,6 +26,10 @@ const MakeSalePage = () => {
     };
     fetchProducts();
   }, []);
+  if (!customerName.trim()) {
+    setError('נא להזין את שם הלקוח');
+    return;
+  }
 
   const handleAddToCart = (product) => {
     setError('');
@@ -110,7 +114,7 @@ const MakeSalePage = () => {
         {error && <p className="text-red-500 border border-red-300 bg-red-100 p-2 rounded">{error}</p>}
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <label htmlFor="customerName" className="font-semibold">שם לקוח (אופציונלי):</label>
+          <label htmlFor="customerName" className="font-semibold">שם לקוח :</label>
           <input
             type="text"
             id="customerName"
@@ -128,6 +132,13 @@ const MakeSalePage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border p-2 rounded w-full sm:max-w-md"
+          />
+          <input
+            type="text"
+            name="address"
+            placeholder="כתובת למשלוח"
+            value={form.address}
+            onChange={handleChange}
           />
 
           <ul className="border rounded divide-y max-h-60 overflow-y-auto">

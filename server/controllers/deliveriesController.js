@@ -4,7 +4,7 @@ exports.getPendingDeliveries = async (req, res) => {
   try {
     const [deliveries] = await pool.query(`
       SELECT 
-        d.id, s.customer_name, s.total_amount, s.sale_date,
+        d.id, s.customer_name, s.address, s.total_amount, s.sale_date,
         u.username AS seller_name,
         p.name AS product_name,
         p.description AS size,
