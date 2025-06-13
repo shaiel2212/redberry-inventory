@@ -15,7 +15,7 @@ const Navbar = () => {
   const showDeliveries = user?.role === 'admin' || user?.role === 'deliver';
 
   return (
-    <nav className="bg-blue-100 text-black shadow-md">
+    <nav className="bg-blue-700 text-black shadow-md">
       <div className="flex justify-between items-center px-6 py-4">
         <Link to={isAuthenticated ? "/dashboard" : "/"} className="text-2xl font-bold text-blue-900">
           Redberry
