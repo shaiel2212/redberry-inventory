@@ -1,4 +1,3 @@
-
 import DOMPurify from 'dompurify';
 import React, { useState, useEffect } from 'react';
 import productService from '../services/productService';
@@ -13,6 +12,8 @@ const MakeSalePage = () => {
   const [customerName, setCustomerName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ address: '' });
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,10 +27,13 @@ const MakeSalePage = () => {
     };
     fetchProducts();
   }, []);
-  if (!customerName.trim()) {
-    setError('נא להזין את שם הלקוח');
-    return;
-  }
+
+  const handleChange = (e) => {
+    setForm(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
 
   const handleAddToCart = (product) => {
     setError('');
@@ -81,9 +85,14 @@ const MakeSalePage = () => {
 
     if (cart.length === 0) return setError('עגלת הקניות ריקה.');
     if (isNaN(totalAmount) || totalAmount <= 0) return setError('סכום לתשלום אינו חוקי.');
+    if (!customerName.trim()) {
+      setError('נא להזין את שם הלקוח');
+      return;
+    }
 
     const saleData = {
       customer_name: customerName.trim(),
+      address: form.address.trim(),
       total_amount: Number(totalAmount.toFixed(2)),
       items: cart.map(item => ({
         product_id: item.product_id,
@@ -97,6 +106,7 @@ const MakeSalePage = () => {
       alert(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.sale_id}`);
       setCart([]);
       setCustomerName('');
+      setForm({ address: '' });
       const updatedProducts = await productService.getAllProducts();
       setProducts(updatedProducts.filter(p => p.stock_quantity > 0));
     } catch (err) {
@@ -124,6 +134,19 @@ const MakeSalePage = () => {
           />
         </div>
 
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <label htmlFor="address" className="font-semibold">כתובת למשלוח :</label>
+          <input
+            type="text"
+            id="address"
+            name="address"
+            className="border p-2 rounded w-full sm:max-w-sm"
+            placeholder="רחוב, עיר, אזור..."
+            value={form.address}
+            onChange={handleChange}
+          />
+        </div>
+
         <div className="space-y-2">
           <label className="font-semibold">בחר מוצרים:</label>
           <input
@@ -132,13 +155,6 @@ const MakeSalePage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border p-2 rounded w-full sm:max-w-md"
-          />
-          <input
-            type="text"
-            name="address"
-            placeholder="כתובת למשלוח"
-            value={form.address}
-            onChange={handleChange}
           />
 
           <ul className="border rounded divide-y max-h-60 overflow-y-auto">

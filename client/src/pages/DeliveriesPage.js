@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react';
 import deliveryService from '../services/deliveryService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 import { Loader2, CheckCircle2, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
