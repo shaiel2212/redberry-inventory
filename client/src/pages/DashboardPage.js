@@ -20,7 +20,10 @@ const DashboardPage = () => {
       const [salesRes, stockRes] = await Promise.all([
         axios.get('/api/reports/sales_summary'),
         axios.get('/api/reports/low_stock')
+        
       ]);
+      console.log("lowStock API:", stockRes.data);
+
       setSalesSummary(salesRes.data);
       setLowStock(stockRes.data.slice(0, 3));
     } catch (err) {
@@ -57,7 +60,8 @@ const DashboardPage = () => {
             <p className="text-gray-500">אין מוצרים במלאי נמוך</p>
           ) : (
             <ul className="space-y-1 text-sm text-right">
-              {lowStock.map(product => (
+             {Array.isArray(lowStock) && lowStock.map(product => (
+              
                 <li key={product.id}>
                   <span className="font-semibold">{product.name}</span> - כמות: {product.stock_quantity}
                 </li>
