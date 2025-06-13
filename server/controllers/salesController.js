@@ -58,7 +58,8 @@ exports.createSale = async (req, res) => {
     res.status(201).json({ sale_id: saleId });
   } catch (err) {
     await connection.rollback();
-    console.error('Create sale error:', err.message);
+  console.error('Create sale error:', err.message, err.stack);
+
     res.status(500).send('Error creating sale');
   } finally {
     connection.release();
