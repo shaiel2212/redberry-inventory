@@ -24,12 +24,12 @@ exports.createSale = async (req, res) => {
       'INSERT INTO sales (total_amount, customer_name, user_id ) VALUES (?, ?, ?)',
       [total_amount, customer_name, userId]
     );
+
+    const saleId = saleResult.insertId;
     await connection.query(
       'INSERT INTO deliveries (sale_id, status) VALUES (?, ?)',
       [saleId, 'pending']
     );
-    const saleId = saleResult.insertId;
-
     for (const item of items) {
       // שלוף את המחיר ליחידה מהמוצר
       const [[product]] = await connection.query(
@@ -58,7 +58,7 @@ exports.createSale = async (req, res) => {
     res.status(201).json({ sale_id: saleId });
   } catch (err) {
     await connection.rollback();
-  console.error('Create sale error:', err.message, err.stack);
+    console.error('Create sale error:', err.message, err.stack);
 
     res.status(500).send('Error creating sale');
   } finally {
