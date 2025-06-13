@@ -15,7 +15,12 @@ const DashboardPage = () => {
   const [salesByDay, setSalesByDay] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "בוקר טוב";
+    if (hour < 18) return "צהריים טובים";
+    return "ערב טוב";
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -44,7 +49,7 @@ const DashboardPage = () => {
     <MainLayout>
       <div className="p-4 sm:p-6 space-y-6 text-right bg-[#e7fafd] min-h-screen" dir="rtl">
         {/* ברכה */}
-        <div className="text-xl font-semibold text-gray-700">בוקר טוב, {user?.username || 'מנהל'} 👋</div>
+        <div className="text-xl font-semibold text-gray-700"> {getGreeting()}, {user?.username || 'משתמש'}👋</div>
 
         {/* כרטיסי מידע */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
