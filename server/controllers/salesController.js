@@ -24,6 +24,10 @@ exports.createSale = async (req, res) => {
       'INSERT INTO sales (total_amount, customer_name, user_id ) VALUES (?, ?, ?)',
       [total_amount, customer_name, userId]
     );
+    await connection.query(
+      'INSERT INTO deliveries (sale_id, status) VALUES (?, ?)',
+      [saleId, 'pending']
+    );
     const saleId = saleResult.insertId;
 
     for (const item of items) {
