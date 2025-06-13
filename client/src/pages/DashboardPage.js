@@ -66,13 +66,16 @@ const DashboardPage = () => {
         <div className="bg-white rounded-xl shadow p-4">
           <h3 className="text-lg font-semibold mb-4">סטטיסטיקות מכירות</h3>
           <div style={{ width: '100%', height: 280 }}>
-            <ResponsiveContainer>
-              <BarChart data={salesByDay}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="total" fill="#3b82f6" />
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={salesByDay} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip
+                  formatter={(value) => [`₪${value.toLocaleString()}`, 'סה"כ מכירות']}
+                  labelFormatter={(label) => `תאריך: ${label}`}
+                />
+                <Bar dataKey="total" fill="#38bdf8" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

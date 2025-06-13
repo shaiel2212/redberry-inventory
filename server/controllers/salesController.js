@@ -3,6 +3,8 @@ const xss = require('xss');
 
 // Create a new sale
 
+
+
 // Create a new sale
 exports.createSale = async (req, res) => {
   const items = req.body.items.map(item => ({

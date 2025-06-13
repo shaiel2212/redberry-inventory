@@ -9,7 +9,7 @@ const corsOptions = {
   origin: function (origin, callback) {
     const isAllowed =
       !origin ||
-      origin === "http://localhost:3000" ||
+      origin === "http://localhost:3000/login" ||
       origin === "https://redberry-inventory-client.vercel.app" ||
       /^https:\/\/redberry-inventory-client-[\w-]+(-{1,2})shaiel2212s-projects\.vercel\.app$/.test(
         origin
