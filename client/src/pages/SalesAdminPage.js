@@ -81,7 +81,6 @@ const SalesAdminPage = () => {
           </table>
         </div>
 
-        {/* מודל הצגת פרטי מכירה */}
         {selectedSaleDetails && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-md w-full relative text-right overflow-y-auto max-h-[90vh]">
@@ -100,7 +99,7 @@ const SalesAdminPage = () => {
               <ul className="list-disc pr-4 space-y-1">
                 {selectedSaleDetails.items.map(item => (
                   <li key={item.product_id}>
-                    {item.product_name || item.name} - כמות: {item.quantity}, מחיר ליחידה: ₪{parseFloat(item.price_per_unit).toFixed(2)}
+                    {item.product_name || item.name} - כמות: {item.quantity}, מחיר ליחידה: ₪{parseFloat(item.sale_price || item.price_per_unit).toFixed(2)}
                   </li>
                 ))}
               </ul>
