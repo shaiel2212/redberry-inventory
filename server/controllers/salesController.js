@@ -65,7 +65,17 @@ exports.createSale = async (req, res) => {
 // Get all sales
 exports.getAllSales = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM sales ORDER BY sale_date DESC');
+    const [rows] = await pool.query(`
+      SELECT 
+        s.id, 
+        s.sale_date, 
+        s.customer_name, 
+        s.total_amount, 
+        u.username AS sold_by
+      FROM sales s
+      LEFT JOIN users u ON s.user_id = u.id
+      ORDER BY s.id DESC
+    `);
     res.json(rows);
   } catch (err) {
     console.error('Get all sales error:', err.message);

@@ -67,7 +67,7 @@ const SalesAdminPage = () => {
                   <td className="p-2 border">{sale.id}</td>
                   <td className="p-2 border">{new Date(sale.sale_date).toLocaleString('he-IL')}</td>
                   <td className="p-2 border">{sale.customer_name || '-'}</td>
-                  <td className="p-2 border">{selectedSaleDetails.sold_by || '-'}</td>
+                  <td className="p-2 border">{sale.sold_by || '-'}</td>
                   <td className="p-2 border">
                     ₪{sale.total_amount ? parseFloat(sale.total_amount).toFixed(2) : '0.00'}
                   </td>
