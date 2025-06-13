@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import deliveryService from '../services/deliveryService';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // ודא שזה הנתיב הנכון
 
 const DeliveriesPage = () => {
   const [deliveries, setDeliveries] = useState([]);
