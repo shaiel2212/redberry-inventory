@@ -27,8 +27,8 @@ exports.createSale = async (req, res) => {
 
     const saleId = saleResult.insertId;
     await connection.query(
-      'INSERT INTO deliveries (sale_id, status) VALUES (?, ?)',
-      [saleId, 'pending']
+      'INSERT INTO deliveries (sale_id, status, assigned_to, picked_up_at) VALUES (?, ?, ?, ?)',
+      [saleId, 'pending', userId, new Date()]
     );
     for (const item of items) {
       // שלוף את המחיר ליחידה מהמוצר
