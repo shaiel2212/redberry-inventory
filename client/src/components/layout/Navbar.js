@@ -12,7 +12,7 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const showDeliveries = user?.role === 'admin' || user?.role === 'deliver';
+  const showDeliveries = user?.role === 'admin' || user?.role === 'deliver' || user?.role === 'user';
 
   return (
     <nav className="bg-blue-700 text-black shadow-md">

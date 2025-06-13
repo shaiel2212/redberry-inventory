@@ -1,4 +1,4 @@
-// DeliveriesPage.js
+// DeliveriesPage.jsx
 import React, { useEffect, useState } from 'react';
 import deliveryService from '../services/deliveryService';
 import { useNavigate } from 'react-router-dom';
