@@ -1,4 +1,4 @@
-
+// Navbar.js
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -13,6 +13,8 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  const showDeliveries = user?.role === 'admin' || user?.role === 'deliver';
+
   return (
     <nav className="bg-blue-700 text-white shadow-md">
       <div className="flex justify-between items-center px-6 py-4">
@@ -24,10 +26,15 @@ const Navbar = () => {
         </button>
         <ul className="hidden md:flex gap-4 items-center text-sm">
           <li><Link to="/products-view" className="hover:underline">מוצרים</Link></li>
-          {isAuthenticated ? (
+          {isAuthenticated && (
             <>
               <li><Link to="/dashboard" className="hover:underline">לוח בקרה</Link></li>
-              {(user?.role === 'admin' || user?.role === 'manager') && (
+
+              {showDeliveries && (
+                <li><Link to="/deliveries" className="hover:underline">משלוחים</Link></li>
+              )}
+
+              {(user.role === 'admin' || user.role === 'manager') && (
                 <>
                   <li><Link to="/admin/products" className="hover:underline">ניהול מוצרים</Link></li>
                   <li><Link to="/admin/sales" className="hover:underline">ניהול מכירות</Link></li>
@@ -35,14 +42,15 @@ const Navbar = () => {
                 </>
               )}
               <li><Link to="/make-sale" className="hover:underline">בצע מכירה</Link></li>
-              <li className="text-gray-300">שלום, {user?.username} ({user?.role})</li>
+              <li className="text-gray-300">שלום, {user.username} ({user.role})</li>
               <li>
                 <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
                   התנתק
                 </button>
               </li>
             </>
-          ) : (
+          )}
+          {!isAuthenticated && (
             <>
               <li><Link to="/login" className="hover:underline">התחברות</Link></li>
               <li><Link to="/register" className="hover:underline">הרשמה</Link></li>
@@ -51,14 +59,18 @@ const Navbar = () => {
         </ul>
       </div>
 
-      {/* תפריט מובייל */}
       {isOpen && (
         <ul className="flex flex-col gap-2 px-6 pb-4 text-sm md:hidden">
           <li><Link to="/products-view" className="hover:underline">מוצרים</Link></li>
-          {isAuthenticated ? (
+          {isAuthenticated && (
             <>
               <li><Link to="/dashboard" className="hover:underline">לוח בקרה</Link></li>
-              {(user?.role === 'admin' || user?.role === 'manager') && (
+
+              {showDeliveries && (
+                <li><Link to="/deliveries" className="hover:underline">משלוחים</Link></li>
+              )}
+
+              {(user.role === 'admin' || user.role === 'manager') && (
                 <>
                   <li><Link to="/admin/products" className="hover:underline">ניהול מוצרים</Link></li>
                   <li><Link to="/admin/sales" className="hover:underline">ניהול מכירות</Link></li>
@@ -66,14 +78,15 @@ const Navbar = () => {
                 </>
               )}
               <li><Link to="/make-sale" className="hover:underline">בצע מכירה</Link></li>
-              <li className="text-gray-300">שלום, {user?.username} ({user?.role})</li>
+              <li className="text-gray-300">שלום, {user.username} ({user.role})</li>
               <li>
                 <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded w-full text-right">
                   התנתק
                 </button>
               </li>
             </>
-          ) : (
+          )}
+          {!isAuthenticated && (
             <>
               <li><Link to="/login" className="hover:underline">התחברות</Link></li>
               <li><Link to="/register" className="hover:underline">הרשמה</Link></li>
