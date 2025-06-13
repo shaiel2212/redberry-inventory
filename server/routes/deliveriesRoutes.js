@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const deliveriesController = require('../controllers/deliveriesController');
-const verifyToken = require('../middleware/verifyToken');
+const { requireAuth } = require('../middleware/authMiddleware');
 
-router.get('/pending', verifyToken, deliveriesController.getPendingDeliveries);
-router.patch('/:id/deliver', verifyToken, deliveriesController.markAsDelivered);
+router.get('/pending', requireAuth, deliveriesController.getPendingDeliveries);
+router.patch('/:id/deliver', requireAuth, deliveriesController.markAsDelivered);
 
 module.exports = router;
