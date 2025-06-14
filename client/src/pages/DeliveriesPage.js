@@ -7,6 +7,7 @@ import { Dialog, DialogTrigger, DialogContent } from '../components/ui/dialog';
 import { Loader2, CheckCircle2, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+
 const DeliveriesPage = () => {
   const [deliveries, setDeliveries] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
@@ -16,6 +17,7 @@ const DeliveriesPage = () => {
 
   const navigate = useNavigate();
   const { user } = useAuth();
+
 
   useEffect(() => {
     if (user?.role !== 'DELIVER') {
@@ -33,6 +35,7 @@ const DeliveriesPage = () => {
       console.error('שגיאה בטעינת משלוחים:', err);
     }
   };
+
 
   const markAsDelivered = async (id) => {
     try {
@@ -52,10 +55,12 @@ const DeliveriesPage = () => {
     }
   };
 
+
   const buildWazeLink = (address) => {
     const encoded = encodeURIComponent(address);
     return `https://waze.com/ul?q=${encoded}&navigate=yes`;
   };
+
 
   return (
     <div className="p-4 max-w-full md:max-w-5xl mx-auto">
