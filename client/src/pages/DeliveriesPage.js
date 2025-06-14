@@ -1,11 +1,13 @@
+
 import React, { useEffect, useState } from 'react';
 import deliveryService from '../services/deliveryService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
-import { Loader2, CheckCircle2, MapPin } from 'lucide-react';
+import MainLayout from '../components/layout/MainLayout';
+import { MapPin, Loader2, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Header from '../components/Header';
+import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
+
 
 const DeliveriesPage = () => {
   const [deliveries, setDeliveries] = useState([]);
@@ -58,7 +60,7 @@ const DeliveriesPage = () => {
 
   return (
     <div className="p-4 max-w-full md:max-w-5xl mx-auto">
-      <Header />
+      <MainLayout />
       <h2 className="text-xl font-bold mb-4 text-center">משלוחים ממתינים</h2>
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm border">
