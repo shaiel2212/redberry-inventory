@@ -1,13 +1,13 @@
-
+// DeliveriesPage.js
 import React, { useEffect, useState } from 'react';
 import deliveryService from '../services/deliveryService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import MainLayout from '../components/layout/MainLayout';
-import { MapPin, Loader2, CheckCircle2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
-
+import { Loader2, CheckCircle2, MapPin } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const DeliveriesPage = () => {
   const [deliveries, setDeliveries] = useState([]);
@@ -15,6 +15,7 @@ const DeliveriesPage = () => {
   const [loadingId, setLoadingId] = useState(null);
   const [deliveredId, setDeliveredId] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -31,7 +32,7 @@ const DeliveriesPage = () => {
       const response = await deliveryService.getPendingDeliveries();
       setDeliveries(response.data);
     } catch (err) {
-      console.error('Error fetching deliveries:', err);
+      console.error('שגיאה בטעינת משלוחים:', err);
     }
   };
 
@@ -39,16 +40,20 @@ const DeliveriesPage = () => {
     try {
       setLoadingId(id);
       await deliveryService.markAsDelivered(id);
+
+      toast.success('✅ ההזמנה סומנה כסופקה בהצלחה!');
+
       setDeliveredId(id);
-      setSelectedDelivery(null);
       setDialogOpen(false);
+      setSelectedDelivery(null);
+
       setTimeout(() => {
         setDeliveredId(null);
         setLoadingId(null);
         fetchDeliveries();
       }, 1500);
     } catch (err) {
-      console.error('Error marking as delivered:', err);
+      console.error('שגיאה בסימון כסופק:', err);
       setLoadingId(null);
     }
   };
@@ -59,13 +64,13 @@ const DeliveriesPage = () => {
   };
 
   return (
-    <div className="p-4 max-w-full md:max-w-5xl mx-auto">
-      <MainLayout />
+    <div className="p-4 max-w-full md:max-w-4xl mx-auto">
       <h2 className="text-xl font-bold mb-4 text-center">משלוחים ממתינים</h2>
+
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm border">
           <thead>
-            <tr className="bg-blue-100 text-right">
+            <tr className="bg-gray-100 text-right">
               <th className="p-2 border">מס׳ הזמנה</th>
               <th className="p-2 border">לקוח</th>
               <th className="p-2 border">כתובת</th>
@@ -117,12 +122,11 @@ const DeliveriesPage = () => {
                     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                       <DialogTrigger asChild>
                         <button
-                          className="bg-blue-600 text-white px-2 py-1 w-full text-sm rounded"
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded w-full"
                           onClick={() => {
                             setSelectedDelivery(delivery);
                             setDialogOpen(true);
                           }}
-                          disabled={loadingId === delivery.id}
                         >
                           {loadingId === delivery.id ? (
                             <Loader2 className="animate-spin w-4 h-4 mx-auto" />
@@ -131,39 +135,31 @@ const DeliveriesPage = () => {
                           )}
                         </button>
                       </DialogTrigger>
-                      <AnimatePresence>
-                        {dialogOpen && selectedDelivery && (
-                          <DialogContent className="text-center bg-white shadow-xl rounded-xl p-6">
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.8 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <h2 className="text-lg font-bold mb-2">אישור סיום אספקה</h2>
-                              <p className="mb-4">
-                                האם אתה בטוח שברצונך לסמן את ההזמנה
-                                <strong> #{selectedDelivery?.sale_id}</strong> ללקוח
-                                <strong> {selectedDelivery?.customer_name}</strong> כסופקה?
-                              </p>
-                              <div className="flex justify-center gap-4">
-                                <button
-                                  onClick={() => setDialogOpen(false)}
-                                  className="border px-4 py-1 rounded"
-                                >
-                                  ביטול
-                                </button>
-                                <button
-                                  onClick={() => markAsDelivered(selectedDelivery.id)}
-                                  className="bg-green-600 text-white px-4 py-1 rounded"
-                                >
-                                  אישור
-                                </button>
-                              </div>
-                            </motion.div>
-                          </DialogContent>
-                        )}
-                      </AnimatePresence>
+                      <DialogContent className="text-right max-w-md mx-auto shadow-xl rounded-xl animate-fade-in bg-white">
+                        <h2 className="text-lg font-bold mb-2">אישור אספקה</h2>
+                        <p>
+                          האם אתה בטוח שברצונך לסמן את ההזמנה
+                          <strong> #{selectedDelivery?.sale_id}</strong> ללקוח
+                          <strong> {selectedDelivery?.customer_name}</strong> כסופקה?
+                        </p>
+                        <div className="flex justify-end gap-2 mt-4">
+                          <button
+                            className="px-4 py-1 rounded border border-gray-300"
+                            onClick={() => {
+                              setDialogOpen(false);
+                              setSelectedDelivery(null);
+                            }}
+                          >
+                            ביטול
+                          </button>
+                          <button
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded"
+                            onClick={() => markAsDelivered(selectedDelivery.id)}
+                          >
+                            אישור
+                          </button>
+                        </div>
+                      </DialogContent>
                     </Dialog>
                   )}
                 </td>
@@ -172,6 +168,8 @@ const DeliveriesPage = () => {
           </tbody>
         </table>
       </div>
+
+      <ToastContainer position="top-center" autoClose={2000} />
     </div>
   );
 };
