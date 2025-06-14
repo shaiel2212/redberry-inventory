@@ -119,7 +119,7 @@ const DeliveriesPage = () => {
                 </td>
                 <td className="p-2 border">
                   {delivery.status !== 'delivered' && (
-                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <Dialog  open={dialogOpen} onClose={undefined}>
                       <DialogTrigger asChild>
                         <button
                           className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded w-full"
