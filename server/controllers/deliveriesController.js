@@ -3,20 +3,28 @@ const pool = require('../config/db');
 exports.getPendingDeliveries = async (req, res) => {
   try {
     const [deliveries] = await pool.query(`
-      SELECT 
-        d.id, s.customer_name, s.address, s.total_amount, s.sale_date,
-        u.username AS seller_name,
-        p.name AS product_name,
-        p.description AS size,
-        si.quantity,
-        d.status, d.assigned_to, d.delivered_at
-      FROM deliveries d
-      JOIN sales s ON d.sale_id = s.id
-      JOIN users u ON s.user_id = u.id
-      JOIN sale_items si ON si.sale_id = s.id
-      JOIN products p ON p.id = si.product_id
-      WHERE d.status != 'delivered'
-      ORDER BY d.sale_id DESC
+     SELECT 
+  d.id,
+  d.sale_id, -- הוספנו כאן את מספר ההזמנה
+  s.customer_name,
+  s.address,
+  s.total_amount,
+  s.sale_date,
+  u.username AS seller_name,
+  p.name AS product_name,
+  p.description AS size,
+  si.quantity,
+  d.status,
+  d.assigned_to,
+  d.delivered_at
+FROM deliveries d
+JOIN sales s ON d.sale_id = s.id
+JOIN users u ON s.user_id = u.id
+JOIN sale_items si ON si.sale_id = s.id
+JOIN products p ON p.id = si.product_id
+WHERE d.status != 'delivered'
+ORDER BY d.sale_id DESC;
+
     `);
 
     res.json(deliveries);
