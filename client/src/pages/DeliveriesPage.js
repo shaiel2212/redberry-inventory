@@ -1,21 +1,23 @@
-
 import React, { useEffect, useState } from 'react';
 import deliveryService from '../services/deliveryService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import MainLayout from '../components/layout/MainLayout';
-import { MapPin, Loader2, CheckCircle2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
+import { Loader2, CheckCircle2, MapPin } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Header from '../components/Header';
 
 const DeliveriesPage = () => {
   const [deliveries, setDeliveries] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
   const [deliveredId, setDeliveredId] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user || (user.role !== 'DELIVER' && user.role !== 'admin')) {
+    if (user?.role !== 'DELIVER') {
       navigate('/');
     } else {
       fetchDeliveries();
@@ -37,6 +39,7 @@ const DeliveriesPage = () => {
       await deliveryService.markAsDelivered(id);
       setDeliveredId(id);
       setSelectedDelivery(null);
+      setDialogOpen(false);
       setTimeout(() => {
         setDeliveredId(null);
         setLoadingId(null);
@@ -49,108 +52,125 @@ const DeliveriesPage = () => {
   };
 
   const buildWazeLink = (address) => {
-    const encodedAddress = encodeURIComponent(address);
-    return `https://waze.com/ul?q=${encodedAddress}&navigate=yes`;
+    const encoded = encodeURIComponent(address);
+    return `https://waze.com/ul?q=${encoded}&navigate=yes`;
   };
 
   return (
-    <MainLayout>
-      <div className="p-4 max-w-full md:max-w-5xl mx-auto">
-        <h2 className="text-xl font-bold mb-4 text-center">משלוחים ממתינים</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm border">
-            <thead>
-              <tr className="bg-gray-100 text-right">
-                <th className="p-2 border">מס׳ הזמנה</th>
-                <th className="p-2 border">לקוח</th>
-                <th className="p-2 border">כתובת</th>
-                <th className="p-2 border hidden sm:table-cell">מוצר</th>
-                <th className="p-2 border hidden sm:table-cell">מידה</th>
-                <th className="p-2 border hidden sm:table-cell">כמות</th>
-                <th className="p-2 border hidden md:table-cell">נמכר ע״י</th>
-                <th className="p-2 border">סטטוס</th>
-                <th className="p-2 border">פעולה</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deliveries.map((delivery) => (
-                <tr key={delivery.id} className="text-right">
-                  <td className="p-2 border">#{delivery.sale_id}</td>
-                  <td className="p-2 border">{delivery.customer_name}</td>
-                  <td className="p-2 border">
-                    {delivery.address ? (
-                      <a
-                        href={buildWazeLink(delivery.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline flex items-center gap-1 justify-end"
-                      >
-                        <MapPin className="w-4 h-4" /> לנווט
-                      </a>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td className="p-2 border hidden sm:table-cell">{delivery.product_name}</td>
-                  <td className="p-2 border hidden sm:table-cell">{delivery.size}</td>
-                  <td className="p-2 border hidden sm:table-cell">{delivery.quantity}</td>
-                  <td className="p-2 border hidden md:table-cell">{delivery.seller_name}</td>
-                  <td className="p-2 border">
-                    {deliveredId === delivery.id ? (
-                      <span className="flex items-center gap-1 text-green-600 font-semibold">
-                        <CheckCircle2 className="w-4 h-4" /> סופק
-                      </span>
-                    ) : (
-                      delivery.status
-                    )}
-                  </td>
-                  <td className="p-2 border">
-                    {delivery.status !== 'delivered' && (
-                      <>
-                        {selectedDelivery?.id === delivery.id ? (
-                          <div className="flex flex-col gap-2">
-                            <div className="text-sm">
-                              אישור אספקה עבור הזמנה #{delivery.sale_id}
-                              <div className="text-xs mt-1">לקוח: {delivery.customer_name}</div>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <button
-                                className="px-3 py-1 rounded border bg-gray-100 hover:bg-gray-200"
-                                onClick={() => setSelectedDelivery(null)}
-                              >
-                                ביטול
-                              </button>
-                              <button
-                                className="px-3 py-1 rounded bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => markAsDelivered(delivery.id)}
-                                disabled={loadingId === delivery.id}
-                              >
-                                {loadingId === delivery.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-                                ) : (
-                                  'אישור'
-                                )}
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded w-full"
-                            onClick={() => setSelectedDelivery(delivery)}
-                          >
-                            פרטים
-                          </button>
+    <div className="p-4 max-w-full md:max-w-5xl mx-auto">
+      <Header />
+      <h2 className="text-xl font-bold mb-4 text-center">משלוחים ממתינים</h2>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm border">
+          <thead>
+            <tr className="bg-blue-100 text-right">
+              <th className="p-2 border">מס׳ הזמנה</th>
+              <th className="p-2 border">לקוח</th>
+              <th className="p-2 border">כתובת</th>
+              <th className="p-2 border hidden sm:table-cell">מוצר</th>
+              <th className="p-2 border hidden sm:table-cell">מידה</th>
+              <th className="p-2 border hidden sm:table-cell">כמות</th>
+              <th className="p-2 border hidden md:table-cell">נמכר ע״י</th>
+              <th className="p-2 border">סטטוס</th>
+              <th className="p-2 border">פעולה</th>
+            </tr>
+          </thead>
+          <tbody>
+            {deliveries.map((delivery) => (
+              <tr key={delivery.id} className="text-right">
+                <td className="p-2 border">#{delivery.sale_id}</td>
+                <td className="p-2 border">{delivery.customer_name}</td>
+                <td className="p-2 border">
+                  {delivery.address && (
+                    <a
+                      href={buildWazeLink(delivery.address)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline flex items-center gap-1 justify-end"
+                    >
+                      <MapPin className="w-4 h-4" /> לנווט
+                    </a>
+                  )}
+                </td>
+                <td className="p-2 border hidden sm:table-cell">{delivery.product_name}</td>
+                <td className="p-2 border hidden sm:table-cell">{delivery.size}</td>
+                <td className="p-2 border hidden sm:table-cell">{delivery.quantity}</td>
+                <td className="p-2 border hidden md:table-cell">{delivery.seller_name}</td>
+                <td className="p-2 border">
+                  {deliveredId === delivery.id ? (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.4 }}
+                      className="flex items-center text-green-600 gap-1"
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> סופק
+                    </motion.div>
+                  ) : (
+                    delivery.status
+                  )}
+                </td>
+                <td className="p-2 border">
+                  {delivery.status !== 'delivered' && (
+                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                      <DialogTrigger asChild>
+                        <button
+                          className="bg-blue-600 text-white px-2 py-1 w-full text-sm rounded"
+                          onClick={() => {
+                            setSelectedDelivery(delivery);
+                            setDialogOpen(true);
+                          }}
+                          disabled={loadingId === delivery.id}
+                        >
+                          {loadingId === delivery.id ? (
+                            <Loader2 className="animate-spin w-4 h-4 mx-auto" />
+                          ) : (
+                            'פרטים'
+                          )}
+                        </button>
+                      </DialogTrigger>
+                      <AnimatePresence>
+                        {dialogOpen && selectedDelivery && (
+                          <DialogContent className="text-center bg-white shadow-xl rounded-xl p-6">
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <h2 className="text-lg font-bold mb-2">אישור סיום אספקה</h2>
+                              <p className="mb-4">
+                                האם אתה בטוח שברצונך לסמן את ההזמנה
+                                <strong> #{selectedDelivery?.sale_id}</strong> ללקוח
+                                <strong> {selectedDelivery?.customer_name}</strong> כסופקה?
+                              </p>
+                              <div className="flex justify-center gap-4">
+                                <button
+                                  onClick={() => setDialogOpen(false)}
+                                  className="border px-4 py-1 rounded"
+                                >
+                                  ביטול
+                                </button>
+                                <button
+                                  onClick={() => markAsDelivered(selectedDelivery.id)}
+                                  className="bg-green-600 text-white px-4 py-1 rounded"
+                                >
+                                  אישור
+                                </button>
+                              </div>
+                            </motion.div>
+                          </DialogContent>
                         )}
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      </AnimatePresence>
+                    </Dialog>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </MainLayout>
+    </div>
   );
 };
 
