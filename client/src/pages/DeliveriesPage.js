@@ -119,7 +119,13 @@ const DeliveriesPage = () => {
                 </td>
                 <td className="p-2 border">
                   {delivery.status !== 'delivered' && (
-                    <Dialog  open={dialogOpen} onClose={undefined}>
+                    <Dialog
+                      open={dialogOpen}
+                      onClose={() => {
+                        setDialogOpen(false);
+                        setSelectedDelivery(null);
+                      }}
+                    >
                       <DialogTrigger asChild>
                         <button
                           className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded w-full"
@@ -135,8 +141,8 @@ const DeliveriesPage = () => {
                           )}
                         </button>
                       </DialogTrigger>
-                      <DialogContent className="text-right max-w-md mx-auto shadow-xl rounded-xl animate-fade-in bg-white">
-                        <h2 className="text-lg font-bold mb-2">אישור אספקה</h2>
+                      <DialogContent className="text-right max-w-md mx-auto bg-white rounded-xl shadow-2xl animate-fade-in">
+                        <h2 className="text-lg font-bold mb-2">אישור אספקה להזמנה #{selectedDelivery?.sale_id}</h2>
                         <p>
                           האם אתה בטוח שברצונך לסמן את ההזמנה
                           <strong> #{selectedDelivery?.sale_id}</strong> ללקוח
