@@ -13,6 +13,8 @@ const DeliveriesPage = () => {
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
   const [deliveredId, setDeliveredId] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -110,11 +112,14 @@ const DeliveriesPage = () => {
                 </td>
                 <td className="p-2 border">
                   {delivery.status !== 'delivered' && (
-                    <Dialog>
+                    <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
                       <DialogTrigger asChild>
                         <Button
                           className="bg-blue-600 text-white px-2 py-1 w-full text-sm"
-                          onClick={() => setSelectedDelivery(delivery)}
+                          onClick={() => {
+                            setSelectedDelivery(delivery);
+                            setDialogOpen(true);
+                          }}
                           disabled={loadingId === delivery.id}
                         >
                           {loadingId === delivery.id ? (
@@ -124,17 +129,20 @@ const DeliveriesPage = () => {
                           )}
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="text-right">
+                      <DialogContent>
                         <h2 className="text-lg font-bold">אישור סיום אספקה</h2>
                         <p className="mb-4">
                           האם אתה בטוח שברצונך לסמן את ההזמנה <strong>#{selectedDelivery?.sale_id}</strong> ללקוח <strong>{selectedDelivery?.customer_name}</strong> כסופקה?
                         </p>
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setSelectedDelivery(null)}>
+                          <Button variant="outline" onClick={() => setDialogOpen(false)}>
                             ביטול
                           </Button>
                           <Button
-                            onClick={() => markAsDelivered(selectedDelivery.id)}
+                            onClick={() => {
+                              markAsDelivered(selectedDelivery.id);
+                              setDialogOpen(false);
+                            }}
                             className="bg-green-600 text-white"
                           >
                             אישור
