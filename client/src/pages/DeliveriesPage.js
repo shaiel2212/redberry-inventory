@@ -3,11 +3,9 @@ import React, { useEffect, useState } from 'react';
 import deliveryService from '../services/deliveryService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
+import { Dialog, DialogTrigger, DialogContent } from '../components/ui/dialog';
 import { Loader2, CheckCircle2, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 const DeliveriesPage = () => {
   const [deliveries, setDeliveries] = useState([]);
@@ -40,13 +38,9 @@ const DeliveriesPage = () => {
     try {
       setLoadingId(id);
       await deliveryService.markAsDelivered(id);
-
-      toast.success('✅ ההזמנה סומנה כסופקה בהצלחה!');
-
       setDeliveredId(id);
       setDialogOpen(false);
       setSelectedDelivery(null);
-
       setTimeout(() => {
         setDeliveredId(null);
         setLoadingId(null);
@@ -64,9 +58,8 @@ const DeliveriesPage = () => {
   };
 
   return (
-    <div className="p-4 max-w-full md:max-w-4xl mx-auto">
+    <div className="p-4 max-w-full md:max-w-5xl mx-auto">
       <h2 className="text-xl font-bold mb-4 text-center">משלוחים ממתינים</h2>
-
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm border">
           <thead>
@@ -128,11 +121,12 @@ const DeliveriesPage = () => {
                     >
                       <DialogTrigger asChild>
                         <button
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded w-full"
+                          className="bg-blue-600 text-white px-2 py-1 w-full text-sm rounded"
                           onClick={() => {
                             setSelectedDelivery(delivery);
                             setDialogOpen(true);
                           }}
+                          disabled={loadingId === delivery.id}
                         >
                           {loadingId === delivery.id ? (
                             <Loader2 className="animate-spin w-4 h-4 mx-auto" />
@@ -141,26 +135,26 @@ const DeliveriesPage = () => {
                           )}
                         </button>
                       </DialogTrigger>
-                      <DialogContent className="text-right max-w-md mx-auto bg-white rounded-xl shadow-2xl animate-fade-in">
-                        <h2 className="text-lg font-bold mb-2">אישור אספקה להזמנה #{selectedDelivery?.sale_id}</h2>
-                        <p>
+                      <DialogContent className="text-right max-w-md mx-auto bg-white shadow-lg rounded-lg p-6">
+                        <h2 className="text-lg font-bold mb-2">אישור סיום אספקה להזמנה #{selectedDelivery?.sale_id}</h2>
+                        <p className="mb-4">
                           האם אתה בטוח שברצונך לסמן את ההזמנה
                           <strong> #{selectedDelivery?.sale_id}</strong> ללקוח
                           <strong> {selectedDelivery?.customer_name}</strong> כסופקה?
                         </p>
-                        <div className="flex justify-end gap-2 mt-4">
+                        <div className="flex justify-end gap-2">
                           <button
-                            className="px-4 py-1 rounded border border-gray-300"
                             onClick={() => {
                               setDialogOpen(false);
                               setSelectedDelivery(null);
                             }}
+                            className="border px-4 py-1 rounded"
                           >
                             ביטול
                           </button>
                           <button
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded"
                             onClick={() => markAsDelivered(selectedDelivery.id)}
+                            className="bg-green-600 text-white px-4 py-1 rounded"
                           >
                             אישור
                           </button>
@@ -174,8 +168,6 @@ const DeliveriesPage = () => {
           </tbody>
         </table>
       </div>
-
-      <ToastContainer position="top-center" autoClose={2000} />
     </div>
   );
 };

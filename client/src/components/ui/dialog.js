@@ -1,26 +1,26 @@
-import * as React from 'react';
-import { Dialog as HeadlessDialog } from '@headlessui/react';
-import { X } from 'lucide-react';
+import * as React from "react";
+import { Dialog as RadixDialog, DialogContent as RadixDialogContent, DialogTrigger as RadixDialogTrigger } from "@radix-ui/react-dialog";
 
-export const Dialog = ({ children, open, onClose }) => (
-  <HeadlessDialog open={open} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center">
-    <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
-    <div className="relative z-50 bg-white p-4 rounded-lg shadow-lg w-full max-w-md mx-4">
-      <button
-        onClick={onClose}
-        className="absolute top-2 left-2 text-gray-500 hover:text-gray-700"
-      >
-        <X className="w-5 h-5" />
-      </button>
+export function Dialog({ open, onClose, children }) {
+  return (
+    <RadixDialog open={open} onOpenChange={(state) => {
+      if (!state && typeof onClose === 'function') {
+        onClose();
+      }
+    }}>
       {children}
-    </div>
-  </HeadlessDialog>
-);
+    </RadixDialog>
+  );
+}
 
-export const DialogTrigger = ({ asChild, children }) => children;
+export const DialogTrigger = RadixDialogTrigger;
 
-export const DialogContent = ({ children }) => (
-  <div className="mt-2">
-    {children}
-  </div>
-);
+export function DialogContent({ children, className = "" }) {
+  return (
+    <RadixDialogContent
+      className={`fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 bg-white p-6 shadow-lg rounded-lg ${className}`.trim()}
+    >
+      {children}
+    </RadixDialogContent>
+  );
+}
