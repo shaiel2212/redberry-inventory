@@ -9,7 +9,7 @@ const {
 
 router.post('/', requireAuth,requireSellerOrHigher, salesController.createSale);
 router.get('/', requireAuth, requireAdmin, salesController.getAllSales);
-router.get('/:id', requireAuth, salesController.getSaleById);
 router.get('/mine', requireAuth, requireSellerOrHigher, salesController.getSalesForCurrentSeller);
+router.get('/:id', requireAuth, salesController.getSaleById);
 
 module.exports = router;

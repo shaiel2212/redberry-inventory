@@ -93,18 +93,23 @@ exports.getAllSales = async (req, res) => {
 
 // Get a single sale by ID
 exports.getSaleById = async (req, res) => {
-  const saleId = parseInt(req.params.id);
+  const saleId = parseInt(req.params.id, 10);
+
+  if (isNaN(saleId)) {
+    console.warn('⚠️ מזהה מכירה לא חוקי:', req.params.id);
+    return res.status(400).json({ message: 'מזהה מכירה שגוי' });
+  }
+
   const user = req.user;
 
   try {
-    // שלוף את המכירה כולל ID של המשתמש
     const [sales] = await pool.query(`
       SELECT 
         s.id, 
         s.sale_date, 
         s.customer_name, 
         s.total_amount, 
-        s.user_id,               -- חשוב: נוסיף את זה לבדיקה בהמשך
+        s.user_id,
         u.username AS sold_by
       FROM sales s
       LEFT JOIN users u ON s.user_id = u.id
@@ -117,12 +122,10 @@ exports.getSaleById = async (req, res) => {
 
     const sale = sales[0];
 
-    // 🔒 בדיקת הרשאה: ADMIN או היוזר שביצע את המכירה
     if (user.role !== 'ADMIN' && sale.user_id !== user.id) {
       return res.status(403).json({ message: 'אין הרשאה לצפות במכירה זו' });
     }
 
-    // שלוף פריטים
     const [items] = await pool.query(`
       SELECT si.product_id, p.name, si.quantity, p.sale_price
       FROM sale_items si
@@ -133,7 +136,7 @@ exports.getSaleById = async (req, res) => {
     res.json({ ...sale, items });
 
   } catch (err) {
-    console.error('Get sale by ID error:', err.message);
+    console.error('❌ Get sale by ID error:', err.message, err.stack);
     res.status(500).send('Error retrieving sale');
   }
 };
