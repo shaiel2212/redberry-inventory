@@ -18,15 +18,10 @@ const markAsDelivered = (id) => {
  * העלאת תעודת משלוח
  * @param {number} deliveryId - מזהה משלוח
  * @param {File} file - קובץ להעלאה
- * @param {"unsigned"|"signed"|undefined} type - סוג התעודה (לא חובה)
  */
-const uploadDeliveryProof = (deliveryId, file, type) => {
+const uploadDeliveryProof = (deliveryId, file) => {
   const formData = new FormData();
-  console.log('Uploading file:', file);
   formData.append('proof', file);
-  if (type) {
-    formData.append('type', type); // שינוי חשוב: שליחה בגוף ולא ב־query param
-  }
 
   return api.patch(`/deliveries/${deliveryId}/proof`, formData, {
     headers: {

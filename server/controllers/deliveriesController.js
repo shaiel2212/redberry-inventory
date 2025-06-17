@@ -1,31 +1,34 @@
 const pool = require('../config/db');
 
+/**
+ * שליפת משלוחים שעדיין לא סופקו
+ */
 exports.getPendingDeliveries = async (req, res) => {
   try {
     const [deliveries] = await pool.query(`
-     SELECT 
-    d.id,
-    d.sale_id,
-    s.customer_name,
-    s.address,
-    s.total_amount,
-    s.sale_date,
-    u.username AS seller_name,
-    p.name AS product_name,
-    p.description AS size,
-    si.quantity,
-    d.status,
-    d.assigned_to,
-    d.delivered_at,
-    d.delivery_proof_url,
-    d.delivery_proof_signed_url  -- ⬅️ הוסף שדה זה!
-  FROM deliveries d
-  JOIN sales s ON d.sale_id = s.id
-  JOIN users u ON s.user_id = u.id
-  JOIN sale_items si ON si.sale_id = s.id
-  JOIN products p ON p.id = si.product_id
-  WHERE d.status != 'delivered'
-  ORDER BY d.sale_id DESC;
+      SELECT 
+        d.id,
+        d.sale_id,
+        s.customer_name,
+        s.address,
+        s.total_amount,
+        s.sale_date,
+        u.username AS seller_name,
+        p.name AS product_name,
+        p.description AS size,
+        si.quantity,
+        d.status,
+        d.assigned_to,
+        d.delivered_at,
+        d.delivery_proof_url,
+        d.delivery_proof_signed_url
+      FROM deliveries d
+      JOIN sales s ON d.sale_id = s.id
+      JOIN users u ON s.user_id = u.id
+      JOIN sale_items si ON si.sale_id = s.id
+      JOIN products p ON p.id = si.product_id
+      WHERE d.status != 'delivered'
+      ORDER BY d.sale_id DESC;
     `);
 
     res.json(deliveries);
@@ -35,11 +38,13 @@ exports.getPendingDeliveries = async (req, res) => {
   }
 };
 
+/**
+ * סימון משלוח כסופק – רק אם קיימת תעודה חתומה
+ */
 exports.markAsDelivered = async (req, res) => {
   const deliveryId = req.params.id;
 
   try {
-    // שלוף את רשומת המשלוח ממסד הנתונים
     const [rows] = await pool.query(
       'SELECT delivery_proof_signed_url FROM deliveries WHERE id = ?',
       [deliveryId]
@@ -49,16 +54,12 @@ exports.markAsDelivered = async (req, res) => {
       return res.status(404).json({ message: 'משלוח לא נמצא' });
     }
 
-    const delivery = rows[0];
-
-    // בדוק אם קיימת תעודה חתומה
-    if (!delivery.delivery_proof_signed_url) {
+    if (!rows[0].delivery_proof_signed_url) {
       return res.status(400).json({
         message: 'לא ניתן לסגור משלוח ללא תעודת משלוח חתומה',
       });
     }
 
-    // עדכן את הסטטוס ל־delivered
     await pool.query(
       'UPDATE deliveries SET status = ?, delivered_at = NOW() WHERE id = ?',
       ['delivered', deliveryId]
@@ -70,33 +71,43 @@ exports.markAsDelivered = async (req, res) => {
     res.status(500).json({ message: 'שגיאה פנימית בשרת' });
   }
 };
+
+/**
+ * העלאת תעודת משלוח – קובץ אחד בכל פעם, השדה נקבע לפי מצב המשלוח
+ */
 exports.updateDeliveryProof = async (req, res) => {
   const deliveryId = req.params.id;
-  const proofType = req.query.type; // או req.body.type אם אתה שולח כך
-  const uploadedByUser = req.user.id;
+  const uploadedByUser = req.user?.id;
 
-  if (!req.file || !proofType) {
-    return res.status(400).json({ message: 'נדרש קובץ וסוג תעודה (type)' });
+  if (!req.file) {
+    return res.status(400).json({ message: 'לא התקבל קובץ להעלאה' });
   }
 
-  const fileUrl = req.file.path; // כאן מגיע הקישור מ־Cloudinary
-
-  let column;
-  if (proofType === 'signed') column = 'delivery_proof_signed_url';
-  else if (proofType === 'unsigned') column = 'delivery_proof_url';
-  else return res.status(400).json({ message: 'ערך type לא חוקי' });
+  const fileUrl = req.file.path;
 
   try {
-    const [result] = await pool.query(
-      `UPDATE deliveries SET ${column} = ?, updated_by_user = ? WHERE id = ?`,
-      [fileUrl, uploadedByUser, deliveryId]
+    const [rows] = await pool.query(
+      'SELECT delivery_proof_url, delivery_proof_signed_url FROM deliveries WHERE id = ?',
+      [deliveryId]
     );
 
-    if (result.affectedRows === 0) {
+    if (rows.length === 0) {
       return res.status(404).json({ message: 'משלוח לא נמצא' });
     }
 
-    res.status(200).json({ message: 'הקובץ הועלה בהצלחה', fileUrl });
+    let columnToUpdate;
+    if (!rows[0].delivery_proof_url) {
+      columnToUpdate = 'delivery_proof_url';
+    } else {
+      columnToUpdate = 'delivery_proof_signed_url';
+    }
+
+    const [result] = await pool.query(
+      `UPDATE deliveries SET ${columnToUpdate} = ?, updated_by_user = ? WHERE id = ?`,
+      [fileUrl, uploadedByUser, deliveryId]
+    );
+
+    res.status(200).json({ message: 'קובץ נשמר בהצלחה', fileUrl, field: columnToUpdate });
   } catch (error) {
     console.error('שגיאה בהעלאת תעודה ל־Cloudinary:', error);
     res.status(500).json({ message: 'שגיאת שרת' });

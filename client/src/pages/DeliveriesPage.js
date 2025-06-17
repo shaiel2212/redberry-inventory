@@ -53,16 +53,15 @@ const DeliveriesPage = () => {
     }
   };
 
- const handleUploadProof = async (deliveryId, file, type) => {
+ const handleUploadProof = async (deliveryId, file) => {
   try {
-    await deliveryService.uploadDeliveryProof(deliveryId, file, type);
+    await deliveryService.uploadDeliveryProof(deliveryId, file);
     fetchDeliveries();
   } catch (err) {
     console.error('שגיאה בהעלאת תעודה:', err);
     setErrorMessage('שגיאה בהעלאת הקובץ.');
   }
 };
-
   const buildWazeLink = (address) => {
     const encoded = encodeURIComponent(address);
     return `https://waze.com/ul?q=${encoded}&navigate=yes`;
@@ -169,7 +168,7 @@ const DeliveriesPage = () => {
                                 accept="image/*"
                                 onChange={(e) => {
                                   const file = e.target.files[0];
-                                  if (file) handleUploadProof(selectedDelivery.id, file, 'unsigned');
+                                  if (file) handleUploadProof(selectedDelivery.id, file);
                                 }}
                                 className="block w-full text-sm text-gray-700"
                               />
@@ -181,7 +180,7 @@ const DeliveriesPage = () => {
                                 accept="image/*"
                                 onChange={(e) => {
                                   const file = e.target.files[0];
-                                  if (file) handleUploadProof(selectedDelivery.id, file, 'signed');
+                                  if (file) handleUploadProof(selectedDelivery.id, file);
                                 }}
                                 className="block w-full text-sm text-gray-700"
                               />
