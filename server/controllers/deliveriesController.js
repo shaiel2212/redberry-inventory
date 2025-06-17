@@ -70,36 +70,35 @@ exports.markAsDelivered = async (req, res) => {
     res.status(500).json({ message: 'שגיאה פנימית בשרת' });
   }
 };
-
-
 exports.updateDeliveryProof = async (req, res) => {
   const deliveryId = req.params.id;
-  const proofType = req.body.type || req.query.type || 'unsigned'; // ברירת מחדל
+  const proofType = req.query.type; // או req.body.type אם אתה שולח כך
+  const uploadedByUser = req.user.id;
 
-  if (!req.file) {
-    return res.status(400).json({ message: 'נדרש קובץ להעלאה' });
+  if (!req.file || !proofType) {
+    return res.status(400).json({ message: 'נדרש קובץ וסוג תעודה (type)' });
   }
 
-  const fileUrl = `/uploads/${req.file.filename}`;
+  const fileUrl = req.file.path; // כאן מגיע הקישור מ־Cloudinary
 
   let column;
   if (proofType === 'signed') column = 'delivery_proof_signed_url';
-  else if (proofType === 'unsigned' || proofType === 'initial') column = 'delivery_proof_url';
+  else if (proofType === 'unsigned') column = 'delivery_proof_url';
   else return res.status(400).json({ message: 'ערך type לא חוקי' });
 
   try {
     const [result] = await pool.query(
       `UPDATE deliveries SET ${column} = ?, updated_by_user = ? WHERE id = ?`,
-      [fileUrl, req.user?.id || null, deliveryId]
+      [fileUrl, uploadedByUser, deliveryId]
     );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'משלוח לא נמצא' });
     }
 
-    res.status(200).json({ message: 'התעודה הועלתה בהצלחה', fileUrl });
+    res.status(200).json({ message: 'הקובץ הועלה בהצלחה', fileUrl });
   } catch (error) {
-    console.error('שגיאה בהעלאת תעודה:', error);
+    console.error('שגיאה בהעלאת תעודה ל־Cloudinary:', error);
     res.status(500).json({ message: 'שגיאת שרת' });
   }
 };
