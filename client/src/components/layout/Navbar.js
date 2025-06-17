@@ -12,7 +12,7 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const showDeliveries = user?.role === 'admin' || user?.role === 'seller' || user?.role === 'user';
+  const showDeliveries = user?.role === 'admin' || user?.role === 'user';
 
   const renderLinks = () => (
     <>

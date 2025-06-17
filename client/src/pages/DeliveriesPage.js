@@ -164,40 +164,45 @@ const DeliveriesPage = () => {
                         <p className="mb-4">
                           הזמנה <strong>#{selectedDelivery?.sale_id}</strong> ללקוח <strong>{selectedDelivery?.customer_name}</strong>
                         </p>
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium mb-1 text-blue-700">העלאת תעודה (טיוטה):</label>
-                          <input
-                            type="file"
-                            accept="image/*,.pdf"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) handleUploadProof(selectedDelivery.id, file, 'unsigned');
-                            }}
-                            className="block w-full text-sm text-gray-700"
-                          />
-                          {selectedDelivery?.delivery_proof_url && (
-                            <div className="mt-1 text-sm text-blue-600">
-                              <a href={selectedDelivery.delivery_proof_url} target="_blank" rel="noopener noreferrer" className="underline">צפייה בתעודה</a>
+                        {(user?.role === 'admin' || user?.role === 'user') && (
+                          <>
+                            <div className="mb-3">
+                              <label className="block text-sm font-medium mb-1 text-blue-700">העלאת תעודה (טיוטה):</label>
+                              <input
+                                type="file"
+                                accept="image/*,.pdf"
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) handleUploadProof(selectedDelivery.id, file, 'unsigned');
+                                }}
+                                className="block w-full text-sm text-gray-700"
+                              />
+                              {selectedDelivery?.delivery_proof_url && (
+                                <div className="mt-1 text-sm text-blue-600">
+                                  <a href={selectedDelivery.delivery_proof_url} target="_blank" rel="noopener noreferrer" className="underline">צפייה בתעודה</a>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium mb-1 text-green-700">העלאת תעודה חתומה:</label>
-                          <input
-                            type="file"
-                            accept="image/*,.pdf"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) handleUploadProof(selectedDelivery.id, file, 'signed');
-                            }}
-                            className="block w-full text-sm text-gray-700"
-                          />
-                          {selectedDelivery?.delivery_proof_signed_url && (
-                            <div className="mt-1 text-sm text-green-600">
-                              <a href={selectedDelivery.delivery_proof_signed_url} target="_blank" rel="noopener noreferrer" className="underline">צפייה בתעודה חתומה</a>
+                            <div className="mb-3">
+                              <label className="block text-sm font-medium mb-1 text-green-700">העלאת תעודה חתומה:</label>
+                              <input
+                                type="file"
+                                accept="image/*,.pdf"
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) handleUploadProof(selectedDelivery.id, file, 'signed');
+                                }}
+                                className="block w-full text-sm text-gray-700"
+                              />
+                              {selectedDelivery?.delivery_proof_signed_url && (
+                                <div className="mt-1 text-sm text-green-600">
+                                  <a href={selectedDelivery.delivery_proof_signed_url} target="_blank" rel="noopener noreferrer" className="underline">צפייה בתעודה חתומה</a>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
+                          </>
+                        )}
+
                         {!selectedDelivery?.delivery_proof_signed_url && (
                           <p className="text-red-600 text-sm mb-2">לא ניתן לאשר אספקה – יש להעלות תעודה חתומה!</p>
                         )}
