@@ -22,6 +22,7 @@ const markAsDelivered = (id) => {
  */
 const uploadDeliveryProof = (deliveryId, file, type) => {
   const formData = new FormData();
+  console.log('Uploading file:', file);
   formData.append('proof', file);
   if (type) {
     formData.append('type', type); // שינוי חשוב: שליחה בגוף ולא ב־query param

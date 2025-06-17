@@ -166,7 +166,7 @@ const DeliveriesPage = () => {
                               <label className="block text-sm font-medium mb-1 text-blue-700">העלאת תעודה (טיוטה):</label>
                               <input
                                 type="file"
-                                accept="image/*,.pdf"
+                                accept="image/*"
                                 onChange={(e) => {
                                   const file = e.target.files[0];
                                   if (file) handleUploadProof(selectedDelivery.id, file, 'unsigned');
@@ -178,7 +178,7 @@ const DeliveriesPage = () => {
                               <label className="block text-sm font-medium mb-1 text-green-700">העלאת תעודה חתומה:</label>
                               <input
                                 type="file"
-                                accept="image/*,.pdf"
+                                accept="image/*"
                                 onChange={(e) => {
                                   const file = e.target.files[0];
                                   if (file) handleUploadProof(selectedDelivery.id, file, 'signed');
