@@ -205,7 +205,7 @@ const DeliveriesPage = () => {
                             onClick={() => markAsDelivered(selectedDelivery.id)}
                             className={`px-3 py-1 rounded text-white ${!selectedDelivery?.delivery_proof_signed_url ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
                           >
-                            סימון כסופק
+                            !סימון כסופק
                           </button>
                         </div>
                       </DialogContent>
