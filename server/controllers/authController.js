@@ -8,7 +8,7 @@ exports.registerUser = async (req, res) => {
   const username = xss(req.body.username);
   const email = xss(req.body.email);
   const password = req.body.password;
-  const role = xss(req.body.role || 'user');
+  const role = xss(req.body.role || 'seller');
 
 
   if (!username || !email || !password) {

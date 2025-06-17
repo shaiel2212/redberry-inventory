@@ -5,6 +5,7 @@ const api = axios.create({
   withCredentials: true,
   timeout: 10000
 });
+console.log("👉 API URL:",process.env.REACT_APP_API_BASE_URL);
 
 // Interceptor לבקשות: מוסיף טוקן אם קיים
 api.interceptors.request.use(

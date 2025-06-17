@@ -3,7 +3,7 @@ import deliveryService from '../services/deliveryService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '../components/ui/dialog';
-import { Loader2, CheckCircle2, MapPin } from 'lucide-react';
+import { Loader2, CheckCircle2, MapPin, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const DeliveriesPage = () => {
@@ -53,15 +53,20 @@ const DeliveriesPage = () => {
     }
   };
 
- const handleUploadProof = async (deliveryId, file) => {
-  try {
-    await deliveryService.uploadDeliveryProof(deliveryId, file);
-    fetchDeliveries();
-  } catch (err) {
-    console.error('שגיאה בהעלאת תעודה:', err);
-    setErrorMessage('שגיאה בהעלאת הקובץ.');
-  }
-};
+  const handleUploadProof = async (deliveryId, file, type) => {
+    try {
+      await deliveryService.uploadDeliveryProof(deliveryId, file, type);
+      const updated = await deliveryService.getPendingDeliveries();
+      setDeliveries(updated.data);
+      const refreshed = updated.data.find((d) => d.id === deliveryId);
+      setSelectedDelivery(refreshed);
+      if (type === 'signed') setDialogOpen(false);
+    } catch (err) {
+      console.error('שגיאה בהעלאת תעודה:', err);
+      setErrorMessage('שגיאה בהעלאת הקובץ.');
+    }
+  };
+
   const buildWazeLink = (address) => {
     const encoded = encodeURIComponent(address);
     return `https://waze.com/ul?q=${encoded}&navigate=yes`;
@@ -104,7 +109,7 @@ const DeliveriesPage = () => {
                       {delivery.address}
                     </a>
                   ) : (
-                    '-'
+                    '-' 
                   )}
                 </td>
                 <td className="p-2 border hidden sm:table-cell">{delivery.product_name}</td>
@@ -137,20 +142,24 @@ const DeliveriesPage = () => {
                 </td>
                 <td className="p-2 border">
                   {delivery.status !== 'delivered' && (
-                    <Dialog>
+                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                       <DialogTrigger asChild>
                         <button
                           className="bg-blue-600 text-white px-2 py-1 w-full text-sm"
                           onClick={() => {
                             setSelectedDelivery(delivery);
                             setErrorMessage('');
+                            setDialogOpen(true);
                           }}
                         >
                           פרטים
                         </button>
                       </DialogTrigger>
                       <DialogContent className="text-right">
-                        <DialogTitle className="text-lg font-bold mb-2">אישור סיום אספקה</DialogTitle>
+                        <div className="flex justify-between mb-2">
+                          <DialogTitle className="text-lg font-bold">אישור סיום אספקה</DialogTitle>
+                          <button onClick={() => setDialogOpen(false)}><X className="w-5 h-5 text-gray-500" /></button>
+                        </div>
                         {errorMessage && (
                           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
                             {errorMessage}
@@ -168,10 +177,13 @@ const DeliveriesPage = () => {
                                 accept="image/*"
                                 onChange={(e) => {
                                   const file = e.target.files[0];
-                                  if (file) handleUploadProof(selectedDelivery.id, file);
+                                  if (file) handleUploadProof(selectedDelivery.id, file, 'unsigned');
                                 }}
                                 className="block w-full text-sm text-gray-700"
                               />
+                              {selectedDelivery?.delivery_proof_url && (
+                                <p className="text-xs text-blue-600">תעודה קיימת</p>
+                              )}
                             </div>
                             <div className="mb-3">
                               <label className="block text-sm font-medium mb-1 text-green-700">העלאת תעודה חתומה:</label>
@@ -180,10 +192,13 @@ const DeliveriesPage = () => {
                                 accept="image/*"
                                 onChange={(e) => {
                                   const file = e.target.files[0];
-                                  if (file) handleUploadProof(selectedDelivery.id, file);
+                                  if (file) handleUploadProof(selectedDelivery.id, file, 'signed');
                                 }}
                                 className="block w-full text-sm text-gray-700"
                               />
+                              {selectedDelivery?.delivery_proof_signed_url && (
+                                <p className="text-xs text-green-600">תעודה חתומה קיימת</p>
+                              )}
                             </div>
                           </>
                         )}
@@ -205,7 +220,7 @@ const DeliveriesPage = () => {
                             onClick={() => markAsDelivered(selectedDelivery.id)}
                             className={`px-3 py-1 rounded text-white ${!selectedDelivery?.delivery_proof_signed_url ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
                           >
-                            !סימון כסופק
+                            סימון כסופק
                           </button>
                         </div>
                       </DialogContent>

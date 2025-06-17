@@ -10,7 +10,6 @@ const productRoutes = require('./routes/productRoutes');
 const salesRoutes = require('./routes/salesRoutes');
 const reportsRoutes = require('./routes/reportsRoutes');
 const deliveriesRoutes = require('./routes/deliveriesRoutes');
-
 dotenv.config();
 
 const app = express();
