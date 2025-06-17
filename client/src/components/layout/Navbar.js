@@ -20,11 +20,6 @@ const Navbar = () => {
 
       {isAuthenticated && (
         <>
-          <li><Link to="/dashboard" className="hover:underline">לוח בקרה</Link></li>
-
-          {showDeliveries && (
-            <li><Link to="/deliveries" className="hover:underline">משלוחים</Link></li>
-          )}
 
           {user?.role === 'seller' && (
             <li><Link to="/my-sales" className="hover:underline">היסטוריית מכירות</Link></li>
