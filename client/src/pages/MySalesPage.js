@@ -34,7 +34,7 @@ const MySalesPage = () => {
             }
         };
 
-        if (user?.role === 'seller') {
+        if (user?.role === 'seller' || user?.role === 'admin') {
             fetchMySales();
         }
     }, [user]);
