@@ -143,7 +143,7 @@ exports.getSalesForCurrentSeller = async (req, res) => {
     const [rows] = await db.query(`
       SELECT s.id, s.customer_name, s.sale_date, s.total_amount
       FROM sales s
-      WHERE s.seller_id = ?
+      WHERE s.user_id = ?
       ORDER BY s.sale_date DESC
     `, [sellerId]);
 

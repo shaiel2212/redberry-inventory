@@ -82,7 +82,6 @@ exports.updateDeliveryProof = async (req, res) => {
 
   const fileUrl = `/uploads/${req.file.filename}`;
 
-  // קביעת שם העמודה לעדכון
   let column;
   if (proofType === 'signed') column = 'delivery_proof_signed_url';
   else if (proofType === 'initial') column = 'delivery_proof_url';
