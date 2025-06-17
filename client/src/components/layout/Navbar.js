@@ -12,7 +12,7 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const showDeliveries = user?.role === 'admin' || user?.role === 'deliver' || user?.role === 'user';
+  const showDeliveries = user?.role === 'admin' || user?.role === 'seller' || user?.role === 'user';
 
   const renderLinks = () => (
     <>
@@ -30,7 +30,7 @@ const Navbar = () => {
             <li><Link to="/my-sales" className="hover:underline">היסטוריית מכירות</Link></li>
           )}
 
-          {(user?.role === 'admin' || user?.role === 'manager') && (
+          {(user?.role === 'admin' || user?.role === 'admin') && (
             <>
               <li><Link to="/admin/products" className="hover:underline">ניהול מוצרים</Link></li>
               <li><Link to="/admin/sales" className="hover:underline">ניהול מכירות</Link></li>
