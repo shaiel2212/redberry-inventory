@@ -33,7 +33,7 @@ function requireAdmin(req, res, next) {
 }
 function requireSellerOrHigher(req, res, next) {
   const role = req.user?.role;
-  if (role === 'admin' || role === 'user' || role === 'SELLER') {
+  if (role === 'admin' || role === 'user' || role === 'seller') {
     return next();
   }
   return res.status(403).json({ message: 'גישה נדחתה – מוכר ומעלה בלבד' });

@@ -22,7 +22,7 @@ const MySalesPage = () => {
       }
     };
 
-    if (user?.role === 'SELLER') {
+    if (user?.role === 'seller') {
       fetchMySales();
     }
   }, [user]);

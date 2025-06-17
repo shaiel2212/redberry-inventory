@@ -20,7 +20,7 @@ const { user } = useAuth(); // הוסף זאת לפני useEffect
 
   useEffect(() => {
     // הגנה: רק מוכר יכול להיכנס לעמוד הזה
-    if (user?.role !== 'SELLER') {
+    if (user?.role !== 'seller') {
       navigate('/');
       return;
     }
