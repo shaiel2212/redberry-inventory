@@ -74,32 +74,32 @@ exports.markAsDelivered = async (req, res) => {
 
 exports.updateDeliveryProof = async (req, res) => {
   const deliveryId = req.params.id;
-  const proofType = req.body.type || 'unsigned';
+  const proofType = req.body.type || req.query.type || 'unsigned'; // ברירת מחדל
 
-  if (!req.file || !proofType) {
-    return res.status(400).json({ message: 'נדרש קובץ וסוג תעודה (type)' });
+  if (!req.file) {
+    return res.status(400).json({ message: 'נדרש קובץ להעלאה' });
   }
 
   const fileUrl = `/uploads/${req.file.filename}`;
 
   let column;
   if (proofType === 'signed') column = 'delivery_proof_signed_url';
-  else if (proofType === 'initial') column = 'delivery_proof_url';
+  else if (proofType === 'unsigned' || proofType === 'initial') column = 'delivery_proof_url';
   else return res.status(400).json({ message: 'ערך type לא חוקי' });
 
   try {
     const [result] = await pool.query(
-      `UPDATE deliveries SET ${column} = ? WHERE id = ?`,
-      [fileUrl, deliveryId]
+      `UPDATE deliveries SET ${column} = ?, updated_by_user = ? WHERE id = ?`,
+      [fileUrl, req.user?.id || null, deliveryId]
     );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'משלוח לא נמצא' });
     }
 
-    res.status(200).json({ message: 'תמונה נשמרה בהצלחה', fileUrl });
+    res.status(200).json({ message: 'התעודה הועלתה בהצלחה', fileUrl });
   } catch (error) {
-    console.error('שגיאה בהעלאת תמונה:', error);
+    console.error('שגיאה בהעלאת תעודה:', error);
     res.status(500).json({ message: 'שגיאת שרת' });
   }
 };
