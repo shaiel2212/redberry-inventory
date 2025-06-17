@@ -4,6 +4,7 @@ import productService from '../services/productService';
 import saleService from '../services/saleService';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
+import { useAuth } from '../context/AuthContext'; // ודא שזה קיים למעלה
 
 const MakeSalePage = () => {
   const [products, setProducts] = useState([]);
@@ -15,8 +16,16 @@ const MakeSalePage = () => {
   const [form, setForm] = useState({ address: '' });
 
   const navigate = useNavigate();
+const { user } = useAuth(); // הוסף זאת לפני useEffect
 
   useEffect(() => {
+    // הגנה: רק מוכר יכול להיכנס לעמוד הזה
+    if (user?.role !== 'SELLER') {
+      navigate('/');
+      return;
+    }
+
+    // אם כן, נטען את המוצרים
     const fetchProducts = async () => {
       try {
         const data = await productService.getAllProducts();
@@ -25,8 +34,9 @@ const MakeSalePage = () => {
         setError('שגיאה בטעינת מוצרים.');
       }
     };
+
     fetchProducts();
-  }, []);
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     setForm(prev => ({
@@ -94,12 +104,12 @@ const MakeSalePage = () => {
       customer_name: customerName.trim(),
       address: form.address.trim(),
       total_amount: Number(totalAmount.toFixed(2)),
+      seller_id: user.id, // 👈 הוספה חשובה!
       items: cart.map(item => ({
         product_id: item.product_id,
         quantity: item.quantity
       })),
     };
-
     try {
       setLoading(true);
       const result = await saleService.createSale(saleData);

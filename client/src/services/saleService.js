@@ -18,10 +18,15 @@ const getSaleById = async (id) => {
   const response = await api.get(`${API_URL}/${id}`);
   return response.data;
 };
+const getMySales = async () => {
+  const response = await api.get('/sales/mine');
+  return response.data;
+};
 
 const saleService = {
   createSale,
   getAllSales,
+  getMySales,
   getSaleById,
 };
 
