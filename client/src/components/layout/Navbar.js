@@ -20,36 +20,46 @@ const Navbar = () => {
 
       {isAuthenticated && (
         <>
-          {/* ✅ הצג לוח בקרה ומשלוחים רק אם המשתמש אינו SELLER */}
-          {user?.role !== 'seller' && (
-            <>
-              <li><Link to="/dashboard" className="hover:underline">לוח בקרה</Link></li>
-              <li><Link to="/deliveries" className="hover:underline">משלוחים</Link></li>
-            </>
-          )}
-
-          {/* ✅ קישור להיסטוריית מכירות עבור SELLER */}
-          {user?.role === 'seller' && (
-            <li><Link to="/my-sales" className="hover:underline">היסטוריית מכירות</Link></li>
-          )}
-
-          {/* ✅ אזור ניהול עבור ADMIN בלבד */}
+          {/* 👑 ADMIN */}
           {user?.role === 'admin' && (
             <>
+              <li><Link to="/dashboard" className="hover:underline">לוח בקרה</Link></li>
+              {showDeliveries && (
+                <li><Link to="/deliveries" className="hover:underline">משלוחים</Link></li>
+              )}
               <li><Link to="/admin/products" className="hover:underline">ניהול מוצרים</Link></li>
               <li><Link to="/admin/sales" className="hover:underline">ניהול מכירות</Link></li>
               <li><Link to="/admin/users" className="hover:underline">ניהול משתמשים</Link></li>
             </>
           )}
 
-          <li><Link to="/make-sale" className="hover:underline">בצע מכירה</Link></li>
+          {/* 👤 USER */}
+          {user?.role === 'user' && (
+            <>
+              <li><Link to="/dashboard" className="hover:underline">לוח בקרה</Link></li>
+              {showDeliveries && (
+                <li><Link to="/deliveries" className="hover:underline">משלוחים</Link></li>
+              )}
+              <li><Link to="/admin/products" className="hover:underline">ניהול מוצרים</Link></li>
+              <li><Link to="/admin/sales" className="hover:underline">ניהול מכירות</Link></li>
+            </>
+          )}
 
+          {/* 🧾 SELLER */}
+          {user?.role === 'seller' && (
+            <li><Link to="/my-sales" className="hover:underline">היסטוריית מכירות</Link></li>
+          )}
+
+          {/* לכל תפקיד */}
+          <li><Link to="/make-sale" className="hover:underline">בצע מכירה</Link></li>
           <li className="text-gray-600">
             שלום, {user?.username} ({user?.role})
           </li>
-
           <li>
-            <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+            >
               התנתק
             </button>
           </li>
@@ -64,7 +74,6 @@ const Navbar = () => {
       )}
     </>
   );
-
 
   return (
     <nav className="bg-blue-700 text-black shadow-md">
@@ -94,8 +103,5 @@ const Navbar = () => {
     </nav>
   );
 };
-
-
-
 
 export default Navbar;
