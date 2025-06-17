@@ -59,7 +59,7 @@ const DeliveriesPage = () => {
     formData.append('proof', file);
 
     try {
-      await deliveryService.uploadProof(deliveryId, formData, type);
+      await deliveryService.uploadDeliveryProof(deliveryId, formData, type);
       fetchDeliveries();
     } catch (err) {
       console.error('שגיאה בהעלאת תעודה:', err);
