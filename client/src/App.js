@@ -6,21 +6,20 @@ import DashboardPage from './pages/DashboardPage';
 import ProductsAdminPage from './pages/ProductsAdminPage';
 import MakeSalePage from './pages/MakeSalePage';
 import SalesAdminPage from './pages/SalesAdminPage';
-import ProductsViewPage from './pages/ProductsViewPage'; // דף תצוגת מוצרים כללי
+import ProductsViewPage from './pages/ProductsViewPage';
+import UsersAdminPage from './pages/UsersAdminPage';
+import DeliveriesPage from './pages/DeliveriesPage';
+import MySalesPage from './pages/MySalesPage'; // ⬅️ ודא שקובץ זה קיים
 import ProtectedRoute from './components/utils/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
-import UsersAdminPage from './pages/UsersAdminPage';
-import MainLayout from './components/layout/MainLayout';
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import config from '../src/config'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import DeliveriesPage from './pages/DeliveriesPage';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 function App() {
+  const { user } = useAuth();
 
-  const { user } = useAuth(); // קבלת המשתמש מהקונטקסט
   return (
     <>
       <div className="container">
@@ -29,26 +28,39 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/products-view" element={<ProductsViewPage />} />
-          <Route path="/admin/users" element={<UsersAdminPage />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
-            {/* עבור role DELIVER — הצג רק את עמוד המשלוחים */}
-            {user?.role === 'DELIVER' ? (
-              <Route path="*" element={<DeliveriesPage />} />
-            ) : (
+            {user?.role === 'seller' && (
+              <>
+                <Route path="/make-sale" element={<MakeSalePage />} />
+                <Route path="/my-sales" element={<MySalesPage />} />
+                <Route path="/dashboard" element={<Navigate to="/make-sale" />} />
+                <Route path="/" element={<Navigate to="/make-sale" />} />
+              </>
+            )}
+
+            {(user?.role === 'user' || user?.role === 'admin') && (
               <>
                 <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/admin/products" element={<ProductsAdminPage />} />
+                <Route path="/deliveries" element={<DeliveriesPage />} />
                 <Route path="/make-sale" element={<MakeSalePage />} />
+                <Route path="/my-sales" element={<MySalesPage />} />
+                <Route path="/" element={<Navigate to="/dashboard" />} />
+              </>
+            )}
+
+            {user?.role === 'admin' && (
+              <>
+                <Route path="/admin/products" element={<ProductsAdminPage />} />
                 <Route path="/admin/sales" element={<SalesAdminPage />} />
-                <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
+                <Route path="/admin/users" element={<UsersAdminPage />} />
               </>
             )}
           </Route>
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" />} />
+          {/* כל משתמש אחר או נתיב לא קיים → הפניה */}
+          <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
         </Routes>
 
         <ToastContainer position="top-right" autoClose={4000} />
@@ -56,6 +68,5 @@ function App() {
     </>
   );
 }
-
 
 export default App;
