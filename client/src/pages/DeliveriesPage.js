@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '../components/ui/dialog';
 import { Loader2, CheckCircle2, MapPin, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import MainLayout from '../components/layout/MainLayout';
 
 const DeliveriesPage = () => {
   const [deliveries, setDeliveries] = useState([]);
