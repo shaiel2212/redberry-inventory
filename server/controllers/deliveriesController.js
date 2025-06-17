@@ -74,7 +74,7 @@ exports.markAsDelivered = async (req, res) => {
 
 exports.updateDeliveryProof = async (req, res) => {
   const deliveryId = req.params.id;
-  const proofType = req.body.type;
+  const proofType = req.body.type || 'unsigned';
 
   if (!req.file || !proofType) {
     return res.status(400).json({ message: 'נדרש קובץ וסוג תעודה (type)' });
