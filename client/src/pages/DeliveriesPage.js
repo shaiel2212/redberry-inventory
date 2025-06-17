@@ -7,7 +7,6 @@ import { Loader2, CheckCircle2, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const DeliveriesPage = () => {
-    console.log('DeliveriesPage Loaded')
 
   const [deliveries, setDeliveries] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
@@ -20,7 +19,7 @@ const DeliveriesPage = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user?.role !== 'user') {
+    if (user?.role !== 'admin' && user?.role !== 'user') {
       navigate('/');
     } else {
       fetchDeliveries();
