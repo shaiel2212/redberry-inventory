@@ -140,6 +140,7 @@ exports.getSaleById = async (req, res) => {
 exports.getSalesForCurrentSeller = async (req, res) => {
   try {
     const sellerId = req.user.id;
+    console.log('🧪 req.user:', req.user);
     const [rows] = await db.query(`
       SELECT s.id, s.customer_name, s.sale_date, s.total_amount
       FROM sales s
