@@ -40,8 +40,7 @@ const Navbar = () => {
               {showDeliveries && (
                 <li><Link to="/deliveries" className="hover:underline">משלוחים</Link></li>
               )}
-              <li><Link to="/admin/products" className="hover:underline">ניהול מוצרים</Link></li>
-              <li><Link to="/admin/sales" className="hover:underline">ניהול מכירות</Link></li>
+              
             </>
           )}
 

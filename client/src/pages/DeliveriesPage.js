@@ -7,6 +7,8 @@ import { Loader2, CheckCircle2, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const DeliveriesPage = () => {
+    console.log('DeliveriesPage Loaded')
+
   const [deliveries, setDeliveries] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
