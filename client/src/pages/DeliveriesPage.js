@@ -60,7 +60,6 @@ const DeliveriesPage = () => {
       setDeliveries(updated.data);
       const refreshed = updated.data.find((d) => d.id === deliveryId);
       setSelectedDelivery(refreshed);
-      if (type === 'signed') setDialogOpen(false);
     } catch (err) {
       console.error('שגיאה בהעלאת תעודה:', err);
       setErrorMessage('שגיאה בהעלאת הקובץ.');
@@ -109,7 +108,7 @@ const DeliveriesPage = () => {
                       {delivery.address}
                     </a>
                   ) : (
-                    '-' 
+                    '-'
                   )}
                 </td>
                 <td className="p-2 border hidden sm:table-cell">{delivery.product_name}</td>
@@ -182,7 +181,7 @@ const DeliveriesPage = () => {
                                 className="block w-full text-sm text-gray-700"
                               />
                               {selectedDelivery?.delivery_proof_url && (
-                                <p className="text-xs text-blue-600">תעודה קיימת</p>
+                                <p className="text-xs text-blue-600">✔ תעודה קיימת</p>
                               )}
                             </div>
                             <div className="mb-3">
@@ -197,7 +196,7 @@ const DeliveriesPage = () => {
                                 className="block w-full text-sm text-gray-700"
                               />
                               {selectedDelivery?.delivery_proof_signed_url && (
-                                <p className="text-xs text-green-600">תעודה חתומה קיימת</p>
+                                <p className="text-xs text-green-600">✔ תעודה חתומה קיימת – יש ללחוץ על "סימון כסופק"</p>
                               )}
                             </div>
                           </>
