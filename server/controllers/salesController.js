@@ -122,7 +122,7 @@ exports.getSaleById = async (req, res) => {
 
     const sale = sales[0];
 
-    if (user.role !== 'ADMIN' && sale.user_id !== user.id) {
+    if (user.role !== 'admin' && sale.user_id !== user.id) {
       return res.status(403).json({ message: 'אין הרשאה לצפות במכירה זו' });
     }
 
