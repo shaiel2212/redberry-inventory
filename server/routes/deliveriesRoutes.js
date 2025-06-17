@@ -9,6 +9,6 @@ router.get('/pending', requireAuth, requireUserOrAdmin, deliveriesController.get
 
 router.patch('/:id/deliver', requireAuth, requireUserOrAdmin, deliveriesController.markAsDelivered);
 
-router.patch('/:id/proof', upload.single('proof'), deliveriesController.updateDeliveryProof);
+router.patch('/:id/proof', requireAuth, requireUserOrAdmin, upload.single('proof'), deliveriesController.updateDeliveryProof);
 
 module.exports = router;
