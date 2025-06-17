@@ -72,166 +72,168 @@ const DeliveriesPage = () => {
   };
 
   return (
-    <div className="p-4 max-w-full md:max-w-5xl mx-auto">
-      <h2 className="text-xl font-bold mb-4 text-center">משלוחים ממתינים</h2>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm border">
-          <thead>
-            <tr className="bg-gray-100 text-right">
-              <th className="p-2 border">מס׳ הזמנה</th>
-              <th className="p-2 border">לקוח</th>
-              <th className="p-2 border">כתובת</th>
-              <th className="p-2 border hidden sm:table-cell">מוצר</th>
-              <th className="p-2 border hidden sm:table-cell">מידה</th>
-              <th className="p-2 border hidden sm:table-cell">כמות</th>
-              <th className="p-2 border hidden md:table-cell">נמכר ע״י</th>
-              <th className="p-2 border">תעודה</th>
-              <th className="p-2 border">תעודה חתומה</th>
-              <th className="p-2 border">סטטוס</th>
-              <th className="p-2 border">פעולה</th>
-            </tr>
-          </thead>
-          <tbody>
-            {deliveries.map((delivery) => (
-              <tr key={delivery.id} className="text-right">
-                <td className="p-2 border">#{delivery.sale_id}</td>
-                <td className="p-2 border">{delivery.customer_name}</td>
-                <td className="p-2 border">
-                  {delivery.address ? (
-                    <a
-                      href={buildWazeLink(delivery.address)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      <MapPin className="inline w-4 h-4 ml-1" />
-                      {delivery.address}
-                    </a>
-                  ) : (
-                    '-'
-                  )}
-                </td>
-                <td className="p-2 border hidden sm:table-cell">{delivery.product_name}</td>
-                <td className="p-2 border hidden sm:table-cell">{delivery.size}</td>
-                <td className="p-2 border hidden sm:table-cell">{delivery.quantity}</td>
-                <td className="p-2 border hidden md:table-cell">{delivery.seller_name}</td>
-                <td className="p-2 border text-center">
-                  {delivery.delivery_proof_url ? (
-                    <a href={delivery.delivery_proof_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">צפייה</a>
-                  ) : ('-')}
-                </td>
-                <td className="p-2 border text-center">
-                  {delivery.delivery_proof_signed_url ? (
-                    <a href={delivery.delivery_proof_signed_url} target="_blank" rel="noopener noreferrer" className="text-green-600 underline">צפייה</a>
-                  ) : ('-')}
-                </td>
-                <td className="p-2 border">
-                  {deliveredId === delivery.id ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.4 }}
-                      className="flex items-center text-green-600 gap-1"
-                    >
-                      <CheckCircle2 className="w-4 h-4" /> סופק
-                    </motion.div>
-                  ) : (
-                    delivery.status
-                  )}
-                </td>
-                <td className="p-2 border">
-                  {delivery.status !== 'delivered' && (
-                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                      <DialogTrigger asChild>
-                        <button
-                          className="bg-blue-600 text-white px-2 py-1 w-full text-sm"
-                          onClick={() => {
-                            setSelectedDelivery(delivery);
-                            setErrorMessage('');
-                            setDialogOpen(true);
-                          }}
-                        >
-                          פרטים
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="text-right">
-                        <div className="flex justify-between mb-2">
-                          <DialogTitle className="text-lg font-bold">אישור סיום אספקה</DialogTitle>
-                          <button onClick={() => setDialogOpen(false)}><X className="w-5 h-5 text-gray-500" /></button>
-                        </div>
-                        {errorMessage && (
-                          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
-                            {errorMessage}
-                          </div>
-                        )}
-                        <p className="mb-4">
-                          הזמנה <strong>#{selectedDelivery?.sale_id}</strong> ללקוח <strong>{selectedDelivery?.customer_name}</strong>
-                        </p>
-                        {(user?.role === 'admin' || user?.role === 'user') && (
-                          <>
-                            <div className="mb-3">
-                              <label className="block text-sm font-medium mb-1 text-blue-700">העלאת תעודה (טיוטה):</label>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files[0];
-                                  if (file) handleUploadProof(selectedDelivery.id, file, 'unsigned');
-                                }}
-                                className="block w-full text-sm text-gray-700"
-                              />
-                              {selectedDelivery?.delivery_proof_url && (
-                                <p className="text-xs text-blue-600">✔ תעודה קיימת</p>
-                              )}
-                            </div>
-                            <div className="mb-3">
-                              <label className="block text-sm font-medium mb-1 text-green-700">העלאת תעודה חתומה:</label>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files[0];
-                                  if (file) handleUploadProof(selectedDelivery.id, file, 'signed');
-                                }}
-                                className="block w-full text-sm text-gray-700"
-                              />
-                              {selectedDelivery?.delivery_proof_signed_url && (
-                                <p className="text-xs text-green-600">✔ תעודה חתומה קיימת – יש ללחוץ על "סימון כסופק"</p>
-                              )}
-                            </div>
-                          </>
-                        )}
-                        {!selectedDelivery?.delivery_proof_signed_url && (
-                          <p className="text-red-600 text-sm mb-2">לא ניתן לאשר אספקה – יש להעלות תעודה חתומה!</p>
-                        )}
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setDialogOpen(false);
-                              setSelectedDelivery(null);
-                            }}
-                            className="px-3 py-1 border rounded text-gray-600 hover:bg-gray-100"
-                          >
-                            ביטול
-                          </button>
-                          <button
-                            disabled={!selectedDelivery?.delivery_proof_signed_url}
-                            onClick={() => markAsDelivered(selectedDelivery.id)}
-                            className={`px-3 py-1 rounded text-white ${!selectedDelivery?.delivery_proof_signed_url ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
-                          >
-                            סימון כסופק
-                          </button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </td>
+    <MainLayout>
+      <div className="p-4 max-w-full md:max-w-5xl mx-auto">
+        <h2 className="text-xl font-bold mb-4 text-center">משלוחים ממתינים</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm border">
+            <thead>
+              <tr className="bg-gray-100 text-right">
+                <th className="p-2 border">מס׳ הזמנה</th>
+                <th className="p-2 border">לקוח</th>
+                <th className="p-2 border">כתובת</th>
+                <th className="p-2 border hidden sm:table-cell">מוצר</th>
+                <th className="p-2 border hidden sm:table-cell">מידה</th>
+                <th className="p-2 border hidden sm:table-cell">כמות</th>
+                <th className="p-2 border hidden md:table-cell">נמכר ע״י</th>
+                <th className="p-2 border">תעודה</th>
+                <th className="p-2 border">תעודה חתומה</th>
+                <th className="p-2 border">סטטוס</th>
+                <th className="p-2 border">פעולה</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {deliveries.map((delivery) => (
+                <tr key={delivery.id} className="text-right">
+                  <td className="p-2 border">#{delivery.sale_id}</td>
+                  <td className="p-2 border">{delivery.customer_name}</td>
+                  <td className="p-2 border">
+                    {delivery.address ? (
+                      <a
+                        href={buildWazeLink(delivery.address)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        <MapPin className="inline w-4 h-4 ml-1" />
+                        {delivery.address}
+                      </a>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                  <td className="p-2 border hidden sm:table-cell">{delivery.product_name}</td>
+                  <td className="p-2 border hidden sm:table-cell">{delivery.size}</td>
+                  <td className="p-2 border hidden sm:table-cell">{delivery.quantity}</td>
+                  <td className="p-2 border hidden md:table-cell">{delivery.seller_name}</td>
+                  <td className="p-2 border text-center">
+                    {delivery.delivery_proof_url ? (
+                      <a href={delivery.delivery_proof_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">צפייה</a>
+                    ) : ('-')}
+                  </td>
+                  <td className="p-2 border text-center">
+                    {delivery.delivery_proof_signed_url ? (
+                      <a href={delivery.delivery_proof_signed_url} target="_blank" rel="noopener noreferrer" className="text-green-600 underline">צפייה</a>
+                    ) : ('-')}
+                  </td>
+                  <td className="p-2 border">
+                    {deliveredId === delivery.id ? (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.4 }}
+                        className="flex items-center text-green-600 gap-1"
+                      >
+                        <CheckCircle2 className="w-4 h-4" /> סופק
+                      </motion.div>
+                    ) : (
+                      delivery.status
+                    )}
+                  </td>
+                  <td className="p-2 border">
+                    {delivery.status !== 'delivered' && (
+                      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                        <DialogTrigger asChild>
+                          <button
+                            className="bg-blue-600 text-white px-2 py-1 w-full text-sm"
+                            onClick={() => {
+                              setSelectedDelivery(delivery);
+                              setErrorMessage('');
+                              setDialogOpen(true);
+                            }}
+                          >
+                            פרטים
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="text-right">
+                          <div className="flex justify-between mb-2">
+                            <DialogTitle className="text-lg font-bold">אישור סיום אספקה</DialogTitle>
+                            <button onClick={() => setDialogOpen(false)}><X className="w-5 h-5 text-gray-500" /></button>
+                          </div>
+                          {errorMessage && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
+                              {errorMessage}
+                            </div>
+                          )}
+                          <p className="mb-4">
+                            הזמנה <strong>#{selectedDelivery?.sale_id}</strong> ללקוח <strong>{selectedDelivery?.customer_name}</strong>
+                          </p>
+                          {(user?.role === 'admin' || user?.role === 'user') && (
+                            <>
+                              <div className="mb-3">
+                                <label className="block text-sm font-medium mb-1 text-blue-700">העלאת תעודה (טיוטה):</label>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) handleUploadProof(selectedDelivery.id, file, 'unsigned');
+                                  }}
+                                  className="block w-full text-sm text-gray-700"
+                                />
+                                {selectedDelivery?.delivery_proof_url && (
+                                  <p className="text-xs text-blue-600">✔ תעודה קיימת</p>
+                                )}
+                              </div>
+                              <div className="mb-3">
+                                <label className="block text-sm font-medium mb-1 text-green-700">העלאת תעודה חתומה:</label>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) handleUploadProof(selectedDelivery.id, file, 'signed');
+                                  }}
+                                  className="block w-full text-sm text-gray-700"
+                                />
+                                {selectedDelivery?.delivery_proof_signed_url && (
+                                  <p className="text-xs text-green-600">✔ תעודה חתומה קיימת – יש ללחוץ על "סימון כסופק"</p>
+                                )}
+                              </div>
+                            </>
+                          )}
+                          {!selectedDelivery?.delivery_proof_signed_url && (
+                            <p className="text-red-600 text-sm mb-2">לא ניתן לאשר אספקה – יש להעלות תעודה חתומה!</p>
+                          )}
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                setDialogOpen(false);
+                                setSelectedDelivery(null);
+                              }}
+                              className="px-3 py-1 border rounded text-gray-600 hover:bg-gray-100"
+                            >
+                              ביטול
+                            </button>
+                            <button
+                              disabled={!selectedDelivery?.delivery_proof_signed_url}
+                              onClick={() => markAsDelivered(selectedDelivery.id)}
+                              className={`px-3 py-1 rounded text-white ${!selectedDelivery?.delivery_proof_signed_url ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                            >
+                              סימון כסופק
+                            </button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
