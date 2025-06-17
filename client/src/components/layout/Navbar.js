@@ -20,12 +20,21 @@ const Navbar = () => {
 
       {isAuthenticated && (
         <>
+          {/* ✅ הצג לוח בקרה ומשלוחים רק אם המשתמש אינו SELLER */}
+          {user?.role !== 'seller' && (
+            <>
+              <li><Link to="/dashboard" className="hover:underline">לוח בקרה</Link></li>
+              <li><Link to="/deliveries" className="hover:underline">משלוחים</Link></li>
+            </>
+          )}
 
+          {/* ✅ קישור להיסטוריית מכירות עבור SELLER */}
           {user?.role === 'seller' && (
             <li><Link to="/my-sales" className="hover:underline">היסטוריית מכירות</Link></li>
           )}
 
-          {(user?.role === 'admin' || user?.role === 'admin') && (
+          {/* ✅ אזור ניהול עבור ADMIN בלבד */}
+          {user?.role === 'admin' && (
             <>
               <li><Link to="/admin/products" className="hover:underline">ניהול מוצרים</Link></li>
               <li><Link to="/admin/sales" className="hover:underline">ניהול מכירות</Link></li>
@@ -55,6 +64,7 @@ const Navbar = () => {
       )}
     </>
   );
+
 
   return (
     <nav className="bg-blue-700 text-black shadow-md">
