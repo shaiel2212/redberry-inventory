@@ -54,8 +54,11 @@ const DeliveriesPage = () => {
   };
 
   const handleUploadProof = async (deliveryId, file, type) => {
+    const formData = new FormData();
+    formData.append('proof', file); // <- רק כאן אתה מוסיף את הקובץ
+
     try {
-      await deliveryService.uploadDeliveryProof(deliveryId, file, type);
+      await deliveryService.uploadDeliveryProof(deliveryId, formData, type); // <- תשלח את formData
       fetchDeliveries();
     } catch (err) {
       console.error('שגיאה בהעלאת תעודה:', err);
