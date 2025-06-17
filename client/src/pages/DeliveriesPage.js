@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react';
 import deliveryService from '../services/deliveryService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Dialog, DialogTrigger, DialogContent } from '../components/ui/dialog';
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '../components/ui/dialog';
 import { Loader2, CheckCircle2, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const DeliveriesPage = () => {
-
   const [deliveries, setDeliveries] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
@@ -55,11 +54,8 @@ const DeliveriesPage = () => {
   };
 
   const handleUploadProof = async (deliveryId, file, type) => {
-    const formData = new FormData();
-    formData.append('proof', file);
-
     try {
-      await deliveryService.uploadDeliveryProof(deliveryId, formData, type);
+      await deliveryService.uploadDeliveryProof(deliveryId, file, type);
       fetchDeliveries();
     } catch (err) {
       console.error('שגיאה בהעלאת תעודה:', err);
@@ -155,7 +151,7 @@ const DeliveriesPage = () => {
                         </button>
                       </DialogTrigger>
                       <DialogContent className="text-right">
-                        <h2 className="text-lg font-bold mb-2">אישור סיום אספקה</h2>
+                        <DialogTitle className="text-lg font-bold mb-2">אישור סיום אספקה</DialogTitle>
                         {errorMessage && (
                           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
                             {errorMessage}
@@ -177,11 +173,6 @@ const DeliveriesPage = () => {
                                 }}
                                 className="block w-full text-sm text-gray-700"
                               />
-                              {selectedDelivery?.delivery_proof_url && (
-                                <div className="mt-1 text-sm text-blue-600">
-                                  <a href={selectedDelivery.delivery_proof_url} target="_blank" rel="noopener noreferrer" className="underline">צפייה בתעודה</a>
-                                </div>
-                              )}
                             </div>
                             <div className="mb-3">
                               <label className="block text-sm font-medium mb-1 text-green-700">העלאת תעודה חתומה:</label>
@@ -194,15 +185,9 @@ const DeliveriesPage = () => {
                                 }}
                                 className="block w-full text-sm text-gray-700"
                               />
-                              {selectedDelivery?.delivery_proof_signed_url && (
-                                <div className="mt-1 text-sm text-green-600">
-                                  <a href={selectedDelivery.delivery_proof_signed_url} target="_blank" rel="noopener noreferrer" className="underline">צפייה בתעודה חתומה</a>
-                                </div>
-                              )}
                             </div>
                           </>
                         )}
-
                         {!selectedDelivery?.delivery_proof_signed_url && (
                           <p className="text-red-600 text-sm mb-2">לא ניתן לאשר אספקה – יש להעלות תעודה חתומה!</p>
                         )}

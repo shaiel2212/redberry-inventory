@@ -1,4 +1,5 @@
 import api from './api';
+
 /**
  * שליפת משלוחים ממתינים
  */
@@ -14,16 +15,16 @@ const markAsDelivered = (id) => {
 };
 
 /**
- * העלאת תעודת משלוח
+ * העלאת תעודת משלוח (טיוטה או חתומה)
  * @param {number} deliveryId - מזהה משלוח
  * @param {File} file - קובץ להעלאה
  * @param {"unsigned"|"signed"} type - סוג התעודה
  */
-const uploadDeliveryProof = async (deliveryId, file, type = 'unsigned') => {
+const uploadDeliveryProof = (deliveryId, file, type = 'unsigned') => {
   const formData = new FormData();
   formData.append('proof', file);
 
-  const response = await api.patch(
+  return api.patch(
     `/deliveries/${deliveryId}/proof?type=${type}`,
     formData,
     {
@@ -32,10 +33,7 @@ const uploadDeliveryProof = async (deliveryId, file, type = 'unsigned') => {
       },
     }
   );
-
-  return response.data;
 };
-
 
 export default {
   getPendingDeliveries,
