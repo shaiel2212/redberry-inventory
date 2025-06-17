@@ -23,45 +23,50 @@ function App() {
   return (
     <>
       <div className="container">
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/products-view" element={<ProductsViewPage />} />
+        <Route element={<ProtectedRoute />}>
+          {/* ADMIN – רואה הכל */}
+          {user?.role === 'admin' && (
+            <>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/deliveries" element={<DeliveriesPage />} />
+              <Route path="/make-sale" element={<MakeSalePage />} />
+              <Route path="/my-sales" element={<MySalesPage />} />
+              <Route path="/admin/products" element={<ProductsAdminPage />} />
+              <Route path="/admin/sales" element={<SalesAdminPage />} />
+              <Route path="/admin/users" element={<UsersAdminPage />} />
+              <Route path="/" element={<Navigate to="/dashboard" />} />
+            </>
+          )}
 
-          {/* Protected Routes */}
-          <Route element={<ProtectedRoute />}>
-            {user?.role === 'seller' && (
-              <>
-                <Route path="/make-sale" element={<MakeSalePage />} />
-                <Route path="/my-sales" element={<MySalesPage />} />
-                <Route path="/dashboard" element={<Navigate to="/make-sale" />} />
-                <Route path="/" element={<Navigate to="/make-sale" />} />
-              </>
-            )}
+          {/* SELLER */}
+          {user?.role === 'seller' && (
+            <>
+              <Route path="/make-sale" element={<MakeSalePage />} />
+              <Route path="/my-sales" element={<MySalesPage />} />
+              <Route path="/dashboard" element={<Navigate to="/make-sale" />} />
+              <Route path="/" element={<Navigate to="/make-sale" />} />
+            </>
+          )}
 
-            {(user?.role === 'user' || user?.role === 'admin') && (
-              <>
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/deliveries" element={<DeliveriesPage />} />
-                <Route path="/make-sale" element={<MakeSalePage />} />
-                <Route path="/my-sales" element={<MySalesPage />} />
-                <Route path="/" element={<Navigate to="/dashboard" />} />
-              </>
-            )}
+          {/* USER */}
+          {user?.role === 'user' && (
+            <>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/deliveries" element={<DeliveriesPage />} />
+              <Route path="/make-sale" element={<MakeSalePage />} />
+              <Route path="/my-sales" element={<MySalesPage />} />
+              <Route path="/" element={<Navigate to="/dashboard" />} />
+            </>
+          )}
 
-            {user?.role === 'admin' && (
-              <>
-                <Route path="/admin/products" element={<ProductsAdminPage />} />
-                <Route path="/admin/sales" element={<SalesAdminPage />} />
-                <Route path="/admin/users" element={<UsersAdminPage />} />
-              </>
-            )}
-          </Route>
-
-          {/* כל משתמש אחר או נתיב לא קיים → הפניה */}
-          <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
-        </Routes>
+          {/* DELIVER (אם קיים) */}
+          {user?.role === 'deliver' && (
+            <>
+              <Route path="/deliveries" element={<DeliveriesPage />} />
+              <Route path="*" element={<Navigate to="/deliveries" />} />
+            </>
+          )}
+        </Route>
 
         <ToastContainer position="top-right" autoClose={4000} />
       </div>
