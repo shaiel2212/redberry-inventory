@@ -19,7 +19,9 @@ import "slick-carousel/slick/slick-theme.css";
 
 function App() {
   const { user } = useAuth();
-
+  if (user === undefined) {
+    return <div>טוען משתמש...</div>; // או Spinner
+  }
   return (
     <>
       <div className="container">
