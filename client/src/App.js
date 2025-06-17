@@ -9,66 +9,85 @@ import SalesAdminPage from './pages/SalesAdminPage';
 import ProductsViewPage from './pages/ProductsViewPage';
 import UsersAdminPage from './pages/UsersAdminPage';
 import DeliveriesPage from './pages/DeliveriesPage';
-import MySalesPage from './pages/MySalesPage'; // ⬅️ ודא שקובץ זה קיים
+import MySalesPage from './pages/MySalesPage';
 import ProtectedRoute from './components/utils/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 
 function App() {
   const { user } = useAuth();
+
+  // טיפול בטעינה התחלתית
   if (user === undefined) {
-    return <div>טוען משתמש...</div>; // או Spinner
+    return <div className="p-4 text-center">⏳ טוען נתוני משתמש...</div>;
   }
+
+  const isSeller = user?.role === 'seller';
+  const isUser = user?.role === 'user';
+  const isAdmin = user?.role === 'admin';
+  const isDeliver = user?.role === 'deliver';
+
   return (
     <>
       <div className="container">
-        <Route element={<ProtectedRoute />}>
-          {/* ADMIN – רואה הכל */}
-          {user?.role === 'admin' && (
-            <>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/deliveries" element={<DeliveriesPage />} />
-              <Route path="/make-sale" element={<MakeSalePage />} />
-              <Route path="/my-sales" element={<MySalesPage />} />
-              <Route path="/admin/products" element={<ProductsAdminPage />} />
-              <Route path="/admin/sales" element={<SalesAdminPage />} />
-              <Route path="/admin/users" element={<UsersAdminPage />} />
-              <Route path="/" element={<Navigate to="/dashboard" />} />
-            </>
-          )}
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/products-view" element={<ProductsViewPage />} />
 
-          {/* SELLER */}
-          {user?.role === 'seller' && (
-            <>
-              <Route path="/make-sale" element={<MakeSalePage />} />
-              <Route path="/my-sales" element={<MySalesPage />} />
-              <Route path="/dashboard" element={<Navigate to="/make-sale" />} />
-              <Route path="/" element={<Navigate to="/make-sale" />} />
-            </>
-          )}
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            {/* ADMIN */}
+            {isAdmin && (
+              <>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/deliveries" element={<DeliveriesPage />} />
+                <Route path="/make-sale" element={<MakeSalePage />} />
+                <Route path="/my-sales" element={<MySalesPage />} />
+                <Route path="/admin/products" element={<ProductsAdminPage />} />
+                <Route path="/admin/sales" element={<SalesAdminPage />} />
+                <Route path="/admin/users" element={<UsersAdminPage />} />
+                <Route path="/" element={<Navigate to="/dashboard" />} />
+              </>
+            )}
 
-          {/* USER */}
-          {user?.role === 'user' && (
-            <>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/deliveries" element={<DeliveriesPage />} />
-              <Route path="/make-sale" element={<MakeSalePage />} />
-              <Route path="/my-sales" element={<MySalesPage />} />
-              <Route path="/" element={<Navigate to="/dashboard" />} />
-            </>
-          )}
+            {/* SELLER */}
+            {isSeller && (
+              <>
+                <Route path="/make-sale" element={<MakeSalePage />} />
+                <Route path="/my-sales" element={<MySalesPage />} />
+                <Route path="/dashboard" element={<Navigate to="/make-sale" />} />
+                <Route path="/" element={<Navigate to="/make-sale" />} />
+              </>
+            )}
 
-          {/* DELIVER (אם קיים) */}
-          {user?.role === 'deliver' && (
-            <>
-              <Route path="/deliveries" element={<DeliveriesPage />} />
-              <Route path="*" element={<Navigate to="/deliveries" />} />
-            </>
-          )}
-        </Route>
+            {/* USER */}
+            {isUser && (
+              <>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/deliveries" element={<DeliveriesPage />} />
+                <Route path="/make-sale" element={<MakeSalePage />} />
+                <Route path="/my-sales" element={<MySalesPage />} />
+                <Route path="/" element={<Navigate to="/dashboard" />} />
+              </>
+            )}
+
+            {/* DELIVER */}
+            {isDeliver && (
+              <>
+                <Route path="/deliveries" element={<DeliveriesPage />} />
+                <Route path="/" element={<Navigate to="/deliveries" />} />
+              </>
+            )}
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to={user ? "/" : "/login"} />} />
+        </Routes>
 
         <ToastContainer position="top-right" autoClose={4000} />
       </div>
