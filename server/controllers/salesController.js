@@ -1,5 +1,7 @@
 const pool = require('../config/db');
 const xss = require('xss');
+const path = require('path');
+const fs = require('fs');
 
 // Create a new sale
 
@@ -23,7 +25,7 @@ exports.createSale = async (req, res) => {
 
     const [saleResult] = await connection.query(
       'INSERT INTO sales (total_amount, customer_name, user_id , address) VALUES (?, ?, ?, ?)',
-      [total_amount, customer_name, userId,address]
+      [total_amount, customer_name, userId, address]
     );
 
     const saleId = saleResult.insertId;
@@ -91,32 +93,64 @@ exports.getAllSales = async (req, res) => {
 
 // Get a single sale by ID
 exports.getSaleById = async (req, res) => {
-  const id = parseInt(req.params.id);
+  const saleId = parseInt(req.params.id);
+  const user = req.user;
+
   try {
-    const [sales] = await pool.query(`SELECT 
-  s.id, 
-  s.sale_date, 
-  s.customer_name, 
-  s.total_amount, 
-  u.username AS sold_by
-FROM sales s
-LEFT JOIN users u ON s.user_id = u.id
-WHERE s.id = ?;
-`,
-      [id]);
+    // שלוף את המכירה כולל ID של המשתמש
+    const [sales] = await pool.query(`
+      SELECT 
+        s.id, 
+        s.sale_date, 
+        s.customer_name, 
+        s.total_amount, 
+        s.user_id,               -- חשוב: נוסיף את זה לבדיקה בהמשך
+        u.username AS sold_by
+      FROM sales s
+      LEFT JOIN users u ON s.user_id = u.id
+      WHERE s.id = ?
+    `, [saleId]);
+
     if (sales.length === 0) {
       return res.status(404).json({ message: 'Sale not found' });
     }
 
-    const [items] = await pool.query(
-      'SELECT si.product_id, p.name, si.quantity, p.sale_price ' +
-      'FROM sale_items si JOIN products p ON si.product_id = p.id WHERE si.sale_id = ?',
-      [id]
-    );
+    const sale = sales[0];
 
-    res.json({ ...sales[0], items });
+    // 🔒 בדיקת הרשאה: ADMIN או היוזר שביצע את המכירה
+    if (user.role !== 'ADMIN' && sale.user_id !== user.id) {
+      return res.status(403).json({ message: 'אין הרשאה לצפות במכירה זו' });
+    }
+
+    // שלוף פריטים
+    const [items] = await pool.query(`
+      SELECT si.product_id, p.name, si.quantity, p.sale_price
+      FROM sale_items si
+      JOIN products p ON si.product_id = p.id
+      WHERE si.sale_id = ?
+    `, [saleId]);
+
+    res.json({ ...sale, items });
+
   } catch (err) {
     console.error('Get sale by ID error:', err.message);
     res.status(500).send('Error retrieving sale');
   }
 };
+exports.getSalesForCurrentSeller = async (req, res) => {
+  try {
+    const sellerId = req.user.id;
+    const [rows] = await db.query(`
+      SELECT s.id, s.customer_name, s.sale_date, s.total_amount
+      FROM sales s
+      WHERE s.seller_id = ?
+      ORDER BY s.sale_date DESC
+    `, [sellerId]);
+
+    res.json(rows);
+  } catch (err) {
+    console.error('❌ Error fetching sales for seller:', err);
+    res.status(500).json({ message: 'שגיאה בשליפת מכירות למוכר.' });
+  }
+};
+

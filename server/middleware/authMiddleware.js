@@ -31,8 +31,25 @@ function requireAdmin(req, res, next) {
   }
   next();
 }
+function requireSellerOrHigher(req, res, next) {
+  const role = req.user?.role;
+  if (role === 'admin' || role === 'user' || role === 'SELLER') {
+    return next();
+  }
+  return res.status(403).json({ message: 'גישה נדחתה – מוכר ומעלה בלבד' });
+}
+
+function requireUserOrAdmin(req, res, next) {
+  const role = req.user?.role;
+  if (role === 'admin' || role === 'user') {
+    return next();
+  }
+  return res.status(403).json({ message: 'גישה נדחתה – משתמש או מנהל בלבד' });
+}
 
 module.exports = {
   requireAuth,
+  requireSellerOrHigher,
+  requireUserOrAdmin,
   requireAdmin
 };

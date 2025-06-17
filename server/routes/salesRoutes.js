@@ -1,10 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const salesController = require('../controllers/salesController');
-const { requireAuth } = require('../middleware/authMiddleware');
+const {
+    requireAuth,
+    requireAdmin,
+    requireSellerOrHigher,
+} = require('../middleware/authMiddleware');
 
-router.post('/', requireAuth, salesController.createSale);
-router.get('/', requireAuth, salesController.getAllSales);
+router.post('/', requireAuth,requireSellerOrHigher, salesController.createSale);
+router.get('/', requireAuth, requireAdmin, salesController.getAllSales);
 router.get('/:id', requireAuth, salesController.getSaleById);
+router.get('/mine', requireAuth, requireSellerOrHigher, salesController.getSalesForCurrentSeller);
 
 module.exports = router;
