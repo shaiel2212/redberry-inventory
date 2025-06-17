@@ -8,42 +8,35 @@ exports.registerUser = async (req, res) => {
   const username = xss(req.body.username);
   const email = xss(req.body.email);
   const password = req.body.password;
-  const role = xss(req.body.role || 'seller');
 
+  // שים לב: אנו מתעלמים מכל ניסיון לשלוח תפקיד – תמיד 'seller'
+  const role = 'seller';
 
   if (!username || !email || !password) {
-    
-    return res.status(400).json({ message: 'Please enter all required fields' });
+    return res.status(400).json({ message: 'יש למלא את כל השדות הנדרשים' });
   }
 
   if (!process.env.JWT_SECRET) {
-    console.error('Missing JWT_SECRET!');
-    return res.status(500).json({ message: 'Server misconfiguration: JWT_SECRET is not defined' });
+    console.error('חסר JWT_SECRET בקובץ .env!');
+    return res.status(500).json({ message: 'הגדרת שרת חסרה: JWT_SECRET לא קיים' });
   }
 
   try {
-    console.log('Checking existing users...');
-
+    // בדיקה אם המשתמש כבר קיים לפי שם משתמש או אימייל
     const [existingUsers] = await pool.query(
       'SELECT * FROM users WHERE username = ? OR email = ?',
       [username, email]
     );
 
-    console.log('Existing users checked.');
-
     if (existingUsers.length > 0) {
-      console.log('User already exists');
-      return res.status(400).json({ message: 'User already exists with this username or email' });
+      return res.status(400).json({ message: 'שם המשתמש או האימייל כבר תפוסים' });
     }
-    console.log('Hashing password...');
 
+    // יצירת סיסמה מוצפנת
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    console.log('Password hashed');
 
-
-    console.log('Inserting user...');
-
+    // יצירת משתמש חדש
     const newUser = {
       username,
       email,
@@ -59,10 +52,6 @@ exports.registerUser = async (req, res) => {
       username: newUser.username,
       role: newUser.role
     };
-    console.log('User inserted');
-
-
-    console.log('Creating token...');
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });
 
@@ -75,14 +64,12 @@ exports.registerUser = async (req, res) => {
         role: newUser.role
       }
     });
+
   } catch (err) {
-    console.error('Register error:', err.message);
-    res.status(500).send('Server error during registration');
+    console.error('שגיאה בהרשמה:', err.message);
+    res.status(500).send('שגיאת שרת במהלך הרשמה');
   }
-  console.log('Token created');
-
 };
-
 // Login User
 exports.loginUser = async (req, res) => {
   const username = xss(req.body.username);
