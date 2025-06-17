@@ -1,5 +1,10 @@
 import * as React from "react";
-import { Dialog as RadixDialog, DialogContent as RadixDialogContent, DialogTrigger as RadixDialogTrigger } from "@radix-ui/react-dialog";
+import {
+  Dialog as RadixDialog,
+  DialogContent as RadixDialogContent,
+  DialogTrigger as RadixDialogTrigger,
+  DialogTitle as RedixDialogTitle,
+} from "@radix-ui/react-dialog";
 
 export function Dialog({ open, onClose, children }) {
   return (
@@ -24,3 +29,6 @@ export function DialogContent({ children, className = "" }) {
     </RadixDialogContent>
   );
 }
+
+// 🛠️ תוספת לפתרון השגיאה
+export const DialogTitle = RedixDialogTitle;
