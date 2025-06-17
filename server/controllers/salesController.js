@@ -147,7 +147,7 @@ exports.getSalesForCurrentSeller = async (req, res) => {
       console.warn('⚠️ Missing or invalid seller ID:', sellerId);
       return res.status(400).json({ message: 'מזהה משתמש חסר או שגוי' });
     }
-    const [rows] = await db.query(`
+    const [rows] = await pool.query(`
       SELECT s.id, s.customer_name, s.sale_date, s.total_amount
       FROM sales s
       WHERE s.user_id = ?
