@@ -3,8 +3,6 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const corsOptions = require('./config/corsConfig'); // ← חדש
-const pool = require('../server/config/db');
-
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
