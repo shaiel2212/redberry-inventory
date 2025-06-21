@@ -61,3 +61,4 @@ exports.getSalesByDay = async (req, res) => {
     res.status(500).send('Error fetching sales by day');
   }
 };
+

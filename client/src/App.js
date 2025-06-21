@@ -16,6 +16,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+import SalesReportPage from './pages/ReportPage';
 
 function App() {
   const { user } = useAuth();
@@ -36,7 +37,6 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
           <Route path="/products-view" element={<ProductsViewPage />} />
 
           {/* Protected routes */}
@@ -44,6 +44,7 @@ function App() {
             {/* ADMIN */}
             {isAdmin && (
               <>
+                <Route path="/reports/sales" element={<SalesReportPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/deliveries" element={<DeliveriesPage />} />
                 <Route path="/make-sale" element={<MakeSalePage />} />

@@ -5,7 +5,7 @@ const api = axios.create({
   withCredentials: true,
   timeout: 10000
 });
-console.log("👉 API URL:",process.env.REACT_APP_API_BASE_URL);
+console.log("🔍 env var:", process.env.REACT_APP_API_BASE_URL);
 
 // Interceptor לבקשות: מוסיף טוקן אם קיים
 api.interceptors.request.use(
@@ -13,7 +13,6 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("✅ Token attached:", token);
     } else {
       console.warn("⚠️ No token in localStorage");
     }

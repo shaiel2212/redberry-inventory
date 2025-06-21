@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const corsOptions = require('./config/corsConfig'); // ← חדש
+const pool = require('../server/config/db');
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -10,10 +11,14 @@ const productRoutes = require('./routes/productRoutes');
 const salesRoutes = require('./routes/salesRoutes');
 const reportsRoutes = require('./routes/reportsRoutes');
 const deliveriesRoutes = require('./routes/deliveriesRoutes');
-dotenv.config();
+const clientRoutes = require('./routes/clientRoutes');
 
+const envPath = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+dotenv.config({ path: envPath });
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
@@ -26,12 +31,14 @@ app.use((req, res, next) => {
   next();
 });
 
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/deliveries', deliveriesRoutes);
+app.use('/api/clients', clientRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Server is running...', cors: 'enabled' });

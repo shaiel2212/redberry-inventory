@@ -1,20 +1,16 @@
 const allowedOrigins = [
   "http://localhost:3000",
+  "http://127.0.0.1:3000",
   "https://redberry-inventory-client.vercel.app",
   "https://redberry-inventory-production.up.railway.app",
-  // תוסיף פה עוד דומיינים לפי הצורך
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
     const isAllowed =
       !origin ||
-      origin === "http://localhost:3000" ||
-      origin === "https://redberry-inventory-client.vercel.app" ||
-      /^https:\/\/redberry-inventory-client-[\w-]+(-{1,2})shaiel2212s-projects\.vercel\.app$/.test(
-        origin
-      ) ||
-      origin === "https://redberry-inventory-production.up.railway.app";
+      allowedOrigins.includes(origin) ||
+      /^https:\/\/redberry-inventory-client-[\w-]+(--)?shaiel2212s-projects\.vercel\.app$/.test(origin);
 
     if (isAllowed) {
       console.log("✅ Origin allowed:", origin);

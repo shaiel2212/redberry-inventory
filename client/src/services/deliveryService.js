@@ -8,6 +8,13 @@ const getPendingDeliveries = () => {
 };
 
 /**
+ * שליפת כל המשלוחים
+ */
+const getAllDeliveries = () => {
+  return api.get('/deliveries/all');
+};
+
+/**
  * סימון משלוח כסופק
  */
 const markAsDelivered = (id) => {
@@ -19,9 +26,10 @@ const markAsDelivered = (id) => {
  * @param {number} deliveryId - מזהה משלוח
  * @param {File} file - קובץ להעלאה
  */
-const uploadDeliveryProof = (deliveryId, file) => {
+const uploadDeliveryProof = (deliveryId, file, type = 'unsigned') => {
   const formData = new FormData();
   formData.append('proof', file);
+  formData.append('type', type);
 
   return api.patch(`/deliveries/${deliveryId}/proof`, formData, {
     headers: {
@@ -32,6 +40,7 @@ const uploadDeliveryProof = (deliveryId, file) => {
 
 export default {
   getPendingDeliveries,
+  getAllDeliveries, // ← חדש
   markAsDelivered,
   uploadDeliveryProof,
 };

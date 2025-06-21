@@ -5,18 +5,19 @@ import saleService from '../services/saleService';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import { useAuth } from '../context/AuthContext'; // ודא שזה קיים למעלה
+import ClientPicker from '../components/clientPicker/ClientPicker';
 
 const MakeSalePage = () => {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [customerName, setCustomerName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ address: '' });
+  const [selectedClientId, setSelectedClientId] = useState(null);
 
   const navigate = useNavigate();
-const { user } = useAuth(); // הוסף זאת לפני useEffect
+  const { user } = useAuth(); // הוסף זאת לפני useEffect
 
   useEffect(() => {
     // הגנה: רק מוכר יכול להיכנס לעמוד הזה
@@ -91,40 +92,44 @@ const { user } = useAuth(); // הוסף זאת לפני useEffect
   };
 
   const handleSubmitSale = async () => {
-    const totalAmount = calculateTotal();
+  const totalAmount = calculateTotal();
 
-    if (cart.length === 0) return setError('עגלת הקניות ריקה.');
-    if (isNaN(totalAmount) || totalAmount <= 0) return setError('סכום לתשלום אינו חוקי.');
-    if (!customerName.trim()) {
-      setError('נא להזין את שם הלקוח');
-      return;
-    }
+  if (cart.length === 0) return setError('עגלת הקניות ריקה.');
+  if (isNaN(totalAmount) || totalAmount <= 0) return setError('סכום לתשלום אינו חוקי.');
+  if (!selectedClientId) {
+    setError('נא לבחור לקוח מהרשימה');
+    return;
+  }
 
-    const saleData = {
-      customer_name: customerName.trim(),
-      address: form.address.trim(),
-      total_amount: Number(totalAmount.toFixed(2)),
-      seller_id: user.id, // 👈 הוספה חשובה!
-      items: cart.map(item => ({
-        product_id: item.product_id,
-        quantity: item.quantity
-      })),
-    };
-    try {
-      setLoading(true);
-      const result = await saleService.createSale(saleData);
-      alert(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.sale_id}`);
-      setCart([]);
-      setCustomerName('');
-      setForm({ address: '' });
-      const updatedProducts = await productService.getAllProducts();
-      setProducts(updatedProducts.filter(p => p.stock_quantity > 0));
-    } catch (err) {
-      console.error('❌ Create sale error:', err);
-      setError(err.response?.data?.message || 'שגיאה בביצוע המכירה.');
-    } finally {
-      setLoading(false);
-    }
+  const saleData = {
+    client_id: selectedClientId, // 👈 זה מה שאתה צריך לשלוח
+    address: form.address.trim(),
+    total_amount: Number(totalAmount.toFixed(2)),
+    seller_id: user.id,
+    items: cart.map(item => ({
+      product_id: item.product_id,
+      quantity: item.quantity
+    })),
+  };
+
+  try {
+    setLoading(true);
+    const result = await saleService.createSale(saleData);
+    alert(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.sale_id}`);
+    setCart([]);
+    setSelectedClientId(null);
+    setForm({ address: '' });
+    const updatedProducts = await productService.getAllProducts();
+    setProducts(updatedProducts.filter(p => p.stock_quantity > 0));
+  } catch (err) {
+    console.error('❌ Create sale error:', err);
+    setError(err.response?.data?.message || 'שגיאה בביצוע המכירה.');
+  } finally {
+    setLoading(false);
+  }
+};
+  const handleClientSelect = (clientId) => {
+    setSelectedClientId(clientId);
   };
 
   return (
@@ -133,16 +138,8 @@ const { user } = useAuth(); // הוסף זאת לפני useEffect
         <h2 className="text-xl font-bold">ביצוע מכירה</h2>
         {error && <p className="text-red-500 border border-red-300 bg-red-100 p-2 rounded">{error}</p>}
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <label htmlFor="customerName" className="font-semibold">שם לקוח :</label>
-          <input
-            type="text"
-            id="customerName"
-            className="border p-2 rounded w-full sm:max-w-sm"
-            value={customerName}
-            onChange={(e) => setCustomerName(DOMPurify.sanitize(e.target.value))}
-          />
-        </div>
+        <h2 className="text-xl mb-2">בחר לקוח</h2>
+        <ClientPicker selectedClientId={selectedClientId} onSelectClient={handleClientSelect} />
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <label htmlFor="address" className="font-semibold">כתובת למשלוח :</label>

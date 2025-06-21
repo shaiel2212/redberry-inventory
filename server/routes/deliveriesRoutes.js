@@ -4,6 +4,7 @@ const deliveriesController = require('../controllers/deliveriesController');
 const { requireAuth, requireUserOrAdmin  } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware'); // ✅ כאן השימוש נקי
 
+router.get('/all', requireAuth, requireUserOrAdmin, deliveriesController.getAllDeliveries);
 
 router.get('/pending', requireAuth, requireUserOrAdmin, deliveriesController.getPendingDeliveries);
 

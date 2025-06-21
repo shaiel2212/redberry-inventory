@@ -113,3 +113,36 @@ exports.updateDeliveryProof = async (req, res) => {
     res.status(500).json({ message: 'שגיאת שרת' });
   }
 };
+exports.getAllDeliveries = async (req, res) => {
+  try {
+    const [deliveries] = await pool.query(`
+      SELECT 
+        d.id,
+        d.sale_id,
+        s.customer_name,
+        s.address,
+        s.total_amount,
+        s.sale_date,
+        u.username AS seller_name,
+        p.name AS product_name,
+        p.description AS size,
+        si.quantity,
+        d.status,
+        d.assigned_to,
+        d.delivered_at,
+        d.delivery_proof_url,
+        d.delivery_proof_signed_url
+      FROM deliveries d
+      JOIN sales s ON d.sale_id = s.id
+      JOIN users u ON s.user_id = u.id
+      JOIN sale_items si ON si.sale_id = s.id
+      JOIN products p ON p.id = si.product_id
+      ORDER BY d.sale_id DESC;
+    `);
+
+    res.json(deliveries);
+  } catch (err) {
+    console.error('Error fetching all deliveries:', err.message);
+    res.status(500).send('Server error');
+  }
+};

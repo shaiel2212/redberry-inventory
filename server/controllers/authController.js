@@ -75,7 +75,6 @@ exports.loginUser = async (req, res) => {
   const username = xss(req.body.username);
   const password = req.body.password;
   console.log('Environment:', process.env.NODE_ENV);
-  console.log('API Base URL:', process.env.REACT_APP_API_BASE_URL);
   if (!username || !password) {
     return res.status(400).json({ message: 'Please enter username and password' });
   }

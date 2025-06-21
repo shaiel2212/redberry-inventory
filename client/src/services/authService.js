@@ -6,9 +6,6 @@ api.defaults.withCredentials = true;
 const API_URL = `${process.env.REACT_APP_API_BASE_URL}/auth`;
 
 
-console.log("🔧 Base URL:", process.env.REACT_APP_API_BASE_URL);
-console.log("🔧 API_URL:", API_URL);
-
 const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -18,8 +15,7 @@ const setAuthToken = (token) => {
 }; 
 
 const login = async (credentials) => {
-  console.log("🔁 API_URL (login):", API_URL);
-  console.log("🔁 Full login URL:", `${API_URL}/login`);
+
 
   try {
     const response = await api.post(

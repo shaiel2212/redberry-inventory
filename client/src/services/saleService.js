@@ -22,12 +22,35 @@ const getMySales = async () => {
   const response = await api.get('/sales/mine');
   return response.data;
 };
+export const updateSaleDiscount = (saleId, discountData) => {
+  
+  return api.patch(`/sales/${saleId}/discount`, discountData);
+};
+export const getSalesReport = async (filters = {}) => {
+  const token = localStorage.getItem('token'); // או איך שאתה שומר אותו
+  const params = new URLSearchParams(filters).toString();
+
+  const response = await api.get(`/sales/report?${params}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+};
+export const updateSaleDetails = (saleId, updateData) => {
+  return api.patch(`/sales/${saleId}/details`, updateData);
+};
+
 
 const saleService = {
   createSale,
   getAllSales,
   getMySales,
   getSaleById,
+  updateSaleDiscount,
+  getSalesReport,
+  updateSaleDetails,
 };
 
 export default saleService;
