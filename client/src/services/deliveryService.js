@@ -38,9 +38,15 @@ const uploadDeliveryProof = (deliveryId, file, type = 'unsigned') => {
   });
 };
 
+const assignToCourier = (id) => {
+  return api.patch(`/deliveries/${id}/assign`);
+};
+
+
 export default {
   getPendingDeliveries,
   getAllDeliveries, // ← חדש
   markAsDelivered,
   uploadDeliveryProof,
+  assignToCourier,
 };

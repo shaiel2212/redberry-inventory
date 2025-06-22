@@ -24,6 +24,8 @@ const DeliveriesPage = () => {
   const [deliveredId, setDeliveredId] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [updatedId, setUpdatedId] = useState(null);
+
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -158,6 +160,15 @@ const DeliveriesPage = () => {
                       >
                         <CheckCircle2 className="w-4 h-4" /> סופק
                       </motion.div>
+                    ) : updatedId === delivery.id ? (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-yellow-600 font-medium"
+                      >
+                        הוקצה לשליח ✔
+                      </motion.div>
                     ) : (
                       getStatusLabel(delivery.status)
                     )}
@@ -176,12 +187,17 @@ const DeliveriesPage = () => {
                           <DialogTitle className="text-lg font-bold">אישור סיום אספקה</DialogTitle>
                           <button onClick={() => setDialogOpen(false)}><X className="w-5 h-5 text-gray-500" /></button>
                         </div>
+
                         {errorMessage && (
-                          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">{errorMessage}</div>
+                          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
+                            {errorMessage}
+                          </div>
                         )}
+
                         <p className="mb-4">
                           הזמנה <strong>#{selectedDelivery?.sale_id}</strong> ללקוח <strong>{selectedDelivery?.customer_name}</strong>
                         </p>
+
                         {(user?.role === 'admin' || user?.role === 'user') && (
                           <>
                             <div className="mb-3">
@@ -192,6 +208,7 @@ const DeliveriesPage = () => {
                               }} className="block w-full text-sm text-gray-700" />
                               {selectedDelivery?.delivery_proof_url && <p className="text-xs text-blue-600">✔ תעודה קיימת</p>}
                             </div>
+
                             <div className="mb-3">
                               <label className="block text-sm font-medium mb-1 text-green-700">העלאת תעודה חתומה:</label>
                               <input type="file" accept="image/*" onChange={(e) => {
@@ -200,19 +217,55 @@ const DeliveriesPage = () => {
                               }} className="block w-full text-sm text-gray-700" />
                               {selectedDelivery?.delivery_proof_signed_url && <p className="text-xs text-green-600">✔ תעודה חתומה קיימת – יש ללחוץ על "סימון כסופק"</p>}
                             </div>
+
+                            {selectedDelivery?.delivery_proof_url && selectedDelivery?.status === 'pending' && (
+                              <div className="mb-3">
+                                <button
+                                  onClick={() => assignToCourier(selectedDelivery.id)}
+                                  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 w-full"
+                                >
+                                  העבר לשליח
+                                </button>
+                              </div>
+                            )}
                           </>
                         )}
+
                         {!selectedDelivery?.delivery_proof_signed_url && (
                           <p className="text-red-600 text-sm mb-2">לא ניתן לאשר אספקה – יש להעלות תעודה חתומה!</p>
                         )}
+
                         <div className="flex justify-end gap-2">
                           <button onClick={() => {
                             setDialogOpen(false);
                             setSelectedDelivery(null);
                           }} className="px-3 py-1 border rounded text-gray-600 hover:bg-gray-100">ביטול</button>
-                          <button disabled={!selectedDelivery?.delivery_proof_signed_url} onClick={() => markAsDelivered(selectedDelivery.id)} className={`px-3 py-1 rounded text-white ${!selectedDelivery?.delivery_proof_signed_url ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}>
+
+                          <button
+                            disabled={!selectedDelivery?.delivery_proof_signed_url}
+                            onClick={() => markAsDelivered(selectedDelivery.id)}
+                            className={`px-3 py-1 rounded text-white ${!selectedDelivery?.delivery_proof_signed_url ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                          >
                             סימון כסופק
                           </button>
+                          {(user?.role === 'admin') && selectedDelivery?.status === 'pending' && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await deliveryService.assignToCourier(selectedDelivery.id);
+                                  fetchDeliveries();
+                                  fetchAllDeliveries();
+                                  toast.success('המשלוח הוקצה לשליח בהצלחה');
+                                } catch (err) {
+                                  console.error('שגיאה בהקצאה:', err);
+                                  toast.error('שגיאה בהקצאת משלוח');
+                                }
+                              }}
+                              className="px-3 py-1 rounded text-white bg-yellow-500 hover:bg-yellow-600"
+                            >
+                              הקצה לשליח
+                            </button>
+                          )}
                         </div>
                       </DialogContent>
                     </Dialog>

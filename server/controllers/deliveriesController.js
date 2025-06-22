@@ -207,3 +207,23 @@ exports.getDeliveryStatuses = async (req, res) => {
     res.status(500).json({ message: 'שגיאה בשליפת סטטוסים' });
   }
 };
+
+
+exports.assignToCourier = async (req, res) => {
+  const deliveryId = parseInt(req.params.id);
+  try {
+    const [result] = await pool.query(
+      'UPDATE deliveries SET status = ? WHERE id = ?',
+      ['assigned', deliveryId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'משלוח לא נמצא' });
+    }
+
+    res.json({ message: 'המשלוח הוקצה לשליח בהצלחה' });
+  } catch (err) {
+    console.error('שגיאה בהקצאת משלוח:', err);
+    res.status(500).json({ message: 'שגיאה בהקצאת משלוח' });
+  }
+};
