@@ -95,7 +95,7 @@ const DeliveriesPage = () => {
     const encoded = encodeURIComponent(address);
     return `https://waze.com/ul?q=${encoded}&navigate=yes`;
   };
-  
+
 
   const filteredDeliveries = activeTab === 'pending' ? deliveries : allDeliveries;
 
@@ -252,19 +252,23 @@ const DeliveriesPage = () => {
                           </button>
                           {(user?.role === 'admin') && selectedDelivery?.status === 'pending' && (
                             <button
+                              disabled={!selectedDelivery?.delivery_proof_url}
                               onClick={async () => {
                                 try {
                                   await deliveryService.assignToCourier(selectedDelivery.id);
                                   fetchDeliveries();
                                   fetchAllDeliveries();
-                                  setUpdatedId(selectedDelivery.id);
                                   toast.success('המשלוח הוקצה לשליח בהצלחה');
                                 } catch (err) {
                                   console.error('שגיאה בהקצאה:', err);
                                   toast.error('שגיאה בהקצאת משלוח');
                                 }
                               }}
-                              className="px-3 py-1 rounded text-white bg-yellow-500 hover:bg-yellow-600"
+                              className={`px-3 py-1 rounded text-white 
+                             ${!selectedDelivery?.delivery_proof_url
+                                  ? 'bg-gray-400 cursor-not-allowed'
+                                  : 'bg-yellow-500 hover:bg-yellow-600'}
+    `}
                             >
                               הקצה לשליח
                             </button>
