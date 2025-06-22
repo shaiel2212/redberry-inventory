@@ -251,27 +251,31 @@ const DeliveriesPage = () => {
                             סימון כסופק
                           </button>
                           {(user?.role === 'admin') && selectedDelivery?.status === 'pending' && (
-                            <button
-                              disabled={!selectedDelivery?.delivery_proof_url}
-                              onClick={async () => {
-                                try {
-                                  await deliveryService.assignToCourier(selectedDelivery.id);
-                                  fetchDeliveries();
-                                  fetchAllDeliveries();
-                                  toast.success('המשלוח הוקצה לשליח בהצלחה');
-                                } catch (err) {
-                                  console.error('שגיאה בהקצאה:', err);
-                                  toast.error('שגיאה בהקצאת משלוח');
-                                }
-                              }}
-                              className={`px-3 py-1 rounded text-white 
-                             ${!selectedDelivery?.delivery_proof_url
-                                  ? 'bg-gray-400 cursor-not-allowed'
-                                  : 'bg-yellow-500 hover:bg-yellow-600'}
-    `}
-                            >
-                              הקצה לשליח
-                            </button>
+                            <div className="flex flex-col items-end">
+                              <button
+                                disabled={!selectedDelivery?.delivery_proof_url}
+                                onClick={async () => {
+                                  try {
+                                    await deliveryService.assignToCourier(selectedDelivery.id);
+                                    fetchDeliveries();
+                                    fetchAllDeliveries();
+                                    toast.success('המשלוח הוקצה לשליח בהצלחה');
+                                  } catch (err) {
+                                    console.error('שגיאה בהקצאה:', err);
+                                    toast.error('שגיאה בהקצאת משלוח');
+                                  }
+                                }}
+                                className={`px-3 py-1 rounded text-white ${!selectedDelivery?.delivery_proof_url ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}
+                              >
+                                הקצה לשליח
+                              </button>
+
+                              {!selectedDelivery?.delivery_proof_url && (
+                                <p className="text-xs text-red-500 mt-1">
+                                  יש להעלות תעודת טיוטה לפני הקצאה לשליח.
+                                </p>
+                              )}
+                            </div>
                           )}
                         </div>
                       </DialogContent>
