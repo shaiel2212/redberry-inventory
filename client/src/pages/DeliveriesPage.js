@@ -6,6 +6,14 @@ import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '../components
 import { Loader2, CheckCircle2, MapPin, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MainLayout from '../components/layout/MainLayout';
+import { DELIVERY_STATUSES } from '../constants/deliveryStatuses';
+
+
+const getStatusLabel = (statusValue) => {
+  const found = DELIVERY_STATUSES.find((s) => s.value === statusValue);
+  return found ? found.label : statusValue;
+};
+
 
 const DeliveriesPage = () => {
   const [activeTab, setActiveTab] = useState('pending');
@@ -142,10 +150,17 @@ const DeliveriesPage = () => {
                   </td>
                   <td className="p-2 border">
                     {deliveredId === delivery.id ? (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.4 }} className="flex items-center text-green-600 gap-1">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.4 }}
+                        className="flex items-center text-green-600 gap-1"
+                      >
                         <CheckCircle2 className="w-4 h-4" /> סופק
                       </motion.div>
-                    ) : delivery.status}
+                    ) : (
+                      getStatusLabel(delivery.status)
+                    )}
                   </td>
                   <td className="p-2 border">
                     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -213,4 +228,3 @@ const DeliveriesPage = () => {
 };
 
 export default DeliveriesPage;
- 

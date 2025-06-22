@@ -146,3 +146,64 @@ exports.getAllDeliveries = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+// deliveriesController.js
+exports.updateDeliveryStatus = async (req, res) => {
+  const deliveryId = parseInt(req.params.id);
+  const { status } = req.body;
+  const updatedByUserId = req.user?.id;
+
+  const allowedStatuses = ['pending', 'assigned', 'picked_up', 'delivered', 'cancelled'];
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({ message: 'סטטוס לא תקין' });
+  }
+
+  try {
+    const updates = ['status = ?'];
+    const values = [status];
+
+    if (status === 'picked_up') {
+      updates.push('picked_up_at = NOW()');
+    }
+
+    updates.push('updated_by_user = ?');
+    values.push(updatedByUserId);
+
+    await pool.query(
+      `UPDATE deliveries SET ${updates.join(', ')} WHERE id = ?`,
+      [...values, deliveryId]
+    );
+
+    res.json({ message: 'סטטוס עודכן בהצלחה' });
+  } catch (err) {
+    console.error('שגיאה בעדכון סטטוס:', err.message);
+    res.status(500).json({ message: 'שגיאה בעדכון סטטוס משלוח' });
+  }
+};
+
+exports.getDeliveryStatuses = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT COLUMN_TYPE 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_NAME = 'deliveries' 
+      AND COLUMN_NAME = 'status'
+    `);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'לא נמצאה עמודת סטטוס' });
+    }
+
+    const columnType = rows[0].COLUMN_TYPE; // enum('pending','assigned',...)
+    const statuses = columnType
+      .replace(/^enum\(/, '')
+      .replace(/\)$/, '')
+      .split(',')
+      .map(s => s.trim().replace(/^'/, '').replace(/'$/, ''));
+
+    res.json(statuses);
+  } catch (err) {
+    console.error('Error fetching status enum:', err);
+    res.status(500).json({ message: 'שגיאה בשליפת סטטוסים' });
+  }
+};

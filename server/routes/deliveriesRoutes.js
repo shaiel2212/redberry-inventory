@@ -9,7 +9,9 @@ router.get('/all', requireAuth, requireUserOrAdmin, deliveriesController.getAllD
 router.get('/pending', requireAuth, requireUserOrAdmin, deliveriesController.getPendingDeliveries);
 
 router.patch('/:id/deliver', requireAuth, requireUserOrAdmin, deliveriesController.markAsDelivered);
+router.get('/statuses', requireAuth, deliveriesController.getDeliveryStatuses);
 
 router.patch('/:id/proof', requireAuth, requireUserOrAdmin, upload.single('proof'), deliveriesController.updateDeliveryProof);
+router.patch('/:id/status', requireAuth, requireUserOrAdmin, deliveriesController.updateDeliveryStatus);
 
 module.exports = router;
