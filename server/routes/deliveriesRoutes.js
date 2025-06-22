@@ -9,7 +9,7 @@ router.get('/all', requireAuth, requireUserOrAdmin, deliveriesController.getAllD
 router.get('/pending', requireAuth, requireUserOrAdmin, deliveriesController.getPendingDeliveries);
 
 router.patch('/:id/deliver', requireAuth, requireUserOrAdmin, deliveriesController.markAsDelivered);
-router.patch('/:id/assign', verifyToken, deliveriesController.assignToCourier);
+router.patch('/:id/assign', requireAuth, deliveriesController.assignToCourier);
 
 router.get('/statuses', requireAuth, deliveriesController.getDeliveryStatuses);
 
