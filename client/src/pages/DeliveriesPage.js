@@ -7,6 +7,7 @@ import { Loader2, CheckCircle2, MapPin, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MainLayout from '../components/layout/MainLayout';
 import { DELIVERY_STATUSES } from '../constants/deliveryStatuses';
+import { toast } from 'react-hot-toast';
 
 
 const getStatusLabel = (statusValue) => {
@@ -94,6 +95,7 @@ const DeliveriesPage = () => {
     const encoded = encodeURIComponent(address);
     return `https://waze.com/ul?q=${encoded}&navigate=yes`;
   };
+  
 
   const filteredDeliveries = activeTab === 'pending' ? deliveries : allDeliveries;
 
@@ -221,7 +223,7 @@ const DeliveriesPage = () => {
                             {selectedDelivery?.delivery_proof_url && selectedDelivery?.status === 'pending' && (
                               <div className="mb-3">
                                 <button
-                                  onClick={() => assignToCourier(selectedDelivery.id)}
+                                  onClick={() => deliveryService.assignToCourier(selectedDelivery.id)}
                                   className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 w-full"
                                 >
                                   העבר לשליח
@@ -255,6 +257,7 @@ const DeliveriesPage = () => {
                                   await deliveryService.assignToCourier(selectedDelivery.id);
                                   fetchDeliveries();
                                   fetchAllDeliveries();
+                                  setUpdatedId(selectedDelivery.id);
                                   toast.success('המשלוח הוקצה לשליח בהצלחה');
                                 } catch (err) {
                                   console.error('שגיאה בהקצאה:', err);
