@@ -188,7 +188,7 @@ exports.updateSaleDiscount = async (req, res) => {
              admin.username AS discount_given_by
       FROM sales s
       LEFT JOIN clients c ON s.client_id = c.id
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.id = u.id
       LEFT JOIN users admin ON s.discount_given_by = admin.id
       WHERE s.id = ?
     `, [saleId]);
@@ -367,7 +367,7 @@ exports.updateSaleDetails = async (req, res) => {
     values.push(discount_value);
     updates.push('discount_given_at = NOW()');
     updates.push('discount_given_by = ?');
-    values.push(req.user.username);
+    values.push(req.user.id);
   }
 
   if (delivery_cost !== undefined) {
