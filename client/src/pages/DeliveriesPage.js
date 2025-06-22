@@ -219,17 +219,6 @@ const DeliveriesPage = () => {
                               }} className="block w-full text-sm text-gray-700" />
                               {selectedDelivery?.delivery_proof_signed_url && <p className="text-xs text-green-600">✔ תעודה חתומה קיימת – יש ללחוץ על "סימון כסופק"</p>}
                             </div>
-
-                            {selectedDelivery?.delivery_proof_url && selectedDelivery?.status === 'pending' && (
-                              <div className="mb-3">
-                                <button
-                                  onClick={() => deliveryService.assignToCourier(selectedDelivery.id)}
-                                  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 w-full"
-                                >
-                                  העבר לשליח
-                                </button>
-                              </div>
-                            )}
                           </>
                         )}
 
