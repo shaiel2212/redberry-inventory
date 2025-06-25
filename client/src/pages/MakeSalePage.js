@@ -13,7 +13,7 @@ const MakeSalePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ address: '' });
+  const [form, setForm] = useState({ address: '', notes: '' });
   const [selectedClientId, setSelectedClientId] = useState(null);
 
   const navigate = useNavigate();
@@ -92,42 +92,45 @@ const MakeSalePage = () => {
   };
 
   const handleSubmitSale = async () => {
-  const totalAmount = calculateTotal();
+    const totalAmount = calculateTotal();
 
-  if (cart.length === 0) return setError('עגלת הקניות ריקה.');
-  if (isNaN(totalAmount) || totalAmount <= 0) return setError('סכום לתשלום אינו חוקי.');
-  if (!selectedClientId) {
-    setError('נא לבחור לקוח מהרשימה');
-    return;
-  }
+    if (cart.length === 0) return setError('עגלת הקניות ריקה.');
+    if (isNaN(totalAmount) || totalAmount <= 0) return setError('סכום לתשלום אינו חוקי.');
+    if (!selectedClientId) {
+      setError('נא לבחור לקוח מהרשימה');
+      return;
+    }
 
-  const saleData = {
-    client_id: selectedClientId, // 👈 זה מה שאתה צריך לשלוח
-    address: form.address.trim(),
-    total_amount: Number(totalAmount.toFixed(2)),
-    seller_id: user.id,
-    items: cart.map(item => ({
-      product_id: item.product_id,
-      quantity: item.quantity
-    })),
+    const saleData = {
+      client_id: selectedClientId, // 👈 זה מה שאתה צריך לשלוח
+      address: form.address.trim(),
+      total_amount: Number(totalAmount.toFixed(2)),
+      seller_id: user.id,
+      notes: form.notes?.trim() || null,
+      items: cart.map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity
+      })),
+    };
+
+    try {
+      setLoading(true);
+      console.log("🔍 saleData:", saleData);
+
+      const result = await saleService.createSale(saleData);
+      alert(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.sale_id}`);
+      setCart([]);
+      setSelectedClientId(null);
+      setForm({ address: '', notes: ''  });
+      const updatedProducts = await productService.getAllProducts();
+      setProducts(updatedProducts.filter(p => p.stock_quantity > 0));
+    } catch (err) {
+      console.error('❌ Create sale error:', err);
+      setError(err.response?.data?.message || 'שגיאה בביצוע המכירה.');
+    } finally {
+      setLoading(false);
+    }
   };
-
-  try {
-    setLoading(true);
-    const result = await saleService.createSale(saleData);
-    alert(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.sale_id}`);
-    setCart([]);
-    setSelectedClientId(null);
-    setForm({ address: '' });
-    const updatedProducts = await productService.getAllProducts();
-    setProducts(updatedProducts.filter(p => p.stock_quantity > 0));
-  } catch (err) {
-    console.error('❌ Create sale error:', err);
-    setError(err.response?.data?.message || 'שגיאה בביצוע המכירה.');
-  } finally {
-    setLoading(false);
-  }
-};
   const handleClientSelect = (clientId) => {
     setSelectedClientId(clientId);
   };
@@ -175,6 +178,18 @@ const MakeSalePage = () => {
               </li>
             ))}
           </ul>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <label htmlFor="notes" className="font-semibold">הערות:</label>
+          <textarea
+            id="notes"
+            name="notes"
+            rows={2}
+            className="border p-2 rounded w-full sm:max-w-sm"
+            placeholder="הערות פנימיות / בקשות מיוחדות..."
+            value={form.notes}
+            onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
+          />
         </div>
 
         <h3 className="text-lg font-bold mt-4">עגלת קניות:</h3>

@@ -34,6 +34,7 @@ exports.createSale = async (req, res) => {
   const address = xss(req.body.address || '');
   const userId = req.user?.id;
   const deliveryCost = parseFloat(req.body.delivery_cost || 0);
+  const notes = req.body.notes?.trim() || null;
 
   if (!total_amount || isNaN(total_amount)) return res.status(400).json({ message: 'סכום לא תקין' });
   if (!userId || isNaN(userId)) return res.status(400).json({ message: 'מזהה משתמש שגוי' });
@@ -44,8 +45,8 @@ exports.createSale = async (req, res) => {
   try {
     await connection.beginTransaction();
     const [saleResult] = await connection.query(
-      `INSERT INTO sales (total_amount, user_id, address, client_id, delivery_cost) VALUES (?, ?, ?, ?, ?)`,
-      [total_amount, userId, address, clientId, deliveryCost]
+      `INSERT INTO sales (total_amount, user_id, address, client_id, delivery_cost, notes) VALUES (?, ?, ?, ?, ?,?)`,
+      [total_amount, userId, address, clientId, deliveryCost, notes]
     );
     const saleId = saleResult.insertId;
 
@@ -151,7 +152,7 @@ exports.getSalesForCurrentSeller = async (req, res) => {
   if (!sellerId || isNaN(sellerId)) return res.status(400).json({ message: 'מזהה משתמש שגוי' });
   try {
     const [rows] = await pool.query(`
-      SELECT s.id, c.full_name AS customer_name, s.sale_date, s.total_amount
+      SELECT s.id, c.full_name AS customer_name, s.sale_date, s.total_amount, s.notes
       FROM sales s
       LEFT JOIN clients c ON s.client_id = c.id
       WHERE s.user_id = ?
@@ -255,6 +256,7 @@ exports.getSalesReport = async (req, res) => {
       s.delivery_cost,
       s.discount_percent,
       s.discount_amount,
+      s.notes,
       c.full_name AS customer_name,
       c.base_discount_percent,
       c.cash_discount_percent,

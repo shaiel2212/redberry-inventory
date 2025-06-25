@@ -96,6 +96,7 @@ const SalesAdminPage = () => {
                 <th className="p-2 border">נמכר ע"י</th>
                 <th className="p-2 border">סכום כולל</th>
                 <th className="p-2 border">סה"כ לאחר הנחות</th>
+                <th className="p-2 border" >הערות</th>
                 <th className="p-2 border">פעולות</th>
               </tr>
             </thead>
@@ -108,6 +109,7 @@ const SalesAdminPage = () => {
                   <td className="p-2 border">{sale.sold_by || '-'}</td>
                   <td className="p-2 border">₪{parseFloat(sale.total_amount).toFixed(2)}</td>
                   <td className="p-2 border font-semibold text-green-700">₪{parseFloat(sale.final_amount || sale.total_amount).toFixed(2)}</td>
+                  <td className="p-2 border">{sale.notes || '-'}</td> {/* חדש */}
                   <td className="p-2 border">
                     <button
                       onClick={() => fetchSaleDetails(sale.id)}
@@ -169,6 +171,11 @@ const SalesAdminPage = () => {
                   <p><strong>בתאריך:</strong> {new Date(selectedSaleDetails.discount_given_at).toLocaleString('he-IL')}</p>
                 )}
               </div>
+              {selectedSaleDetails.notes && (
+                <div className="mt-2 text-sm text-gray-700">
+                  <strong>הערות:</strong> {selectedSaleDetails.notes}
+                </div>
+              )}
 
               {editDiscount ? (
                 <div className="mt-4 space-y-2">
