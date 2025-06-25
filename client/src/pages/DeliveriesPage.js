@@ -3,12 +3,13 @@ import deliveryService from '../services/deliveryService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '../components/ui/dialog';
-import { Loader2, CheckCircle2, MapPin, X } from 'lucide-react';
+import { Loader2, CheckCircle2, MapPin, X, Badge } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MainLayout from '../components/layout/MainLayout';
 import { DELIVERY_STATUSES } from '../constants/deliveryStatuses';
 import { toast } from 'react-hot-toast';
-
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 const getStatusLabel = (statusValue) => {
   const found = DELIVERY_STATUSES.find((s) => s.value === statusValue);
@@ -27,6 +28,7 @@ const DeliveriesPage = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [updatedId, setUpdatedId] = useState(null);
 
+  console.log('Selected delivery:', selectedDelivery);
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -41,9 +43,12 @@ const DeliveriesPage = () => {
   }, [user, navigate]);
 
   const fetchDeliveries = async () => {
+    
+
     try {
       const response = await deliveryService.getPendingDeliveries();
       setDeliveries(response.data);
+      console.log('📦 Deliveries:', response.data);
     } catch (err) {
       console.error('שגיאה בטעינת משלוחים:', err);
     }
@@ -51,7 +56,10 @@ const DeliveriesPage = () => {
 
   const fetchAllDeliveries = async () => {
     try {
+    
+
       const response = await deliveryService.getAllDeliveries();
+      console.log('📦 Deliveries:', response.data);
       setAllDeliveries(response.data);
     } catch (err) {
       console.error('שגיאה בטעינת כל המשלוחים:', err);
@@ -95,7 +103,10 @@ const DeliveriesPage = () => {
     const encoded = encodeURIComponent(address);
     return `https://waze.com/ul?q=${encoded}&navigate=yes`;
   };
-
+  const openDetails = (delivery) => {
+    setSelectedDelivery(delivery);
+    setDialogOpen(true);
+  };
 
   const filteredDeliveries = activeTab === 'pending' ? deliveries : allDeliveries;
 
@@ -199,6 +210,13 @@ const DeliveriesPage = () => {
                         <p className="mb-4">
                           הזמנה <strong>#{selectedDelivery?.sale_id}</strong> ללקוח <strong>{selectedDelivery?.customer_name}</strong>
                         </p>
+                        {selectedDelivery?.assigned_by_name && selectedDelivery?.assigned_at && (
+                          <p className="text-sm text-gray-600 mb-4">
+                            הוקצה ע״י <strong>{selectedDelivery.assigned_by_name}</strong>
+                            בתאריך <strong>{new Date(selectedDelivery.assigned_at).toLocaleString('he-IL')}</strong>
+                          </p>
+                        )}
+
 
                         {(user?.role === 'admin' || user?.role === 'user') && (
                           <>

@@ -23,7 +23,6 @@ const calculateFinalAmount = (sale) => {
   return Number(final.toFixed(2));
 };
 
-
 exports.createSale = async (req, res) => {
   const items = req.body.items.map(item => ({
     product_id: parseInt(item.product_id),
@@ -44,9 +43,19 @@ exports.createSale = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
+
+    // 🧠 שליפת שם הלקוח
+    const [[client]] = await connection.query(
+      'SELECT full_name FROM clients WHERE id = ?',
+      [clientId]
+    );
+    const customerName = client?.full_name || 'ללא שם';
+
+    // 💾 הכנסת המכירה עם שם הלקוח
     const [saleResult] = await connection.query(
-      `INSERT INTO sales (total_amount, user_id, address, client_id, delivery_cost, notes) VALUES (?, ?, ?, ?, ?,?)`,
-      [total_amount, userId, address, clientId, deliveryCost, notes]
+      `INSERT INTO sales (total_amount, user_id, address, client_id, delivery_cost, notes, customer_name)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [total_amount, userId, address, clientId, deliveryCost, notes, customerName]
     );
     const saleId = saleResult.insertId;
 
@@ -56,7 +65,10 @@ exports.createSale = async (req, res) => {
     );
 
     for (const item of items) {
-      const [[product]] = await connection.query('SELECT sale_price, cost_price FROM products WHERE id = ?', [item.product_id]);
+      const [[product]] = await connection.query(
+        'SELECT sale_price, cost_price FROM products WHERE id = ?',
+        [item.product_id]
+      );
       if (!product) throw new Error(`Product ID ${item.product_id} not found`);
 
       const pricePerUnit = parseFloat(product.sale_price);
@@ -64,13 +76,16 @@ exports.createSale = async (req, res) => {
       const profitPerItem = pricePerUnit - costPrice;
       const totalProfit = profitPerItem * item.quantity;
 
-      await connection.query(`
-        INSERT INTO sale_items (sale_id, product_id, quantity, price_per_unit, cost_price, profit_per_item, total_profit)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `, [saleId, item.product_id, item.quantity, pricePerUnit, costPrice, profitPerItem, totalProfit]);
+      await connection.query(
+        `INSERT INTO sale_items (sale_id, product_id, quantity, price_per_unit, cost_price, profit_per_item, total_profit)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [saleId, item.product_id, item.quantity, pricePerUnit, costPrice, profitPerItem, totalProfit]
+      );
 
-      await connection.query('UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ? AND stock_quantity >= ?',
-        [item.quantity, item.product_id, item.quantity]);
+      await connection.query(
+        'UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ? AND stock_quantity >= ?',
+        [item.quantity, item.product_id, item.quantity]
+      );
     }
 
     await connection.commit();
