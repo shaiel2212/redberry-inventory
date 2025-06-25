@@ -81,7 +81,7 @@ const SalesAdminPage = () => {
   return (
     <MainLayout>
       <div dir="rtl" className="p-4 max-w-5xl mx-auto space-y-4">
-        <h2 className="text-2xl font-bold">היסטוריית מכירות</h2>
+        <h2 className="text-2xl font-bold">ניהול מכירות</h2>
         {error && <p className="text-red-600">{error}</p>}
         {sales.length === 0 && !loading && <p>לא נמצאו מכירות.</p>}
 

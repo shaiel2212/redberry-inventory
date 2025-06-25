@@ -47,7 +47,7 @@ const Navbar = () => {
 
           {/* 🧾 SELLER */}
           {user?.role === 'seller' && (
-            <li><Link to="/my-sales" className="hover:underline">היסטוריית מכירות</Link></li>
+            <li><Link to="/my-sales" className="hover:underline">ניהול מכירות</Link></li>
           )}
 
           {/* לכל תפקיד */}
