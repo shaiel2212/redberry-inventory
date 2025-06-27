@@ -147,7 +147,7 @@ const DeliveriesPage = () => {
           ))}
         </div>
 
-        <div>
+        <div className="hidden md:block" >
           <table className="min-w-full text-sm border rounded overflow-hidden shadow">
             <thead>
               <tr className="bg-gray-100 text-right">
