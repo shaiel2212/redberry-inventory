@@ -22,7 +22,6 @@ const calculateFinalAmount = (sale) => {
   }
   return Number(final.toFixed(2));
 };
-
 exports.createSale = async (req, res) => {
   const items = req.body.items.map(item => ({
     product_id: parseInt(item.product_id),
@@ -44,29 +43,21 @@ exports.createSale = async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // 🧠 שליפת שם הלקוח
-    const [[client]] = await connection.query(
-      'SELECT full_name FROM clients WHERE id = ?',
-      [clientId]
-    );
+    const [[client]] = await connection.query('SELECT full_name FROM clients WHERE id = ?', [clientId]);
     const customerName = client?.full_name || 'ללא שם';
 
-    // 💾 הכנסת המכירה עם שם הלקוח
     const [saleResult] = await connection.query(
-      `INSERT INTO sales (total_amount, user_id, address, client_id, delivery_cost, notes, customer_name)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO sales (total_amount, user_id, address, client_id, delivery_cost, notes, customer_name, has_unsupplied_items)
+       VALUES (?, ?, ?, ?, ?, ?, ?, FALSE)`,
       [total_amount, userId, address, clientId, deliveryCost, notes, customerName]
     );
     const saleId = saleResult.insertId;
 
-    await connection.query(
-      'INSERT INTO deliveries (sale_id, status, assigned_to, picked_up_at) VALUES (?, ?, ?, ?)',
-      [saleId, 'pending', userId, new Date()]
-    );
+    let hasUnsupplied = false;
 
     for (const item of items) {
       const [[product]] = await connection.query(
-        'SELECT sale_price, cost_price FROM products WHERE id = ?',
+        'SELECT sale_price, cost_price, stock_quantity FROM products WHERE id = ?',
         [item.product_id]
       );
       if (!product) throw new Error(`Product ID ${item.product_id} not found`);
@@ -75,21 +66,54 @@ exports.createSale = async (req, res) => {
       const costPrice = parseFloat(product.cost_price);
       const profitPerItem = pricePerUnit - costPrice;
       const totalProfit = profitPerItem * item.quantity;
+      const stockAvailable = parseInt(product.stock_quantity);
 
+      const isSupplied = stockAvailable >= item.quantity;
+
+      // עדכון מלאי – גם אם המלאי יורד למינוס
       await connection.query(
-        `INSERT INTO sale_items (sale_id, product_id, quantity, price_per_unit, cost_price, profit_per_item, total_profit)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [saleId, item.product_id, item.quantity, pricePerUnit, costPrice, profitPerItem, totalProfit]
+        'UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?',
+        [item.quantity, item.product_id]
       );
 
       await connection.query(
-        'UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ? AND stock_quantity >= ?',
-        [item.quantity, item.product_id, item.quantity]
+        `INSERT INTO sale_items (sale_id, product_id, quantity, price_per_unit, cost_price, profit_per_item, total_profit, is_supplied)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [saleId, item.product_id, item.quantity, pricePerUnit, costPrice, profitPerItem, totalProfit, isSupplied]
+      );
+
+      if (!isSupplied) {
+        hasUnsupplied = true;
+        await connection.query(
+          `INSERT INTO pending_orders (product_id, quantity, client_id, sale_notes, created_by)
+           VALUES (?, ?, ?, ?, ?)`,
+          [item.product_id, item.quantity, clientId, notes, userId]
+        );
+      }
+    }
+
+    const deliveryStatus = hasUnsupplied ? 'awaiting_stock' : 'pending';
+
+    await connection.query(
+      `INSERT INTO deliveries (sale_id, status, assigned_to, picked_up_at, is_awaiting_stock)
+       VALUES (?, ?, ?, ?, ?)`,
+      [saleId, deliveryStatus, userId, new Date(), hasUnsupplied]
+    );
+
+    if (hasUnsupplied) {
+      await connection.query(
+        'UPDATE sales SET has_unsupplied_items = TRUE WHERE id = ?',
+        [saleId]
       );
     }
 
     await connection.commit();
-    res.status(201).json({ sale_id: saleId });
+    res.status(201).json({
+      sale_id: saleId,
+      message: hasUnsupplied
+        ? 'המכירה בוצעה. חלק מהמוצרים סומנו כלא מסופקים.'
+        : 'המכירה בוצעה בהצלחה.'
+    });
   } catch (err) {
     await connection.rollback();
     console.error('❌ Error creating sale:', err);
@@ -98,6 +122,9 @@ exports.createSale = async (req, res) => {
     connection.release();
   }
 };
+
+
+
 
 exports.getSaleById = async (req, res) => {
   const saleId = parseInt(req.params.id, 10);
@@ -137,7 +164,8 @@ exports.getSaleById = async (req, res) => {
         si.quantity, 
         si.price_per_unit, 
         si.cost_price, 
-        si.total_profit
+        si.total_profit,
+        si.is_supplied
       FROM sale_items si
       JOIN products p ON si.product_id = p.id
       WHERE si.sale_id = ?
@@ -154,6 +182,7 @@ exports.getSaleById = async (req, res) => {
       delivery_cost,
       total_product_profit,
       total_profit,
+      has_unsupplied_items: !!sale.has_unsupplied_items
     });
 
   } catch (err) {
@@ -218,7 +247,6 @@ exports.updateSaleDiscount = async (req, res) => {
     res.status(500).json({ message: 'שגיאה בעדכון הנחה' });
   }
 };
-
 exports.getAllSales = async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -236,7 +264,7 @@ exports.getAllSales = async (req, res) => {
       ORDER BY s.sale_date DESC
     `);
 
-    // עבור כל מכירה נחזיר גם את final_amount וגם total_profit
+    // עבור כל מכירה נחזיר גם final_amount, total_profit וגם הדגל has_unsupplied_items
     const enhancedRows = await Promise.all(rows.map(async (sale) => {
       const [profitResult] = await pool.query(
         `SELECT SUM(total_profit) AS total FROM sale_items WHERE sale_id = ?`,
@@ -250,6 +278,7 @@ exports.getAllSales = async (req, res) => {
         ...sale,
         final_amount: calculateFinalAmount(sale),
         total_profit: Number((productProfit - deliveryCost).toFixed(2)),
+        has_unsupplied_items: !!sale.has_unsupplied_items // ודא שזה יופיע כתאריך בוליאני
       };
     }));
 
@@ -259,7 +288,6 @@ exports.getAllSales = async (req, res) => {
     res.status(500).json({ message: 'שגיאה בטעינת רשימת מכירות' });
   }
 };
-
 exports.getSalesReport = async (req, res) => {
   const { clientId, productId, startDate, endDate } = req.query;
 
@@ -271,6 +299,7 @@ exports.getSalesReport = async (req, res) => {
       s.delivery_cost,
       s.discount_percent,
       s.discount_amount,
+      s.has_unsupplied_items,
       s.notes,
       c.full_name AS customer_name,
       c.base_discount_percent,
@@ -295,28 +324,22 @@ exports.getSalesReport = async (req, res) => {
     query += ` AND s.client_id = ?`;
     params.push(clientId);
   }
+
   if (productId) {
     query += ` AND si.product_id = ?`;
     params.push(productId);
   }
-  if (startDate) {
-    query += ` AND s.sale_date >= ?`;
-    params.push(startDate);
-  }
-  if (endDate) {
-    query += ` AND s.sale_date <= ?`;
-    params.push(endDate);
-  }
+
   if (startDate) {
     query += ` AND s.sale_date >= ?`;
     params.push(startDate);
   }
 
   if (endDate) {
-    query += ` AND s.sale_date < ?`;
     const nextDay = new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000)
       .toISOString()
       .slice(0, 10);
+    query += ` AND s.sale_date < ?`;
     params.push(nextDay);
   }
 
@@ -326,10 +349,10 @@ exports.getSalesReport = async (req, res) => {
     const [rows] = await pool.query(query, params);
 
     const enrichedRows = rows.map(row => {
-      const totalAmount = Number(row.total_amount) || 0;
-      const quantity = Number(row.quantity) || 1;
-      const deliveryCost = Number(row.delivery_cost) || 0;
-      const costPrice = Number(row.cost_price) || 0;
+      const totalAmount = Number(row.total_amount || 0);
+      const quantity = Number(row.quantity || 1);
+      const deliveryCost = Number(row.delivery_cost || 0);
+      const costPrice = Number(row.cost_price || 0);
 
       const baseDiscount = Number(row.base_discount_percent || 0);
       const cashDiscount = Number(row.cash_discount_percent || 0);
@@ -352,6 +375,7 @@ exports.getSalesReport = async (req, res) => {
         ...row,
         final_amount: finalAmount,
         final_profit: finalProfit,
+        has_unsupplied_items: !!row.has_unsupplied_items,
       };
     });
 
@@ -361,6 +385,7 @@ exports.getSalesReport = async (req, res) => {
     res.status(500).json({ message: 'שגיאה בשליפת דוח מכירות' });
   }
 };
+
 
 exports.updateSaleDetails = async (req, res) => {
   const saleId = parseInt(req.params.id);

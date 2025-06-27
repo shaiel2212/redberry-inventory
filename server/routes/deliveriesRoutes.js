@@ -12,6 +12,7 @@ router.patch('/:id/deliver', requireAuth, requireUserOrAdmin, deliveriesControll
 router.patch('/:id/assign', requireAuth, deliveriesController.assignToCourier);
 
 router.get('/statuses', requireAuth, deliveriesController.getDeliveryStatuses);
+router.get('/awaiting-stock', requireAuth, requireUserOrAdmin, deliveriesController.getAwaitingStockDeliveries);
 
 router.patch('/:id/proof', requireAuth, requireUserOrAdmin, upload.single('proof'), deliveriesController.updateDeliveryProof);
 router.patch('/:id/status', requireAuth, requireUserOrAdmin, deliveriesController.updateDeliveryStatus);

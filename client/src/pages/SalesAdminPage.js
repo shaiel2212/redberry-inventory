@@ -109,7 +109,12 @@ const SalesAdminPage = () => {
                   <td className="p-2 border">{sale.sold_by || '-'}</td>
                   <td className="p-2 border">₪{parseFloat(sale.total_amount).toFixed(2)}</td>
                   <td className="p-2 border font-semibold text-green-700">₪{parseFloat(sale.final_amount || sale.total_amount).toFixed(2)}</td>
-                  <td className="p-2 border">{sale.notes || '-'}</td> {/* חדש */}
+                  <td className="p-2 border">
+                    {sale.notes || '-'}
+                    {sale.has_unsupplied_items && (
+                      <div className="text-xs text-red-600 mt-1">⚠️ כולל פריטים שטרם סופקו</div>
+                    )}
+                  </td>
                   <td className="p-2 border">
                     <button
                       onClick={() => fetchSaleDetails(sale.id)}
@@ -134,6 +139,9 @@ const SalesAdminPage = () => {
               <p><strong>נמכר ע"י:</strong> {sale.sold_by || '-'}</p>
               <p><strong>סכום:</strong> ₪{parseFloat(sale.total_amount).toFixed(2)}</p>
               <p><strong>אחרי הנחות:</strong> ₪{parseFloat(sale.final_amount || sale.total_amount).toFixed(2)}</p>
+              {sale.has_unsupplied_items && (
+                <p className="text-red-600 text-sm mt-1">⚠️ כולל פריטים שלא סופקו</p>
+              )}
               <button
                 onClick={() => fetchSaleDetails(sale.id)}
                 className="mt-2 bg-blue-500 hover:bg-blue-600 text-white w-full py-2 rounded"
@@ -142,6 +150,8 @@ const SalesAdminPage = () => {
               </button>
             </div>
           ))}
+
+
         </div>
 
         {selectedSaleDetails && (
@@ -171,6 +181,11 @@ const SalesAdminPage = () => {
                   <p><strong>בתאריך:</strong> {new Date(selectedSaleDetails.discount_given_at).toLocaleString('he-IL')}</p>
                 )}
               </div>
+              {selectedSaleDetails.has_unsupplied_items && (
+                <div className="text-red-600 text-sm mt-2">
+                  ⚠️ מכירה זו כוללת פריטים שטרם סופקו (חסר מלאי)
+                </div>
+              )}
               {selectedSaleDetails.notes && (
                 <div className="mt-2 text-sm text-gray-700">
                   <strong>הערות:</strong> {selectedSaleDetails.notes}

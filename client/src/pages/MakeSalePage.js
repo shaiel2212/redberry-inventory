@@ -30,7 +30,7 @@ const MakeSalePage = () => {
     const fetchProducts = async () => {
       try {
         const data = await productService.getAllProducts();
-        setProducts(data.filter(p => p.stock_quantity > 0));
+        setProducts(data);
       } catch (err) {
         setError('שגיאה בטעינת מוצרים.');
       }
@@ -49,25 +49,27 @@ const MakeSalePage = () => {
   const handleAddToCart = (product) => {
     setError('');
     const existingItem = cart.find(item => item.product_id === product.id);
+
     if (existingItem) {
-      if (existingItem.quantity < product.stock_quantity) {
-        setCart(cart.map(item =>
-          item.product_id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        ));
-      } else {
-        setError(`לא ניתן להוסיף עוד '${product.name}'. במלאי ${product.stock_quantity}.`);
+      setCart(cart.map(item =>
+        item.product_id === product.id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
+      if ((existingItem.quantity + 1) > product.stock_quantity) {
+        setError(`שימו לב: הוזמן יותר מהכמות הקיימת למוצר '${product.name}'.`);
       }
     } else {
-      if (product.stock_quantity > 0) {
-        setCart([...cart, {
-          product_id: product.id,
-          name: product.name,
-          quantity: 1,
-          price_per_unit: parseFloat(product.sale_price),
-          stock_quantity: product.stock_quantity
-        }]);
-      } else {
-        setError(`המוצר '${product.name}' אזל מהמלאי.`);
+      setCart([...cart, {
+        product_id: product.id,
+        name: product.name,
+        quantity: 1,
+        price_per_unit: parseFloat(product.sale_price),
+        stock_quantity: product.stock_quantity
+      }]);
+
+      if (product.stock_quantity <= 0) {
+        setError(`המוצר '${product.name}' חסר במלאי – הוא יוזמן כהזמנה ממתינה.`);
       }
     }
   };
@@ -121,7 +123,7 @@ const MakeSalePage = () => {
       alert(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.sale_id}`);
       setCart([]);
       setSelectedClientId(null);
-      setForm({ address: '', notes: ''  });
+      setForm({ address: '', notes: '' });
       const updatedProducts = await productService.getAllProducts();
       setProducts(updatedProducts.filter(p => p.stock_quantity > 0));
     } catch (err) {
@@ -168,15 +170,25 @@ const MakeSalePage = () => {
           />
 
           <ul className="border rounded divide-y max-h-60 overflow-y-auto">
-            {products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).map(product => (
-              <li key={product.id} className="flex justify-between items-center p-2 text-sm">
-                <span>{product.name} (₪{parseFloat(product.sale_price).toFixed(2)}) - מלאי: {product.stock_quantity}</span>
-                <button
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-                  onClick={() => handleAddToCart(product)}
-                >הוסף לעגלה</button>
-              </li>
-            ))}
+            {products
+              .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map(product => (
+                <li key={product.id} className="flex justify-between items-center p-2 text-sm">
+                  <span>
+                    {product.name} (₪{parseFloat(product.sale_price).toFixed(2)}) -
+                    מלאי: {product.stock_quantity}
+                    {product.stock_quantity <= 0 && (
+                      <span className="text-red-500 ml-2">(לא זמין במלאי – יסופק בהמשך)</span>
+                    )}
+                  </span>
+                  <button
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                    onClick={() => handleAddToCart(product)}
+                  >
+                    הוסף לעגלה
+                  </button>
+                </li>
+              ))}
           </ul>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

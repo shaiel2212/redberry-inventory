@@ -4,4 +4,5 @@ export const DELIVERY_STATUSES = [
   { value: 'picked_up', label: 'נאסף' },
   { value: 'delivered', label: 'סופק' },
   { value: 'cancelled', label: 'בוטל' },
+  { value: 'awaiting_stock', label: 'ממתינים למלאי' },
 ];

@@ -38,6 +38,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/deliveries', deliveriesRoutes);
 app.use('/api/clients', clientRoutes);
 
+
 app.get('/', (req, res) => {
   res.json({ message: 'Server is running...', cors: 'enabled' });
 });

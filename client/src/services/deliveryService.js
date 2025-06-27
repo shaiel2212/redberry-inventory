@@ -41,6 +41,10 @@ const uploadDeliveryProof = (deliveryId, file, type = 'unsigned') => {
 const assignToCourier = (id) => {
   return api.patch(`/deliveries/${id}/assign`);
 };
+export async function getAwaitingStockDeliveries() {
+  const res = await api.get('/deliveries/awaiting-stock');
+  return res.data;
+}
 
 
 export default {
@@ -49,4 +53,5 @@ export default {
   markAsDelivered,
   uploadDeliveryProof,
   assignToCourier,
+  getAwaitingStockDeliveries,
 };

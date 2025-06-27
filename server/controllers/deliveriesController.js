@@ -28,6 +28,12 @@ exports.getPendingDeliveries = async (req, res) => {
       JOIN sale_items si ON si.sale_id = s.id
       JOIN products p ON p.id = si.product_id
       WHERE d.status != 'delivered'
+      AND d.id NOT IN (
+        SELECT d2.id
+        FROM deliveries d2
+        JOIN sale_items si2 ON d2.sale_id = si2.sale_id
+        WHERE si2.is_supplied = FALSE
+      )
       ORDER BY d.sale_id DESC;
     `);
 
@@ -37,6 +43,7 @@ exports.getPendingDeliveries = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
 
 /**
  * סימון משלוח כסופק – רק אם קיימת תעודה חתומה
@@ -225,5 +232,40 @@ exports.assignToCourier = async (req, res) => {
   } catch (err) {
     console.error('שגיאה בהקצאת משלוח:', err);
     res.status(500).json({ message: 'שגיאה בהקצאת משלוח' });
+  }
+};
+
+exports.getAwaitingStockDeliveries = async (req, res) => {
+  try {
+    const [results] = await pool.query(`
+      SELECT 
+        d.id AS delivery_id,
+        d.sale_id,
+        s.customer_name,
+        s.address,
+        s.total_amount,
+        s.sale_date,
+        u.username AS seller_name,
+        p.name AS product_name,
+        p.description AS size,
+        si.quantity,
+        d.status,
+        d.assigned_to,
+        d.delivered_at,
+        d.delivery_proof_url,
+        d.delivery_proof_signed_url
+      FROM deliveries d
+      JOIN sales s ON d.sale_id = s.id
+      JOIN users u ON s.user_id = u.id
+      JOIN sale_items si ON si.sale_id = s.id
+      JOIN products p ON p.id = si.product_id
+      WHERE si.is_supplied = FALSE
+      ORDER BY d.sale_id DESC;
+    `);
+
+    res.json(results);
+  } catch (err) {
+    console.error('❌ Error fetching deliveries awaiting stock:', err.message);
+    res.status(500).send('Server error');
   }
 };
