@@ -7,6 +7,8 @@ const getStatusLabel = (statusValue) => {
     case 'pending': return 'ממתין';
     case 'delivered': return 'סופק';
     case 'awaiting_stock': return 'חסר במלאי';
+    case 'assigned': return 'הוקצה לשליח';
+  ;
     default: return statusValue;
   }
 };
@@ -20,18 +22,18 @@ const DeliveryCard = ({ delivery, user, openDetails }) => {
   if (hasSigned) badgeColor = 'bg-green-100 border-green-300';
 
   return (
-    <div className={`border-2 rounded-2xl shadow-md bg-white p-4 space-y-3 ${badgeColor} text-right`}> {/* RTL container */}
+    <div dir="rtl" className={`border-2 rounded-2xl shadow-md bg-white p-4 space-y-3 ${badgeColor} text-right`}> {/* RTL container */}
       <div className="flex justify-between items-center flex-row-reverse"> {/* RTL row */}
         <h4 className="font-bold text-base">
           הזמנה #{delivery.sale_id}
         </h4>
         <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">
-          {getStatusLabel(delivery.status)}
+        <span>{getStatusLabel(delivery.status)}</span>
         </span>
       </div>
 
       <div className="text-sm text-gray-700 space-y-1">
-        <p><strong>לקוח:</strong> {delivery.customer_name}</p>
+        <p><strong>לקוח:</strong> <bdi>{delivery.customer_name}</bdi></p>
         {delivery.address && (
           <p className="flex items-center gap-1 flex-row-reverse">
             <MapPin className="w-4 h-4 text-blue-500" />

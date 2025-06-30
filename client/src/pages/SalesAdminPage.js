@@ -2,6 +2,8 @@ import DOMPurify from 'dompurify';
 import React, { useState, useEffect } from 'react';
 import saleService from '../services/saleService';
 import MainLayout from '../components/layout/MainLayout';
+import { Dialog, DialogContent, DialogTitle } from '../components/ui/dialog';
+import { Receipt, X } from 'lucide-react';
 
 const SalesAdminPage = () => {
   const [sales, setSales] = useState([]);
@@ -155,17 +157,26 @@ const SalesAdminPage = () => {
         </div>
 
         {selectedSaleDetails && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 p-2 md:p-0">
-            <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-md md:max-w-lg relative text-right overflow-y-auto max-h-[90vh]">
+          <Dialog open={!!selectedSaleDetails} onClose={closeModal}>
+            <DialogContent dir="rtl" className="text-right max-w-lg w-full p-6 rounded-3xl shadow-2xl bg-gradient-to-br from-blue-50 via-white to-blue-100 border border-blue-200">
+              <div className="flex items-center justify-center mb-4 relative">
+                {/* כפתור X – בצד שמאל */}
+                <button
+                  onClick={closeModal}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-blue-100 transition"
+                  style={{ direction: 'ltr' }}
+                  aria-label="סגור"
+                >
+                  <X className="w-7 h-7 text-gray-400 hover:text-blue-600" />
+                </button>
+                {/* כותרת ממורכזת */}
+                <DialogTitle className="text-2xl font-extrabold text-blue-700 flex items-center gap-2 justify-center w-full">
+                  <Receipt className="w-7 h-7 text-blue-500" />
+                  פרטי מכירה #{selectedSaleDetails.id}
+                </DialogTitle>
+              </div>
 
-              <button
-                onClick={closeModal}
-                className="absolute top-2 left-2 text-gray-500 text-xl font-bold"
-              >✕</button>
-
-              <h3 className="text-xl font-bold mb-2">פרטי מכירה #{selectedSaleDetails.id}</h3>
-
-              <div className="text-sm space-y-1">
+              <div className="text-sm space-y-1 mb-4">
                 <p><strong>תאריך:</strong> {new Date(selectedSaleDetails.sale_date).toLocaleString('he-IL')}</p>
                 <p><strong>לקוח:</strong> {selectedSaleDetails.customer_name || '-'}</p>
                 <p><strong>נמכר ע"י:</strong> {selectedSaleDetails.sold_by || '-'}</p>
@@ -173,7 +184,6 @@ const SalesAdminPage = () => {
                 <p><strong>הנחה באחוזים:</strong> {selectedSaleDetails.discount_percent || 0}%</p>
                 <p><strong>הנחה בש"ח:</strong> ₪{selectedSaleDetails.discount_amount || 0}</p>
                 <p><strong>סה"כ לאחר הנחה:</strong> ₪{parseFloat(selectedSaleDetails.final_amount || selectedSaleDetails.total_amount).toFixed(2)}</p>
-
                 {selectedSaleDetails.discount_given_by && (
                   <p><strong>ניתנה ע"י:</strong> {selectedSaleDetails.discount_given_by}</p>
                 )}
@@ -254,8 +264,8 @@ const SalesAdminPage = () => {
               >
                 סגור פרטים
               </button>
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
 
       </div>

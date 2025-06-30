@@ -85,6 +85,7 @@ exports.markAsDelivered = async (req, res) => {
 exports.updateDeliveryProof = async (req, res) => {
   const deliveryId = req.params.id;
   const uploadedByUser = req.user?.id;
+  const type = req.body.type || 'unsigned'; // קבלת סוג התעודה מהקליינט
 
   if (!req.file) {
     return res.status(400).json({ message: 'לא התקבל קובץ להעלאה' });
@@ -103,13 +104,13 @@ exports.updateDeliveryProof = async (req, res) => {
     }
 
     let columnToUpdate;
-    if (!rows[0].delivery_proof_url) {
-      columnToUpdate = 'delivery_proof_url';
-    } else {
+    if (type === 'signed') {
       columnToUpdate = 'delivery_proof_signed_url';
+    } else {
+      columnToUpdate = 'delivery_proof_url';
     }
 
-    const [result] = await pool.query(
+    await pool.query(
       `UPDATE deliveries SET ${columnToUpdate} = ?, updated_by_user = ? WHERE id = ?`,
       [fileUrl, uploadedByUser, deliveryId]
     );
@@ -269,3 +270,4 @@ exports.getAwaitingStockDeliveries = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+

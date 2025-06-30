@@ -3,15 +3,17 @@ import deliveryService from '../services/deliveryService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '../components/ui/dialog';
-import { Loader2, CheckCircle2, MapPin, X } from 'lucide-react';
+import { Loader2, CheckCircle2, MapPin, X, UserPlus2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MainLayout from '../components/layout/MainLayout';
 import { DELIVERY_STATUSES } from '../constants/deliveryStatuses';
 import { toast } from 'react-hot-toast';
 import DeliveryCard from '../components/deliveryCard/DeliveryCard';
+import { AnimatePresence } from 'framer-motion';
 
 const getStatusLabel = (statusValue) => {
   const found = DELIVERY_STATUSES.find((s) => s.value === statusValue);
+ 
   return found ? found.label : statusValue;
 };
 
@@ -24,6 +26,7 @@ const DeliveriesPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [updatedId, setUpdatedId] = useState(null);
+  const [globalLoading, setGlobalLoading] = useState(false);
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -36,7 +39,6 @@ const DeliveriesPage = () => {
       loadDeliveriesForTab(activeTab);
     }
   }, [user, activeTab, navigate]);
-
   const loadDeliveriesForTab = async (tab) => {
     try {
       setDeliveries([]);
@@ -91,12 +93,38 @@ const DeliveriesPage = () => {
   };
 
   const handleUploadProof = async (deliveryId, file, type) => {
+    setGlobalLoading(true);
     try {
-      await deliveryService.uploadDeliveryProof(deliveryId, file, type);
-      loadDeliveriesForTab(activeTab);
+      const res = await deliveryService.uploadDeliveryProof(deliveryId, file, type);
+      toast.success(`${type === 'signed' ? 'תעודה חתומה' : 'תעודה'} הועלתה בהצלחה`);
+      const newUrl = res.data.fileUrl + '?t=' + Date.now();
+      setSelectedDelivery(prev => prev && prev.id === deliveryId
+        ? {
+            ...prev,
+            ...(type === 'signed'
+              ? { delivery_proof_signed_url: newUrl }
+              : { delivery_proof_url: newUrl }
+            )
+          }
+        : prev
+      );
+      setDeliveries(prev =>
+        prev.map(delivery =>
+          delivery.id === deliveryId
+            ? {
+                ...delivery,
+                ...(type === 'signed'
+                  ? { delivery_proof_signed_url: newUrl }
+                  : { delivery_proof_url: newUrl }
+                )
+              }
+            : delivery
+        )
+      );
     } catch (err) {
-      console.error('שגיאה בהעלאת תעודה:', err);
-      setErrorMessage('שגיאה בהעלאת הקובץ.');
+      toast.error('שגיאה בהעלאת הקובץ');
+    } finally {
+      setGlobalLoading(false);
     }
   };
 
@@ -206,7 +234,9 @@ const DeliveriesPage = () => {
                         הוקצה לשליח ✔
                       </motion.div>
                     ) : (
+                      
                       getStatusLabel(delivery.status)
+                      
                     )}
                   </td>
                   <td className="p-2 border">
@@ -227,95 +257,197 @@ const DeliveriesPage = () => {
 
       {/* Dialog גלובלי עבור פרטים */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="text-right">
-          <div className="flex justify-between mb-2">
-            <DialogTitle className="text-lg font-bold">אישור סיום אספקה</DialogTitle>
-            <button onClick={() => setDialogOpen(false)}><X className="w-5 h-5 text-gray-500" /></button>
+        <DialogContent dir="rtl"  className="text-right max-w-lg w-full p-6 rounded-3xl shadow-2xl bg-gradient-to-br from-blue-50 via-white to-blue-100 border border-blue-200">
+          <div className="flex items-center justify-center mb-4 relative">
+            {/* כפתור X – בצד שמאל */}
+            <button
+              onClick={() => setDialogOpen(false)}
+              className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-blue-100 transition"
+              style={{ direction: 'ltr' }}
+              aria-label="סגור"
+            >
+              <X className="w-7 h-7 text-gray-400 hover:text-blue-600" />
+            </button>
+            {/* כותרת ממורכזת */}
+            <DialogTitle className="text-2xl font-extrabold text-blue-700 flex items-center gap-2 justify-center w-full">
+              <CheckCircle2 className="w-7 h-7 text-blue-500 animate-bounce" />
+              אישור סיום אספקה
+            </DialogTitle>
           </div>
 
-          {errorMessage && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
-              {errorMessage}
-            </div>
-          )}
+          <AnimatePresence>
+            {errorMessage && (
+              <motion.div
+                initial={{ x: 100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 100, opacity: 0 }}
+                className="flex items-center gap-2 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-lg mb-4"
+              >
+                <X className="w-5 h-5" />
+                <span>{errorMessage}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <p className="mb-4">
-            הזמנה <strong>#{selectedDelivery?.sale_id}</strong> ללקוח <strong>{selectedDelivery?.customer_name}</strong>
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4"
+          >
+            <span className="text-gray-700">
+               הזמנה   <strong className="text-blue-700">#{selectedDelivery?.sale_id}</strong>
+              <span dir="rtl">
+                ללקוח <strong className="text-blue-700"><bdi>{selectedDelivery?.customer_name}</bdi></strong>
+              </span>
+            </span>
+          </motion.div>
 
           {selectedDelivery?.assigned_by_name && selectedDelivery?.assigned_at && (
-            <p className="text-sm text-gray-600 mb-4">
-              הוקצה ע״י <strong>{selectedDelivery.assigned_by_name}</strong>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-sm text-gray-500 mb-4"
+            >
+              הוקצה ע"י <strong>{selectedDelivery.assigned_by_name}</strong>
               בתאריך <strong>{new Date(selectedDelivery.assigned_at).toLocaleString('he-IL')}</strong>
-            </p>
+            </motion.p>
           )}
 
           {(user?.role === 'admin' || user?.role === 'user') && (
             <>
-              <div className="mb-3">
-                <label className="block text-sm font-medium mb-1 text-blue-700">העלאת תעודה (טיוטה):</label>
-                <input type="file" accept="image/*" onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (file) handleUploadProof(selectedDelivery.id, file, 'unsigned');
-                }} className="block w-full text-sm text-gray-700" />
-                {selectedDelivery?.delivery_proof_url && <p className="text-xs text-blue-600">✔ תעודה קיימת</p>}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold mb-1 text-blue-700">העלאת תעודה (טיוטה):</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) handleUploadProof(selectedDelivery.id, file, 'unsigned');
+                  }}
+                  className="block w-full text-sm text-gray-700 border border-blue-200 rounded-lg p-2"
+                />
+                {selectedDelivery?.delivery_proof_url && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs text-blue-600">✔ תעודה קיימת</span>
+                    <button
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = (e) => {
+                          const file = e.target.files[0];
+                          if (file) handleUploadProof(selectedDelivery.id, file, 'unsigned');
+                        };
+                        input.click();
+                      }}
+                      className="text-xs text-red-600 underline hover:text-red-800 ml-2"
+                    >
+                      החלף תעודה
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div className="mb-3">
-                <label className="block text-sm font-medium mb-1 text-green-700">העלאת תעודה חתומה:</label>
-                <input type="file" accept="image/*" onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (file) handleUploadProof(selectedDelivery.id, file, 'signed');
-                }} className="block w-full text-sm text-gray-700" />
-                {selectedDelivery?.delivery_proof_signed_url && <p className="text-xs text-green-600">✔ תעודה חתומה קיימת – יש ללחוץ על "סימון כסופק"</p>}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold mb-1 text-green-700">העלאת תעודה חתומה:</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) handleUploadProof(selectedDelivery.id, file, 'signed');
+                  }}
+                  className="block w-full text-sm text-gray-700 border border-green-200 rounded-lg p-2"
+                />
+                {selectedDelivery?.delivery_proof_signed_url && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <span className="text-xs text-green-600">✔ תעודה חתומה קיימת – יש ללחוץ על \"סימון כסופק\"</span>
+                    <button
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = (e) => {
+                          const file = e.target.files[0];
+                          if (file) handleUploadProof(selectedDelivery.id, file, 'signed');
+                        };
+                        input.click();
+                      }}
+                      className="text-xs text-red-600 underline hover:text-red-800 ml-2"
+                    >
+                      החלף תעודה חתומה
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
 
           {!selectedDelivery?.delivery_proof_signed_url && (
-            <p className="text-red-600 text-sm mb-2">לא ניתן לאשר אספקה – יש להעלות תעודה חתומה!</p>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-red-600 text-sm mb-2 flex items-center gap-1"
+            >
+              <X className="w-4 h-4" />
+              לא ניתן לאשר אספקה – יש להעלות תעודה חתומה!
+            </motion.p>
           )}
 
-          <div className="flex justify-end gap-2">
-            <button onClick={() => {
-              setDialogOpen(false);
-              setSelectedDelivery(null);
-            }} className="px-3 py-1 border rounded text-gray-600 hover:bg-gray-100">ביטול</button>
-
-            <button
-              disabled={!selectedDelivery?.delivery_proof_signed_url}
-              onClick={() => markAsDelivered(selectedDelivery.id)}
-              className={`px-3 py-1 rounded text-white ${!selectedDelivery?.delivery_proof_signed_url ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
-            >
-              סימון כסופק
-            </button>
-
+          <div className="flex flex-col md:flex-row justify-end gap-2 mt-6">
+            {/* כפתור הקצה לשליח */}
             {(user?.role === 'admin') && selectedDelivery?.status === 'pending' && (
-              <div className="flex flex-col items-end">
-                <button
-                  disabled={!selectedDelivery?.delivery_proof_url}
-                  onClick={async () => {
-                    try {
-                      await deliveryService.assignToCourier(selectedDelivery.id);
-                      loadDeliveriesForTab(activeTab);
-                      toast.success('המשלוח הוקצה לשליח בהצלחה');
-                    } catch (err) {
-                      console.error('שגיאה בהקצאה:', err);
-                      toast.error('שגיאה בהקצאת משלוח');
-                    }
-                  }}
-                  className={`px-3 py-1 rounded text-white ${!selectedDelivery?.delivery_proof_url ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}
-                >
-                  הקצה לשליח
-                </button>
-
-                {!selectedDelivery?.delivery_proof_url && (
-                  <p className="text-xs text-red-500 mt-1">
-                    יש להעלות תעודת טיוטה לפני הקצאה לשליח.
-                  </p>
-                )}
-              </div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
+                disabled={!selectedDelivery?.delivery_proof_url}
+                onClick={async () => {
+                  try {
+                    await deliveryService.assignToCourier(selectedDelivery.id);
+                    loadDeliveriesForTab(activeTab, 1, true);
+                    toast.success('המשלוח הוקצה לשליח בהצלחה');
+                  } catch (err) {
+                    console.error('שגיאה בהקצאה:', err);
+                    toast.error('שגיאה בהקצאת משלוח');
+                  }
+                }}
+                className={`w-full flex justify-center items-center gap-1 px-4 py-2 rounded-lg font-bold text-white transition ${!selectedDelivery?.delivery_proof_url ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}
+              >
+                <UserPlus2 className="w-5 h-5" />
+                הקצה לשליח
+              </motion.button>
             )}
+
+            {/* כפתור ביטול */}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => {
+                setDialogOpen(false);
+                setSelectedDelivery(null);
+              }}
+              className="w-full flex items-center justify-center text-center px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition"
+            >
+              ביטול
+            </motion.button>
+
+            {/* כפתור סימון כסופק */}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05 }}
+              disabled={!selectedDelivery?.delivery_proof_signed_url?.length}
+              onClick={() => markAsDelivered(selectedDelivery.id)}
+              className={`w-full flex items-center justify-center text-center px-4 py-2 rounded-lg font-bold transition
+                ${!selectedDelivery?.delivery_proof_signed_url?.length
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700 text-white'}
+              `}
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              סימון כסופק
+            </motion.button>
           </div>
         </DialogContent>
       </Dialog>
