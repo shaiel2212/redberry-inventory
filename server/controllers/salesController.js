@@ -432,3 +432,20 @@ exports.updateSaleDetails = async (req, res) => {
     return res.status(500).json({ message: 'שגיאה בעדכון פרטי מכירה' });
   }
 };
+
+exports.getRecentSales = async (req, res) => {
+  try {
+    const [sales] = await pool.query(`
+      SELECT s.id, s.sale_date, c.full_name AS customer_name, s.total_amount, s.notes
+      FROM sales s
+      LEFT JOIN clients c ON s.client_id = c.id
+      ORDER BY s.sale_date DESC
+      LIMIT 5
+    `);
+    res.json(sales);
+    console.log(sales);
+  } catch (err) {
+    console.error('Error fetching recent sales:', err);
+    res.status(500).send('Error fetching recent sales');
+  }
+};

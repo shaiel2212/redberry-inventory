@@ -1,4 +1,3 @@
-
 import DOMPurify from 'dompurify';
 import React, { useState, useEffect } from 'react';
 import productService from '../services/productService';
@@ -11,6 +10,7 @@ const ProductsAdminPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [billingDay, setBillingDay] = useState('');
 
   const fetchProducts = async () => {
     try {
@@ -116,6 +116,15 @@ const ProductsAdminPage = () => {
             </tbody>
           </table>
         </div>
+
+        <label>מועד חיוב (יום בחודש):</label>
+        <input
+          type="number"
+          min="1"
+          max="31"
+          value={billingDay}
+          onChange={e => setBillingDay(e.target.value)}
+        />
       </div>
     </MainLayout>
   );

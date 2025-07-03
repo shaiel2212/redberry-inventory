@@ -12,7 +12,13 @@ const createClient = async (clientData) => {
   return res.data;
 };
 
+const getBillingReminders = async () => {
+  const res = await api.get('/clients/billing-reminders');
+  return res.data;
+};
+
 export default {
   getAllClients,
   createClient,
+  getBillingReminders,
 };

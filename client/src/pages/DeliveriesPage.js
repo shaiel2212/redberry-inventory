@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import deliveryService from '../services/deliveryService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '../components/ui/dialog';
 import { Loader2, CheckCircle2, MapPin, X, UserPlus2 } from 'lucide-react';
@@ -27,9 +27,15 @@ const DeliveriesPage = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [updatedId, setUpdatedId] = useState(null);
   const [globalLoading, setGlobalLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+
+  const params = new URLSearchParams(location.search);
+  const focusId = params.get("focus");
+  const statusFromUrl = params.get("status");
 
   useEffect(() => {
     if (!user) return;
@@ -39,9 +45,26 @@ const DeliveriesPage = () => {
       loadDeliveriesForTab(activeTab);
     }
   }, [user, activeTab, navigate]);
+
+  useEffect(() => {
+    if (!loading && deliveries.length > 0 && focusId) {
+      openDeliveryDetails(focusId);
+      const params = new URLSearchParams(location.search);
+      params.delete('focus');
+      navigate({ search: params.toString() }, { replace: true });
+    }
+  }, [loading, deliveries, focusId, navigate, location.search]);
+
+  useEffect(() => {
+    if (statusFromUrl) {
+      setActiveTab(statusFromUrl);
+    }
+  }, [statusFromUrl]);
+
   const loadDeliveriesForTab = async (tab) => {
     try {
       setDeliveries([]);
+      setLoading(true);
 
       if (tab === 'pending') {
         const res = await deliveryService.getPendingDeliveries();
@@ -70,6 +93,8 @@ const DeliveriesPage = () => {
 
     } catch (err) {
       console.error('❌ שגיאה בטעינת משלוחים:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -140,8 +165,24 @@ const DeliveriesPage = () => {
     setErrorMessage('');
   };
 
+  const openDeliveryDetails = async (id) => {
+    try {
+      const delivery = await deliveryService.getDeliveryById(id);
+      console.log('delivery:', delivery);
+      setSelectedDelivery(delivery);
+      setDialogOpen(true);
+      setErrorMessage('');
+    } catch (err) {
+      console.error('שגיאה בפתיחת פרטי המשלוח:', err);
+      setErrorMessage('אירעה שגיאה בפתיחת פרטי המשלוח. אנא נסה שוב מאוחר יותר.');
+    }
+  };
+
   const filteredDeliveries = deliveries || [];
 
+  const handleSaleClick = (saleId) => {
+    navigate(`/deliveries?focus=${saleId}`);
+  };
 
   return (
     <MainLayout>

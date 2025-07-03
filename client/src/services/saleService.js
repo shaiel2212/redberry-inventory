@@ -42,6 +42,11 @@ export const updateSaleDetails = (saleId, updateData) => {
   return api.patch(`/sales/${saleId}/details`, updateData);
 };
 
+const getRecentSales = async () => { 
+  const response = await api.get('/sales/recent');
+  console.log(response.data);
+  return response.data;
+};
 
 const saleService = {
   createSale,
@@ -51,6 +56,7 @@ const saleService = {
   updateSaleDiscount,
   getSalesReport,
   updateSaleDetails,
+  getRecentSales,
 };
 
 export default saleService;

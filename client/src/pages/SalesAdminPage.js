@@ -4,6 +4,7 @@ import saleService from '../services/saleService';
 import MainLayout from '../components/layout/MainLayout';
 import { Dialog, DialogContent, DialogTitle } from '../components/ui/dialog';
 import { Receipt, X } from 'lucide-react';
+import { useLocation } from "react-router-dom";
 
 const SalesAdminPage = () => {
   const [sales, setSales] = useState([]);
@@ -14,6 +15,7 @@ const SalesAdminPage = () => {
   const [discountPercent, setDiscountPercent] = useState('');
   const [discountAmount, setDiscountAmount] = useState('');
   const [deliveryCost, setDeliveryCost] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     const fetchSales = async () => {
@@ -31,6 +33,17 @@ const SalesAdminPage = () => {
     };
     fetchSales();
   }, []);
+
+  useEffect(() => {
+    if (!loading && sales.length > 0) {
+      const params = new URLSearchParams(location.search);
+      const focusId = params.get("focus");
+      if (focusId && sales.some(sale => sale.id === Number(focusId))) {
+        fetchSaleDetails(Number(focusId));
+      }
+    }
+    // eslint-disable-next-line
+  }, [loading, sales, location.search]);
 
   const fetchSaleDetails = async (saleId) => {
     try {

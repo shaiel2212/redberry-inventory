@@ -47,6 +47,16 @@ export async function getAwaitingStockDeliveries() {
 }
 
 
+const getDashboardDeliveriesByStatus = async () => {
+  const res = await api.get('/deliveries/dashboard-by-status');
+  return res.data;
+};
+
+const getDeliveryById = async (id) => {
+  const res = await api.get(`/deliveries/${id}`);
+  return res.data;
+};
+
 export default {
   getPendingDeliveries,
   getAllDeliveries, // ← חדש
@@ -54,4 +64,6 @@ export default {
   uploadDeliveryProof,
   assignToCourier,
   getAwaitingStockDeliveries,
+  getDeliveryById,
+  getDashboardDeliveriesByStatus,
 };

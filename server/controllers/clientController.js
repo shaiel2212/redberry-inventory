@@ -26,3 +26,19 @@ exports.getAllClients = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch clients' });
   }
 };
+
+exports.getClientsForBillingReminder = async (req, res) => {
+  try {
+    const today = new Date();
+    const day = today.getDate();
+    const tomorrow = (day % 31) + 1; // גלגול ל-1 אחרי 31
+
+    const [clients ]= await pool.query(
+      'SELECT * FROM clients WHERE billing_day IN (?, ?)',
+      [day, tomorrow]
+    );
+    res.json(clients);
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה בשליפת לקוחות לתזכורת חיוב' });
+  }
+};

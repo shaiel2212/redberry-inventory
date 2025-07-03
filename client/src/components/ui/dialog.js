@@ -2,6 +2,7 @@ import * as React from "react";
 import {
   Dialog as RadixDialog,
   DialogContent as RadixDialogContent,
+  DialogOverlay as RadixDialogOverlay,
   DialogTrigger as RadixDialogTrigger,
   DialogTitle as RedixDialogTitle,
 } from "@radix-ui/react-dialog";
@@ -22,11 +23,14 @@ export const DialogTrigger = RadixDialogTrigger;
 
 export function DialogContent({ children, className = "" }) {
   return (
-    <RadixDialogContent
-      className={`fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 bg-white p-6 shadow-lg rounded-lg ${className}`.trim()}
-    >
-      {children}
-    </RadixDialogContent>
+    <>
+      <RadixDialogOverlay className="fixed inset-0 bg-black/40 z-40" />
+      <RadixDialogContent
+        className={`fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 bg-white p-6 shadow-lg rounded-lg ${className}`.trim()}
+      >
+        {children}
+      </RadixDialogContent>
+    </>
   );
 }
 

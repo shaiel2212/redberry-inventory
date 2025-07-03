@@ -271,3 +271,91 @@ exports.getAwaitingStockDeliveries = async (req, res) => {
   }
 };
 
+
+    // משלוחים למור: יש טיוטה, אין שליח
+    exports.getDashboardDeliveriesByStatus = async (req, res) => {
+      try {
+        // 1. ממתין לטיוטה
+        const [awaitingDraft] = await pool.query(`
+          SELECT d.id, d.sale_id, s.customer_name, s.sale_date
+          FROM deliveries d
+          JOIN sales s ON d.sale_id = s.id
+          WHERE d.delivery_proof_url IS NULL
+          AND d.status NOT IN ('delivered', 'cancelled', 'awaiting_stock')
+          ORDER BY s.sale_date DESC
+        `);
+    
+        // 2. ממתין להקצאת שליח
+        const [awaitingAssignment] = await pool.query(`
+          SELECT d.id, d.sale_id, s.customer_name, s.sale_date
+          FROM deliveries d
+          JOIN sales s ON d.sale_id = s.id
+          WHERE d.delivery_proof_url IS NOT NULL
+          AND d.delivery_proof_signed_url IS NULL
+         
+          AND d.status = 'pending'
+          ORDER BY s.sale_date DESC
+        `);
+    
+        // 3. ממתין למסירה
+        const [awaitingDelivery] = await pool.query(`
+          SELECT d.id, d.sale_id, s.customer_name, s.sale_date
+          FROM deliveries d
+          JOIN sales s ON d.sale_id = s.id
+          WHERE d.assigned_to IS NOT NULL
+          AND d.status IN ('assigned', 'picked_up')
+          AND d.delivered_at IS NULL
+          ORDER BY s.sale_date DESC
+        `);
+    
+        // 4. נמסר
+        const [delivered] = await pool.query(`
+          SELECT d.id, d.sale_id, s.customer_name, s.sale_date
+          FROM deliveries d
+          JOIN sales s ON d.sale_id = s.id
+          WHERE d.status = 'delivered'
+          AND d.delivered_at IS NOT NULL
+          ORDER BY s.sale_date DESC
+        `);
+    
+        // 5. בוטל
+        const [cancelled] = await pool.query(`
+          SELECT d.id, d.sale_id, s.customer_name, s.sale_date
+          FROM deliveries d
+          JOIN sales s ON d.sale_id = s.id
+          WHERE d.status = 'cancelled'
+          ORDER BY s.sale_date DESC
+        `);
+    
+        res.json({
+          awaitingDraft,
+          awaitingAssignment,
+          awaitingDelivery,
+          delivered,
+          cancelled
+        });
+        console.log(awaitingDraft,awaitingAssignment,awaitingDelivery,delivered,cancelled);
+      } catch (err) {
+        console.error('Error fetching dashboard deliveries by status:', err.message);
+        res.status(500).send('Server error');
+      }
+    };
+
+exports.getDeliveryById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.query(`
+      SELECT d.*, s.customer_name
+      FROM deliveries d
+      JOIN sales s ON d.sale_id = s.id
+      WHERE d.id = ?
+    `, [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Delivery not found' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Error fetching delivery by id:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
