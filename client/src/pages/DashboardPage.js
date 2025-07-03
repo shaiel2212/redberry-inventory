@@ -181,12 +181,6 @@ const DashboardPage = () => {
                 >
                   נמסר
                 </span>
-                <span
-                  className={`cursor-pointer pb-1 border-b-2 transition ${activeTab === 'cancelled' ? 'border-blue-500 text-blue-700 font-bold' : 'border-transparent text-gray-500'}`}
-                  onClick={() => setActiveTab('cancelled')}
-                >
-                  בוטל
-                </span>
               </div>
               <div className="max-h-56 overflow-y-auto divide-y">
                 {(pendingDeliveries[activeTab] || []).length === 0 ? (
