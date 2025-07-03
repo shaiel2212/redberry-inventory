@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import { useAuth } from '../context/AuthContext'; // ודא שזה קיים למעלה
 import ClientPicker from '../components/clientPicker/ClientPicker';
+import toast from 'react-hot-toast';
 
 const MakeSalePage = () => {
   const [products, setProducts] = useState([]);
@@ -104,7 +105,7 @@ const MakeSalePage = () => {
     }
 
     const saleData = {
-      client_id: selectedClientId, // 👈 זה מה שאתה צריך לשלוח
+      client_id: selectedClientId,
       address: form.address.trim(),
       total_amount: Number(totalAmount.toFixed(2)),
       seller_id: user.id,
@@ -117,10 +118,8 @@ const MakeSalePage = () => {
 
     try {
       setLoading(true);
-      console.log("🔍 saleData:", saleData);
-
       const result = await saleService.createSale(saleData);
-      alert(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.sale_id}`);
+      toast.success(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.sale_id}`);
       setCart([]);
       setSelectedClientId(null);
       setForm({ address: '', notes: '' });
@@ -128,131 +127,150 @@ const MakeSalePage = () => {
       setProducts(updatedProducts.filter(p => p.stock_quantity > 0));
     } catch (err) {
       console.error('❌ Create sale error:', err);
-      setError(err.response?.data?.message || 'שגיאה בביצוע המכירה.');
+      toast.error(err.response?.data?.message || 'שגיאה בביצוע המכירה.');
     } finally {
       setLoading(false);
     }
   };
+
   const handleClientSelect = (clientId) => {
     setSelectedClientId(clientId);
   };
 
   return (
     <MainLayout>
-      <div className="p-4 max-w-4xl mx-auto space-y-4">
-        <h2 className="text-xl font-bold">ביצוע מכירה</h2>
-        {error && <p className="text-red-500 border border-red-300 bg-red-100 p-2 rounded">{error}</p>}
+      <div className="max-w-2xl mx-auto p-4 space-y-6 text-right">
+        <h2 className="text-2xl font-bold mb-4 text-center">ביצוע מכירה</h2>
 
-        <h2 className="text-xl mb-2">בחר לקוח</h2>
-        <ClientPicker selectedClientId={selectedClientId} onSelectClient={handleClientSelect} />
+        {error && <div className="bg-red-100 border border-red-300 text-red-700 p-2 rounded text-center">{error}</div>}
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <label htmlFor="address" className="font-semibold">כתובת למשלוח :</label>
-          <input
-            type="text"
-            id="address"
-            name="address"
-            className="border p-2 rounded w-full sm:max-w-sm"
-            placeholder="רחוב, עיר, אזור..."
-            value={form.address}
-            onChange={handleChange}
-          />
+        <div className="bg-white rounded-xl shadow p-4 space-y-4">
+          <div>
+            <label className="font-semibold">בחר לקוח</label>
+            <ClientPicker selectedClientId={selectedClientId} onSelectClient={handleClientSelect} />
+          </div>
+          <div>
+            <label className="font-semibold">כתובת למשלוח</label>
+            <input
+              type="text"
+              id="address"
+              name="address"
+              className="border rounded p-2 w-full"
+              placeholder="רחוב, עיר, אזור..."
+              value={form.address}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <label className="font-semibold">הערות</label>
+            <textarea
+              id="notes"
+              name="notes"
+              rows={2}
+              className="border rounded p-2 w-full"
+              placeholder="הערות פנימיות / בקשות מיוחדות"
+              value={form.notes}
+              onChange={handleChange}
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="bg-white rounded-xl shadow p-4 space-y-2">
           <label className="font-semibold">בחר מוצרים:</label>
           <input
             type="text"
             placeholder="חפש מוצר..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="border p-2 rounded w-full sm:max-w-md"
+            className="border rounded p-2 w-full"
           />
-
-          <ul className="border rounded divide-y max-h-60 overflow-y-auto">
+          <ul className="divide-y max-h-48 overflow-y-auto">
             {products
               .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
               .map(product => (
-                <li key={product.id} className="flex justify-between items-center p-2 text-sm">
+                <li key={product.id} className="flex justify-between items-center py-2 text-sm">
                   <span>
-                    {product.name} (₪{parseFloat(product.sale_price).toFixed(2)}) -
-                    מלאי: {product.stock_quantity}
+                    {product.name} (₪{parseFloat(product.sale_price).toFixed(2)}) - מלאי: {product.stock_quantity}
                     {product.stock_quantity <= 0 && (
-                      <span className="text-red-500 ml-2">(לא זמין במלאי – יסופק בהמשך)</span>
+                      <span className="text-red-500 ml-2">(לא זמין במלאי)</span>
                     )}
                   </span>
                   <button
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded-md shadow-sm transition min-w-[64px] h-8 flex items-center justify-center"
+                    style={{ lineHeight: '1.2' }}
                     onClick={() => handleAddToCart(product)}
                   >
-                    הוסף לעגלה
+                    הוסף לסל
                   </button>
                 </li>
               ))}
           </ul>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <label htmlFor="notes" className="font-semibold">הערות:</label>
-          <textarea
-            id="notes"
-            name="notes"
-            rows={2}
-            className="border p-2 rounded w-full sm:max-w-sm"
-            placeholder="הערות פנימיות / בקשות מיוחדות..."
-            value={form.notes}
-            onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
-          />
-        </div>
-
-        <h3 className="text-lg font-bold mt-4">עגלת קניות:</h3>
-        {cart.length === 0 ? <p className="text-gray-500">העגלה ריקה.</p> : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border">
-              <thead className="bg-gray-100">
-                <tr className="text-right">
-                  <th className="p-2">מוצר</th>
-                  <th className="p-2">כמות</th>
-                  <th className="p-2">מחיר ליחידה</th>
-                  <th className="p-2">סה"כ לפריט</th>
-                  <th className="p-2">פעולות</th>
+       
+        <div className="bg-white rounded-xl shadow p-4">
+          <h3 className="font-bold mb-2">עגלת קניות</h3>
+          {cart.length === 0 ? (
+            <p className="text-gray-500">העגלה ריקה</p>
+          ) : (
+            <table className="w-full text-sm border rounded">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th>שם</th>
+                  <th>כמות</th>
+                  <th>מחיר ליח'</th>
+                  <th>סה"כ</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {cart.map(item => (
-                  <tr key={item.product_id} className="border-t text-right">
-                    <td className="p-2">{item.name}</td>
-                    <td className="p-2">
-                      <input
-                        type="number"
-                        className="w-16 border rounded p-1"
-                        value={item.quantity}
-                        onChange={(e) => handleUpdateQuantity(item.product_id, parseInt(e.target.value))}
-                      />
+                  <tr key={item.product_id} className={item.stock_quantity <= 0 ? 'bg-red-50' : ''}>
+                    <td>
+                      {item.name}
+                      {item.stock_quantity <= 0 && (
+                        <span className="text-xs text-red-600 ml-2">(חסר במלאי – יסופק בהמשך)</span>
+                      )}
                     </td>
-                    <td className="p-2">₪{item.price_per_unit.toFixed(2)}</td>
-                    <td className="p-2">₪{(item.price_per_unit * item.quantity).toFixed(2)}</td>
-                    <td className="p-2">
-                      <button
-                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
-                        onClick={() => handleUpdateQuantity(item.product_id, 0)}
-                      >הסר</button>
+                    <td>
+                      <button type="button" onClick={() => handleUpdateQuantity(item.product_id, item.quantity - 1)} className="px-2">-</button>
+                      <span className="mx-2">{item.quantity}</span>
+                      <button type="button" onClick={() => handleUpdateQuantity(item.product_id, item.quantity + 1)} className="px-2">+</button>
+                    </td>
+                    <td>₪{item.price_per_unit.toFixed(2)}</td>
+                    <td>₪{(item.price_per_unit * item.quantity).toFixed(2)}</td>
+                    <td>
+                      <button type="button" onClick={() => handleUpdateQuantity(item.product_id, 0)} className="text-red-500">הסר</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan={3} className="text-left font-bold">סה"כ</td>
+                  <td colSpan={2} className="font-bold">₪{calculateTotal().toFixed(2)}</td>
+                </tr>
+              </tfoot>
             </table>
-          </div>
-        )}
-
-        <div className="text-right font-semibold text-lg mt-4">
-          סה"כ לתשלום: ₪{calculateTotal().toFixed(2)}
+          )}
+          <button type="button" onClick={() => setCart([])} className="mt-2 bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded">נקה עגלה</button>
         </div>
 
         <button
+          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl text-lg font-bold mt-4"
           onClick={handleSubmitSale}
-          disabled={loading || cart.length === 0}
-          className="mt-4 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2 rounded disabled:opacity-50"
-        >{loading ? 'מעבד...' : 'בצע מכירה'}</button>
+          disabled={loading}
+        >
+          {loading ? 'מעבד...' : 'בצע מכירה'}
+        </button>
+
+        {loading && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+            <div className="bg-white p-6 rounded shadow text-center">
+              <span className="block mb-2">שומר מכירה...</span>
+              <div className="loader mx-auto"></div>
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );
