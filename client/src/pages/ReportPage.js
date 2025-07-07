@@ -205,18 +205,23 @@ const SalesReportPage = () => {
                                                     <th className="p-2 border">מחיר ליחידה</th>
                                                     <th className="p-2 border">עלות מוצר</th>
                                                     <th className="p-2 border">רווח פריט</th>
+                                                    <th className="p-2 border">רווח כולל</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {sale.items.map((item, i) => (
-                                                    <tr key={i} className="border-t">
-                                                        <td className="p-1 border">{item.product_name}</td>
-                                                        <td className="p-1 border">{item.quantity}</td>
-                                                        <td className="p-1 border">₪{parseFloat(item.price_per_unit).toFixed(2)}</td>
-                                                        <td className="p-1 border">₪{item.cost_price ? parseFloat(item.cost_price).toFixed(2) : '0.00'}</td>
-                                                        <td className="p-1 border">₪{parseFloat(item.final_profit || item.total_profit).toFixed(2)}</td>
-                                                    </tr>
-                                                ))}
+                                                {sale.items.map((item, i) => {
+                                                    const profitPerItem = (Number(item.price_per_unit) || 0) - (Number(item.cost_price) || 0);
+                                                    return (
+                                                        <tr key={i} className="border-t">
+                                                            <td className="p-1 border">{item.product_name}</td>
+                                                            <td className="p-1 border">{item.quantity}</td>
+                                                            <td className="p-1 border">₪{parseFloat(item.price_per_unit).toFixed(2)}</td>
+                                                            <td className="p-1 border">₪{item.cost_price ? parseFloat(item.cost_price).toFixed(2) : '0.00'}</td>
+                                                            <td className="p-1 border">₪{profitPerItem.toFixed(2)}</td>
+                                                            <td className="p-1 border">₪{(profitPerItem * Number(item.quantity || 0)).toFixed(2)}</td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
                                     </div>
@@ -253,18 +258,23 @@ const SalesReportPage = () => {
                                                     <th className="p-2 border">מחיר ליחידה</th>
                                                     <th className="p-2 border">עלות מוצר</th>
                                                     <th className="p-2 border">רווח פריט</th>
+                                                    <th className="p-2 border">רווח כולל</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {sale.items.map((item, i) => (
-                                                    <tr key={i} className="border-t">
-                                                        <td className="p-1 border">{item.product_name}</td>
-                                                        <td className="p-1 border">{item.quantity}</td>
-                                                        <td className="p-1 border">₪{parseFloat(item.price_per_unit).toFixed(2)}</td>
-                                                        <td className="p-1 border">₪{item.cost_price ? parseFloat(item.cost_price).toFixed(2) : '0.00'}</td>
-                                                        <td className="p-1 border">₪{parseFloat(item.final_profit || item.total_profit).toFixed(2)}</td>
-                                                    </tr>
-                                                ))}
+                                                {sale.items.map((item, i) => {
+                                                    const profitPerItem = (Number(item.price_per_unit) || 0) - (Number(item.cost_price) || 0);
+                                                    return (
+                                                        <tr key={i} className="border-t">
+                                                            <td className="p-1 border">{item.product_name}</td>
+                                                            <td className="p-1 border">{item.quantity}</td>
+                                                            <td className="p-1 border">₪{parseFloat(item.price_per_unit).toFixed(2)}</td>
+                                                            <td className="p-1 border">₪{item.cost_price ? parseFloat(item.cost_price).toFixed(2) : '0.00'}</td>
+                                                            <td className="p-1 border">₪{profitPerItem.toFixed(2)}</td>
+                                                            <td className="p-1 border">₪{(profitPerItem * Number(item.quantity || 0)).toFixed(2)}</td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
                                     </div>
