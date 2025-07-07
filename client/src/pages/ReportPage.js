@@ -92,7 +92,7 @@ const SalesReportPage = () => {
             const final = Number(row.final_amount) || total;
             return sum + (total - final);
         }, 0);
-        const totalDelivery = filteredData.reduce((sum, row) => sum + (Number(row.delivery_cost) || 0), 0);
+        const totalDelivery = groupedArray.reduce((sum, row) => sum + (Number(row.delivery_cost) || 0), 0);
         const totalProfit = filteredData.reduce((sum, row) => sum + (Number(row.final_profit || row.total_profit) || 0), 0);
         setSummary({
             totalDiscount: totalDiscount.toFixed(2),
@@ -111,6 +111,26 @@ const SalesReportPage = () => {
         setMattressSummaryData(summary);
         setViewMode("mattressSummary");
     };
+
+
+    // קיבוץ לפי sale_id
+    const groupedData = filteredData.reduce((acc, row) => {
+        if (!acc[row.sale_id]) {
+            acc[row.sale_id] = {
+                ...row,
+                items: [],
+                total_profit: 0,
+            };
+        }
+        acc[row.sale_id].items.push(row);
+        acc[row.sale_id].total_profit += Number(row.final_profit || row.total_profit) || 0;
+        return acc;
+    }, {});
+    const groupedArray = Object.values(groupedData);
+    // מיין לפי תאריך מהחדש לישן
+    const sortedGroupedArray = groupedArray.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
+    // מיין גם למובייל
+    const sortedGroupedArrayMobile = groupedArray.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
 
     return (
         <MainLayout>
@@ -138,7 +158,7 @@ const SalesReportPage = () => {
                     )}
                 </div>
 
-                {showSummary && summary &&(
+                {showSummary && summary && (
                     <div className="mt-6 p-4 bg-gray-50 border rounded shadow-sm text-sm leading-6">
                         <p>💰 <b>סה"כ הנחות:</b> ₪{summary.totalDiscount}</p>
                         <p>🚚 <b>סה"כ עלויות משלוח:</b> ₪{summary.totalDelivery}</p>
@@ -156,57 +176,100 @@ const SalesReportPage = () => {
 
                 {viewMode === "default" && (
                     isMobile ? (
-                        <div className="space-y-4">
-                            {filteredData.map((row, idx) => (
-                                <div key={idx} className="border rounded shadow-sm p-4 bg-white text-sm">
-                                    <div className="flex justify-between font-bold">
-                                        <span>#{row.sale_id}</span>
-                                        <span>{new Date(row.sale_date).toLocaleDateString('he-IL')}</span>
+                        <div className="space-y-8">
+                            {sortedGroupedArrayMobile.map((sale, idx) => (
+                                <div key={sale.sale_id} className="border rounded-2xl shadow-md bg-white p-4 text-right rtl">
+                                    {/* כותרת עסקה */}
+                                    <div className="mb-3 space-y-1 text-right rtl">
+                                        <div className="flex items-center gap-2 text-blue-700 font-bold text-lg rtl">
+                                            <a href={`#sale-${sale.sale_id}`} className="text-blue-600 underline">הזמנה #{sale.sale_id}</a>
+                                            <span className="text-gray-500 text-base font-normal">{new Date(sale.sale_date).toLocaleDateString('he-IL')} <span className="ml-1">📅</span></span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm rtl">
+                                            <span>{sale.customer_name} <span className="ml-1">👤</span></span>
+                                            <span className="mx-2">|</span>
+                                            <span>{sale.sold_by} <span className="ml-1">🛒</span></span>
+                                        </div>
+                                        <div className="text-sm"><span>סכום כולל: </span><span className="text-green-700">₪{parseFloat(sale.total_amount).toFixed(2)} 🟩</span></div>
+                                        <div className="text-sm"><span>לאחר הנחה: </span><span className="text-blue-700">₪{sale.items.reduce((sum, item) => sum + (Number(item.final_profit || item.total_profit) || 0), 0).toFixed(2)} 🪙</span></div>
+                                        <div className="text-sm"><span>משלוח: </span><span className="text-orange-700">₪{parseFloat(sale.delivery_cost || 0).toFixed(2)} 🚚</span></div>
+                                        <div className="text-sm"><span>רווח כולל: </span><span className="text-purple-700">₪{Number(sale.total_profit || 0).toFixed(2)} 📈</span></div>
                                     </div>
-                                    <p>👤 לקוח: {row.customer_name}</p>
-                                    <p>🛒 נמכר ע"י: {row.sold_by}</p>
-                                    <p>🛏️ מוצר: {row.product_name}</p>
-                                    <p>🔢 כמות: {row.quantity}</p>
-                                    <p>💵 מחיר ליחידה: ₪{parseFloat(row.price_per_unit).toFixed(2)}</p>
-                                    <p>🧾 עלות ליחידה: ₪{parseFloat(row.cost_price).toFixed(2)}</p>
-                                    <p>📦 סכום כולל: ₪{parseFloat(row.total_amount).toFixed(2)}</p>
-                                    <p>💸 לאחר הנחה: ₪{parseFloat(row.final_amount).toFixed(2)}</p>
-                                    <p>🚚 משלוח: ₪{parseFloat(row.delivery_cost).toFixed(2)}</p>
-                                    <p>📈 רווח: ₪{parseFloat(row.final_profit || row.total_profit).toFixed(2)}</p>
+                                    {/* טבלת פריטים */}
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full border text-sm">
+                                            <thead className="bg-blue-50">
+                                                <tr>
+                                                    <th className="p-2 border">שם מוצר</th>
+                                                    <th className="p-2 border">כמות</th>
+                                                    <th className="p-2 border">מחיר ליחידה</th>
+                                                    <th className="p-2 border">עלות מוצר</th>
+                                                    <th className="p-2 border">רווח פריט</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {sale.items.map((item, i) => (
+                                                    <tr key={i} className="border-t">
+                                                        <td className="p-1 border">{item.product_name}</td>
+                                                        <td className="p-1 border">{item.quantity}</td>
+                                                        <td className="p-1 border">₪{parseFloat(item.price_per_unit).toFixed(2)}</td>
+                                                        <td className="p-1 border">₪{item.cost_price ? parseFloat(item.cost_price).toFixed(2) : '0.00'}</td>
+                                                        <td className="p-1 border">₪{parseFloat(item.final_profit || item.total_profit).toFixed(2)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full border text-sm">
-                                <thead className="bg-gray-100">
-                                    <tr>
-                                        {["מספר הזמנה", "תאריך", "שם לקוח", "נמכר על ידי", "שם מוצר", "כמות", "מחיר ליחידה", "עלות מוצר", "סכום כולל", "סכום כולל לאחר הנחה", "עלות משלוח", "רווח בסך הכל "].map((field, index) => (
-                                            <th key={index} className="p-2 border cursor-pointer" onClick={() => handleSort(field)}>
-                                                {field} {sortField === field ? (sortDirection === 'asc' ? '⬆️' : '⬇️') : ''}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredData.map((row, idx) => (
-                                        <tr key={idx} className="border-t">
-                                            <td className="p-1 border">{row.sale_id}</td>
-                                            <td className="p-1 border">{new Date(row.sale_date).toLocaleDateString('he-IL')}</td>
-                                            <td className="p-1 border">{row.customer_name}</td>
-                                            <td className="p-1 border">{row.sold_by}</td>
-                                            <td className="p-1 border">{row.product_name}</td>
-                                            <td className="p-1 border">{row.quantity}</td>
-                                            <td className="p-1 border">₪{parseFloat(row.price_per_unit).toFixed(2)}</td>
-                                            <td className="p-1 border">₪{parseFloat(row.cost_price).toFixed(2)}</td>
-                                            <td className="p-1 border">₪{parseFloat(row.total_amount).toFixed(2)}</td>
-                                            <td className="p-1 border">₪{parseFloat(row.final_amount).toFixed(2)}</td>
-                                            <td className="p-1 border">₪{parseFloat(row.delivery_cost).toFixed(2)}</td>
-                                            <td className="p-1 border">₪{parseFloat(row.final_profit || row.total_profit).toFixed(2)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="space-y-8">
+                            {sortedGroupedArray.map((sale, idx) => (
+                                <div key={sale.sale_id} className="border rounded-lg shadow-sm bg-white">
+                                    {/* כותרת עסקה */}
+                                    <div className="mb-3 space-y-1 text-right rtl">
+                                        <div className="flex items-center gap-2 text-blue-700 font-bold text-lg rtl">
+                                            <a href={`#sale-${sale.sale_id}`} className="text-blue-600 underline">הזמנה #{sale.sale_id}</a>
+                                            <span className="text-gray-500 text-base font-normal">{new Date(sale.sale_date).toLocaleDateString('he-IL')} <span className="ml-1">📅</span></span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm rtl">
+                                            <span>{sale.customer_name} <span className="ml-1">👤</span></span>
+                                            <span className="mx-2">|</span>
+                                            <span>{sale.sold_by} <span className="ml-1">🛒</span></span>
+                                        </div>
+                                        <div className="text-sm"><span>סכום כולל: </span><span className="text-green-700">₪{parseFloat(sale.total_amount).toFixed(2)} 🟩</span></div>
+                                        <div className="text-sm"><span>לאחר הנחה: </span><span className="text-blue-700">₪{sale.items.reduce((sum, item) => sum + (Number(item.final_profit || item.total_profit) || 0), 0).toFixed(2)} 🪙</span></div>
+                                        <div className="text-sm"><span>משלוח: </span><span className="text-orange-700">₪{parseFloat(sale.delivery_cost || 0).toFixed(2)} 🚚</span></div>
+                                        <div className="text-sm"><span>רווח כולל: </span><span className="text-purple-700">₪{Number(sale.total_profit || 0).toFixed(2)} 📈</span></div>
+                                    </div>
+                                    {/* טבלת פריטים */}
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full border text-sm">
+                                            <thead className="bg-blue-50">
+                                                <tr>
+                                                    <th className="p-2 border">שם מוצר</th>
+                                                    <th className="p-2 border">כמות</th>
+                                                    <th className="p-2 border">מחיר ליחידה</th>
+                                                    <th className="p-2 border">עלות מוצר</th>
+                                                    <th className="p-2 border">רווח פריט</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {sale.items.map((item, i) => (
+                                                    <tr key={i} className="border-t">
+                                                        <td className="p-1 border">{item.product_name}</td>
+                                                        <td className="p-1 border">{item.quantity}</td>
+                                                        <td className="p-1 border">₪{parseFloat(item.price_per_unit).toFixed(2)}</td>
+                                                        <td className="p-1 border">₪{item.cost_price ? parseFloat(item.cost_price).toFixed(2) : '0.00'}</td>
+                                                        <td className="p-1 border">₪{parseFloat(item.final_profit || item.total_profit).toFixed(2)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )
                 )}

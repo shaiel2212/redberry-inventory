@@ -5,6 +5,8 @@ import MainLayout from '../components/layout/MainLayout';
 import { Dialog, DialogContent, DialogTitle } from '../components/ui/dialog';
 import { Receipt, X } from 'lucide-react';
 import { useLocation } from "react-router-dom";
+import { useAuth } from '../context/AuthContext';
+import SaleEditForm from '../components/sales/SaleEditForm';
 
 const SalesAdminPage = () => {
   const [sales, setSales] = useState([]);
@@ -16,6 +18,8 @@ const SalesAdminPage = () => {
   const [discountAmount, setDiscountAmount] = useState('');
   const [deliveryCost, setDeliveryCost] = useState('');
   const location = useLocation();
+  const { user } = useAuth();
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     const fetchSales = async () => {
@@ -187,96 +191,70 @@ const SalesAdminPage = () => {
                   <Receipt className="w-7 h-7 text-blue-500" />
                   פרטי מכירה #{selectedSaleDetails.id}
                 </DialogTitle>
-              </div>
-
-              <div className="text-sm space-y-1 mb-4">
-                <p><strong>תאריך:</strong> {new Date(selectedSaleDetails.sale_date).toLocaleString('he-IL')}</p>
-                <p><strong>לקוח:</strong> {selectedSaleDetails.customer_name || '-'}</p>
-                <p><strong>נמכר ע"י:</strong> {selectedSaleDetails.sold_by || '-'}</p>
-                <p><strong>סכום כולל:</strong> ₪{parseFloat(selectedSaleDetails.total_amount).toFixed(2)}</p>
-                <p><strong>הנחה באחוזים:</strong> {selectedSaleDetails.discount_percent || 0}%</p>
-                <p><strong>הנחה בש"ח:</strong> ₪{selectedSaleDetails.discount_amount || 0}</p>
-                <p><strong>סה"כ לאחר הנחה:</strong> ₪{parseFloat(selectedSaleDetails.final_amount || selectedSaleDetails.total_amount).toFixed(2)}</p>
-                {selectedSaleDetails.discount_given_by && (
-                  <p><strong>ניתנה ע"י:</strong> {selectedSaleDetails.discount_given_by}</p>
-                )}
-                {selectedSaleDetails.discount_given_at && (
-                  <p><strong>בתאריך:</strong> {new Date(selectedSaleDetails.discount_given_at).toLocaleString('he-IL')}</p>
-                )}
-              </div>
-              {selectedSaleDetails.has_unsupplied_items && (
-                <div className="text-red-600 text-sm mt-2">
-                  ⚠️ מכירה זו כוללת פריטים שטרם סופקו (חסר מלאי)
-                </div>
-              )}
-              {selectedSaleDetails.notes && (
-                <div className="mt-2 text-sm text-gray-700">
-                  <strong>הערות:</strong> {selectedSaleDetails.notes}
-                </div>
-              )}
-
-              {editDiscount ? (
-                <div className="mt-4 space-y-2">
-                  <label className="block text-sm">הנחה באחוזים:</label>
-                  <input
-                    type="number"
-                    value={discountPercent}
-                    onChange={(e) => { setDiscountPercent(e.target.value); setDiscountAmount(''); }}
-                    className="border p-1 w-full"
-                    placeholder="לדוגמה: 15"
-                    disabled={discountAmount !== ''}
-                  />
-
-                  <label className="block text-sm">או הנחה בשקלים:</label>
-                  <input
-                    type="number"
-                    value={discountAmount}
-                    onChange={(e) => { setDiscountAmount(e.target.value); setDiscountPercent(''); }}
-                    className="border p-1 w-full"
-                    placeholder="לדוגמה: 100"
-                    disabled={discountPercent !== ''}
-                  />
-
-                  <label className="block text-sm">עלות משלוח (₪):</label>
-                  <input
-                    type="number"
-                    value={deliveryCost}
-                    onChange={(e) => setDeliveryCost(e.target.value)}
-                    className="border p-1 w-full"
-                    placeholder="לדוגמה: 50"
-                  />
-
+                {/* כפתור עריכה לאדמין בלבד */}
+                {user?.role === 'admin' && !['delivered', 'cancelled'].includes(selectedSaleDetails.status) && !isEditMode && (
                   <button
-                    onClick={handleUpdateSaleDetails}
-                    className="bg-green-600 text-white w-full py-2 rounded mt-2"
+                    onClick={() => setIsEditMode(true)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-1 rounded shadow"
                   >
-                    עדכן פרטי עסקה
+                    ערוך
                   </button>
-                </div>
+                )}
+              </div>
+              {isEditMode ? (
+                <SaleEditForm
+                  sale={selectedSaleDetails}
+                  onSave={async () => {
+                    await fetchSaleDetails(selectedSaleDetails.id);
+                    setIsEditMode(false);
+                  }}
+                  onCancel={() => setIsEditMode(false)}
+                />
               ) : (
-                <button
-                  onClick={() => setEditDiscount(true)}
-                  className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-white w-full py-2 rounded"
-                >
-                  ערוך פרטי עסקה
-                </button>
+                <>
+                  <div className="text-sm space-y-1 mb-4">
+                    <p><strong>תאריך:</strong> {new Date(selectedSaleDetails.sale_date).toLocaleString('he-IL')}</p>
+                    <p><strong>לקוח:</strong> {selectedSaleDetails.customer_name || '-'}</p>
+                    <p><strong>נמכר ע"י:</strong> {selectedSaleDetails.sold_by || '-'}</p>
+                    <p><strong>סכום כולל:</strong> ₪{parseFloat(selectedSaleDetails.total_amount).toFixed(2)}</p>
+                    <p><strong>הנחה באחוזים:</strong> {selectedSaleDetails.discount_percent || 0}%</p>
+                    <p><strong>הנחה בש"ח:</strong> ₪{selectedSaleDetails.discount_amount || 0}</p>
+                    <p><strong>סה"כ לאחר הנחה:</strong> ₪{parseFloat(selectedSaleDetails.final_amount || selectedSaleDetails.total_amount).toFixed(2)}</p>
+                    <p><strong>עלות משלוח:</strong> ₪{parseFloat(selectedSaleDetails.delivery_cost || 0).toFixed(2)}</p>
+                    <p className="font-bold text-blue-700">סה"כ לאחר הנחה ומשלוח: ₪{(parseFloat(selectedSaleDetails.final_amount || selectedSaleDetails.total_amount) - parseFloat(selectedSaleDetails.delivery_cost || 0)).toFixed(2)} <span className="text-xs text-gray-500">(כולל משלוח)</span></p>
+                    {selectedSaleDetails.discount_given_by && (
+                      <p><strong>ניתנה ע"י:</strong> {selectedSaleDetails.discount_given_by}</p>
+                    )}
+                    {selectedSaleDetails.discount_given_at && (
+                      <p><strong>בתאריך:</strong> {new Date(selectedSaleDetails.discount_given_at).toLocaleString('he-IL')}</p>
+                    )}
+                  </div>
+                  {selectedSaleDetails.has_unsupplied_items && (
+                    <div className="text-red-600 text-sm mt-2">
+                      ⚠️ מכירה זו כוללת פריטים שטרם סופקו (חסר מלאי)
+                    </div>
+                  )}
+                  {selectedSaleDetails.notes && (
+                    <div className="mt-2 text-sm text-gray-700">
+                      <strong>הערות:</strong> {selectedSaleDetails.notes}
+                    </div>
+                  )}
+                  <h4 className="mt-4 font-semibold">📦 פריטים במכירה:</h4>
+                  <ul className="list-disc pr-5 text-sm mt-1 space-y-1">
+                    {selectedSaleDetails.items.map(item => (
+                      <li key={item.product_id}>
+                        {item.product_name || item.name} — כמות: {item.quantity}, ₪{parseFloat(item.sale_price || item.price_per_unit).toFixed(2)} ליחידה
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={closeModal}
+                    className="mt-6 bg-gray-800 hover:bg-gray-900 text-white w-full py-2 rounded"
+                  >
+                    סגור פרטים
+                  </button>
+                </>
               )}
-
-              <h4 className="mt-4 font-semibold">📦 פריטים במכירה:</h4>
-              <ul className="list-disc pr-5 text-sm mt-1 space-y-1">
-                {selectedSaleDetails.items.map(item => (
-                  <li key={item.product_id}>
-                    {item.product_name || item.name} — כמות: {item.quantity}, ₪{parseFloat(item.sale_price || item.price_per_unit).toFixed(2)} ליחידה
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                onClick={closeModal}
-                className="mt-6 bg-gray-800 hover:bg-gray-900 text-white w-full py-2 rounded"
-              >
-                סגור פרטים
-              </button>
             </DialogContent>
           </Dialog>
         )}

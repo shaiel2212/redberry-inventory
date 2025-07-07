@@ -17,5 +17,6 @@ router.get('/recent',requireAuth ,salesController.getRecentSales);
 router.get('/:id', requireAuth, salesController.getSaleById);
 router.patch('/:id/discount', requireAuth, requireAdmin, salesController.updateSaleDiscount);
 router.patch('/:id/details', requireAuth, requireAdmin, salesController.updateSaleDetails);
-
+router.patch('/:id/full-edit', requireAuth, requireAdmin, salesController.fullEditSale);
+router.get('/:id/history', requireAuth, requireAdmin, salesController.getSaleEditHistory);
 module.exports = router;

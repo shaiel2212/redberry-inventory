@@ -348,35 +348,55 @@ exports.getSalesReport = async (req, res) => {
   try {
     const [rows] = await pool.query(query, params);
 
-    const enrichedRows = rows.map(row => {
-      const totalAmount = Number(row.total_amount || 0);
-      const quantity = Number(row.quantity || 1);
-      const deliveryCost = Number(row.delivery_cost || 0);
-      const costPrice = Number(row.cost_price || 0);
+    // קיבוץ כל הפריטים לכל עסקה
+    const salesMap = {};
+    rows.forEach(row => {
+      if (!salesMap[row.sale_id]) salesMap[row.sale_id] = [];
+      salesMap[row.sale_id].push(row);
+    });
 
-      const baseDiscount = Number(row.base_discount_percent || 0);
-      const cashDiscount = Number(row.cash_discount_percent || 0);
-      const extraDiscount = Number(row.discount_percent || 0);
-      const discountAmount = Number(row.discount_amount || 0);
+    const enrichedRows = [];
+    Object.values(salesMap).forEach(items => {
+      const totalAmount = Number(items[0].total_amount || 0);
+      const deliveryCost = Number(items[0].delivery_cost || 0);
 
-      // חישוב מחיר סופי אחרי כל ההנחות
+      // סכום כל הפריטים (לפני הנחות)
+      const totalItemsAmount = items.reduce((sum, item) =>
+        sum + (Number(item.price_per_unit) * Number(item.quantity)), 0);
+
+      // חישוב final_amount (אחרי הנחות)
       let finalAmount = totalAmount;
+      const baseDiscount = Number(items[0].base_discount_percent || 0);
+      const cashDiscount = Number(items[0].cash_discount_percent || 0);
+      const extraDiscount = Number(items[0].discount_percent || 0);
+      const discountAmount = Number(items[0].discount_amount || 0);
       if (baseDiscount > 0) finalAmount -= finalAmount * (baseDiscount / 100);
       if (cashDiscount > 0) finalAmount -= finalAmount * (cashDiscount / 100);
       if (extraDiscount > 0) finalAmount -= finalAmount * (extraDiscount / 100);
       if (discountAmount > 0) finalAmount -= discountAmount;
       finalAmount = Number(finalAmount.toFixed(2));
 
-      // רווח פריט = מחיר לאחר הנחות פחות עלות מוצר פחות משלוח
-      const totalCost = costPrice * quantity;
-      const finalProfit = Number((finalAmount - totalCost - deliveryCost).toFixed(2));
+      // סה\"כ הנחה
+      const totalDiscount = totalAmount - finalAmount;
 
-      return {
-        ...row,
-        final_amount: finalAmount,
-        final_profit: finalProfit,
-        has_unsupplied_items: !!row.has_unsupplied_items,
-      };
+      items.forEach(item => {
+        const itemAmount = Number(item.price_per_unit) * Number(item.quantity);
+        const itemShare = totalItemsAmount > 0 ? itemAmount / totalItemsAmount : 0;
+        const itemDiscount = totalDiscount * itemShare;
+        const itemDelivery = deliveryCost * itemShare;
+        const costPrice = Number(item.cost_price) || 0;
+        const profitPerItem = (Number(item.price_per_unit) - costPrice) * Number(item.quantity);
+        const finalProfit = profitPerItem - itemDiscount - itemDelivery;
+
+        enrichedRows.push({
+          ...item,
+          final_amount: finalAmount,
+          final_profit: Number(finalProfit.toFixed(2)),
+          item_discount: Number(itemDiscount.toFixed(2)),
+          item_delivery: Number(itemDelivery.toFixed(2)),
+          has_unsupplied_items: !!item.has_unsupplied_items,
+        });
+      });
     });
 
     res.json(enrichedRows);
@@ -447,5 +467,137 @@ exports.getRecentSales = async (req, res) => {
   } catch (err) {
     console.error('Error fetching recent sales:', err);
     res.status(500).send('Error fetching recent sales');
+  }
+};
+
+
+exports.fullEditSale = async (req, res) => {
+  const saleId = parseInt(req.params.id, 10);
+  const userId = req.user?.id;
+  if (isNaN(saleId) || !userId) return res.status(400).json({ message: 'Invalid request' });
+
+  // שליפת המכירה לבדוק סטטוס
+  const [[sale]] = await pool.query('SELECT * FROM sales WHERE id = ?', [saleId]);
+  if (!sale) return res.status(404).json({ message: 'Sale not found' });
+  if (['delivered', 'cancelled'].includes(sale.status)) {
+    return res.status(400).json({ message: 'Cannot edit delivered or cancelled sale' });
+  }
+
+  const { items, address, notes, delivery_cost, discount_percent } = req.body;
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // שלוף את הפריטים הקיימים
+    const [oldItems] = await connection.query('SELECT * FROM sale_items WHERE sale_id = ?', [saleId]);
+
+    // 1. מחיקת פריטים שהוסרו (והחזרת מלאי)
+    for (const oldItem of oldItems) {
+      if (!items.find(i => i.product_id === oldItem.product_id)) {
+        await connection.query('UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?', [oldItem.quantity, oldItem.product_id]);
+        await connection.query('DELETE FROM sale_items WHERE sale_id = ? AND product_id = ?', [saleId, oldItem.product_id]);
+        await connection.query(
+          'INSERT INTO sales_edit_history (sale_id, user_id, change_type, field_name, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+          [saleId, userId, 'remove_item', 'product_id', oldItem.product_id, null]
+        );
+      }
+    }
+
+    // 2. עדכון/הוספה של פריטים
+    for (const item of items) {
+      const [existing] = oldItems.filter(i => i.product_id === item.product_id);
+      if (existing) {
+        if (existing.quantity !== item.quantity) {
+          // עדכון מלאי
+          const diff = item.quantity - existing.quantity;
+          await connection.query('UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?', [diff, item.product_id]);
+          await connection.query('UPDATE sale_items SET quantity = ? WHERE sale_id = ? AND product_id = ?', [item.quantity, saleId, item.product_id]);
+          await connection.query(
+            'INSERT INTO sales_edit_history (sale_id, user_id, change_type, field_name, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+            [saleId, userId, 'update_quantity', 'quantity', existing.quantity, item.quantity]
+          );
+        }
+      } else {
+        // הוספת פריט חדש
+        await connection.query('UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?', [item.quantity, item.product_id]);
+        await connection.query(
+          'INSERT INTO sale_items (sale_id, product_id, quantity, price_per_unit) VALUES (?, ?, ?, ?)',
+          [saleId, item.product_id, item.quantity, item.price_per_unit]
+        );
+        await connection.query(
+          'INSERT INTO sales_edit_history (sale_id, user_id, change_type, field_name, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+          [saleId, userId, 'add_item', 'product_id', null, item.product_id]
+        );
+      }
+    }
+
+    // 3. עדכון שדות כלליים (כתובת, הערות, עלות משלוח, הנחה, סכומים)
+    if (address !== sale.address) {
+      await connection.query('UPDATE sales SET address = ? WHERE id = ?', [address, saleId]);
+      await connection.query(
+        'INSERT INTO sales_edit_history (sale_id, user_id, change_type, field_name, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+        [saleId, userId, 'update_field', 'address', sale.address, address]
+      );
+    }
+    if (notes !== sale.notes) {
+      await connection.query('UPDATE sales SET notes = ? WHERE id = ?', [notes, saleId]);
+      await connection.query(
+        'INSERT INTO sales_edit_history (sale_id, user_id, change_type, field_name, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+        [saleId, userId, 'update_field', 'notes', sale.notes, notes]
+      );
+    }
+    if (delivery_cost !== sale.delivery_cost) {
+      await connection.query('UPDATE sales SET delivery_cost = ? WHERE id = ?', [delivery_cost, saleId]);
+      await connection.query(
+        'INSERT INTO sales_edit_history (sale_id, user_id, change_type, field_name, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+        [saleId, userId, 'update_field', 'delivery_cost', sale.delivery_cost, delivery_cost]
+      );
+    }
+    if (discount_percent !== sale.discount_percent) {
+      await connection.query('UPDATE sales SET discount_percent = ? WHERE id = ?', [discount_percent, saleId]);
+      await connection.query(
+        'INSERT INTO sales_edit_history (sale_id, user_id, change_type, field_name, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+        [saleId, userId, 'update_field', 'discount_percent', sale.discount_percent, discount_percent]
+      );
+    }
+    // עדכון סכומים
+    if (req.body.total_amount !== undefined && req.body.total_amount !== sale.total_amount) {
+      await connection.query('UPDATE sales SET total_amount = ? WHERE id = ?', [req.body.total_amount, saleId]);
+      await connection.query(
+        'INSERT INTO sales_edit_history (sale_id, user_id, change_type, field_name, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',
+        [saleId, userId, 'update_field', 'total_amount', sale.total_amount, req.body.total_amount]
+      );
+    }
+
+
+    await connection.commit();
+    res.json({ message: 'Sale updated successfully' });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error editing sale:', err);
+    res.status(500).json({ message: 'Error editing sale' });
+  } finally {
+    connection.release();
+  }
+};
+
+exports.getSaleEditHistory = async (req, res) => {
+  const saleId = parseInt(req.params.id, 10);
+  if (isNaN(saleId)) return res.status(400).json({ message: 'Invalid sale id' });
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT h.*, u.username 
+       FROM sales_edit_history h
+       JOIN users u ON h.user_id = u.id
+       WHERE h.sale_id = ?
+       ORDER BY h.changed_at DESC`,
+      [saleId]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching sale edit history:', err);
+    res.status(500).json({ message: 'Error fetching history' });
   }
 };
