@@ -522,8 +522,8 @@ exports.fullEditSale = async (req, res) => {
         // הוספת פריט חדש
         await connection.query('UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?', [item.quantity, item.product_id]);
         await connection.query(
-          'INSERT INTO sale_items (sale_id, product_id, quantity, price_per_unit) VALUES (?, ?, ?, ?)',
-          [saleId, item.product_id, item.quantity, item.price_per_unit]
+          'INSERT INTO sale_items (sale_id, product_id, quantity, price_per_unit, cost_price) VALUES (?, ?, ?, ?, ?)',
+          [saleId, item.product_id, item.quantity, item.price_per_unit, item.cost]
         );
         await connection.query(
           'INSERT INTO sales_edit_history (sale_id, user_id, change_type, field_name, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)',

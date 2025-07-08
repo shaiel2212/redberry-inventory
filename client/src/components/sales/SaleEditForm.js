@@ -51,6 +51,7 @@ const SaleEditForm = ({ sale, onSave, onCancel }) => {
       quantity: 1,
       sale_price: product.sale_price,
       price_per_unit: product.sale_price,
+      cost: product.cost_price,
     }]);
     setShowProductDialog(false);
     setProductSearch('');
