@@ -191,15 +191,6 @@ const SalesAdminPage = () => {
                   <Receipt className="w-7 h-7 text-blue-500" />
                   פרטי מכירה #{selectedSaleDetails.id}
                 </DialogTitle>
-                {/* כפתור עריכה לאדמין בלבד */}
-                {user?.role === 'admin' && !['delivered', 'cancelled'].includes(selectedSaleDetails.status) && !isEditMode && (
-                  <button
-                    onClick={() => setIsEditMode(true)}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-1 rounded shadow"
-                  >
-                    ערוך
-                  </button>
-                )}
               </div>
               {isEditMode ? (
                 <SaleEditForm
@@ -247,9 +238,17 @@ const SalesAdminPage = () => {
                       </li>
                     ))}
                   </ul>
+                  {user?.role === 'admin' && !['delivered', 'cancelled'].includes(selectedSaleDetails.status) && (
+                    <button
+                      onClick={() => setIsEditMode(true)}
+                      className="mb-2 bg-yellow-400 hover:bg-yellow-500 text-black w-full py-2 rounded"
+                    >
+                      ערוך
+                    </button>
+                  )}
                   <button
                     onClick={closeModal}
-                    className="mt-6 bg-gray-800 hover:bg-gray-900 text-white w-full py-2 rounded"
+                    className="mt-2 bg-gray-800 hover:bg-gray-900 text-white w-full py-2 rounded"
                   >
                     סגור פרטים
                   </button>
