@@ -88,9 +88,9 @@ const SalesReportPage = () => {
             "מוכר",
             "עלות מוצר",
             "רווח פריט",
-            "רווח כולל",
             "עלות משלוח",
-            "הערות"
+            "הערות",
+            "רווח כולל" // עכשיו בסוף!
         ];
         // המרת הנתונים למבנה תואם כותרות
         const data = filteredData.map(row => ([
@@ -107,10 +107,10 @@ const SalesReportPage = () => {
             row.cost_price,
             // רווח פר פריט
             (Number(row.price_per_unit || 0) - Number(row.cost_price || 0)).toFixed(2),
-            // רווח כולל
-            ((Number(row.price_per_unit || 0) - Number(row.cost_price || 0)) * Number(row.quantity || 0)).toFixed(2),
             row.delivery_cost,
-            row.notes
+            row.notes,
+            // רווח כולל (בסוף)
+            ((Number(row.price_per_unit || 0) - Number(row.cost_price || 0)) * Number(row.quantity || 0)).toFixed(2)
         ]));
         // הוספת headers כראשונה
         const worksheetData = [headers, ...data];
