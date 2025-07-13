@@ -74,7 +74,47 @@ const SalesReportPage = () => {
     };
 
     const exportToExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(filteredData);
+        // הגדרת שמות עמודות בעברית
+        const headers = [
+            "מספר עסקה",
+            "תאריך",
+            "לקוח",
+            "מוצר",
+            "כמות",
+            "מחיר ליחידה",
+            "סכום כולל",
+            "הנחה",
+            "סכום לאחר הנחה",
+            "מוכר",
+            "עלות מוצר",
+            "רווח פריט",
+            "רווח כולל",
+            "עלות משלוח",
+            "הערות"
+        ];
+        // המרת הנתונים למבנה תואם כותרות
+        const data = filteredData.map(row => ([
+            row.sale_id,
+            row.sale_date ? new Date(row.sale_date).toLocaleDateString('he-IL') : '',
+            row.customer_name,
+            row.product_name,
+            row.quantity,
+            row.price_per_unit,
+            row.total_amount,
+            row.discount_percent || row.discount_amount || '',
+            row.final_amount || '',
+            row.sold_by,
+            row.cost_price,
+            // רווח פר פריט
+            (Number(row.price_per_unit || 0) - Number(row.cost_price || 0)).toFixed(2),
+            // רווח כולל
+            ((Number(row.price_per_unit || 0) - Number(row.cost_price || 0)) * Number(row.quantity || 0)).toFixed(2),
+            row.delivery_cost,
+            row.notes
+        ]));
+        // הוספת headers כראשונה
+        const worksheetData = [headers, ...data];
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'דוח מכירות');
         const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
