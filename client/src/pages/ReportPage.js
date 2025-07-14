@@ -230,8 +230,8 @@ const SalesReportPage = () => {
                                             <span className="mx-2">|</span>
                                             <span>{sale.sold_by} <span className="ml-1">🛒</span></span>
                                         </div>
-                                        <div className="text-sm"><span>סכום כולל: </span><span className="text-green-700">₪{parseFloat(sale.total_amount).toFixed(2)} 🟩</span></div>
-                                        <div className="text-sm"><span>לאחר הנחה: </span><span className="text-blue-700">₪{sale.items.reduce((sum, item) => sum + (Number(item.final_profit || item.total_profit) || 0), 0).toFixed(2)} 🪙</span></div>
+                                        <div className="text-sm"><span>סכום כולל: </span><span className="text-green-700">₪{parseFloat(sale.total_amount).toFixed(2)}  💵</span></div>
+                                        <div className="text-sm"><span>לאחר הנחה: </span><span className="text-blue-700">₪{sale.items.reduce((sum, item) => sum + (Number(item.final_profit || item.total_profit) || 0), 0).toFixed(2)} 💵</span></div>
                                         <div className="text-sm"><span>משלוח: </span><span className="text-orange-700">₪{parseFloat(sale.delivery_cost || 0).toFixed(2)} 🚚</span></div>
                                         <div className="text-sm"><span>רווח כולל: </span><span className="text-purple-700">₪{Number(sale.total_profit || 0).toFixed(2)} 📈</span></div>
                                     </div>
