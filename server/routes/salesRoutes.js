@@ -19,4 +19,8 @@ router.patch('/:id/discount', requireAuth, requireAdmin, salesController.updateS
 router.patch('/:id/details', requireAuth, requireAdmin, salesController.updateSaleDetails);
 router.patch('/:id/full-edit', requireAuth, requireAdmin, salesController.fullEditSale);
 router.get('/:id/history', requireAuth, requireAdmin, salesController.getSaleEditHistory);
+
+// מחיקת מכירה
+router.delete('/:id', requireAuth, requireAdmin, salesController.deleteSale);
+
 module.exports = router;

@@ -601,3 +601,35 @@ exports.getSaleEditHistory = async (req, res) => {
     res.status(500).json({ message: 'Error fetching history' });
   }
 };
+
+exports.deleteSale = async (req, res) => {
+  const saleId = req.params.id;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // שלוף את כל הפריטים במכירה
+    const [items] = await conn.query('SELECT product_id, quantity FROM sale_items WHERE sale_id = ?', [saleId]);
+
+    // החזר מלאי לכל מוצר
+    for (const item of items) {
+      await conn.query('UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?', [item.quantity, item.product_id]);
+    }
+
+    // מחק את הפריטים
+    await conn.query('DELETE FROM sale_items WHERE sale_id = ?', [saleId]);
+    // מחק משלוחים
+    await conn.query('DELETE FROM deliveries WHERE sale_id = ?', [saleId]);
+    // מחק את המכירה
+    await conn.query('DELETE FROM sales WHERE id = ?', [saleId]);
+
+    await conn.commit();
+    res.json({ message: 'המכירה נמחקה בהצלחה' });
+  } catch (err) {
+    await conn.rollback();
+    console.error('שגיאה במחיקת מכירה:', err);
+    res.status(500).json({ message: 'שגיאה במחיקת מכירה' });
+  } finally {
+    conn.release();
+  }
+};

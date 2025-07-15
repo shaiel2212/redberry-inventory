@@ -90,18 +90,18 @@ const SaleEditForm = ({ sale, onSave, onCancel }) => {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-2">עריכת עסקה #{sale.id}</h3>
-      {error && <div className="text-red-600 mb-2">{error}</div>}
+      <h3 className="text-lg font-bold mb-1">עריכת עסקה #{sale.id}</h3>
+      {error && <div className="text-red-600 mb-1">{error}</div>}
       <label className="block font-semibold">כתובת:</label>
-      <input type="text" className="border rounded p-2 w-full mb-2" value={address} onChange={e => setAddress(e.target.value)} />
+      <input type="text" className="border rounded p-2 w-full mb-1" value={address} onChange={e => setAddress(e.target.value)} />
       <label className="block font-semibold">הערות:</label>
-      <textarea className="border rounded p-2 w-full mb-2" value={notes} onChange={e => setNotes(e.target.value)} />
+      <textarea rows={2} style={{height: '2.5em'}} className="border rounded p-2 w-full mb-1 text-sm" value={notes} onChange={e => setNotes(e.target.value)} />
       <label className="block font-semibold">עלות משלוח:</label>
-      <input type="number" className="border rounded p-2 w-full mb-2" value={deliveryCost} onChange={e => setDeliveryCost(e.target.value)} />
+      <input type="number" className="border rounded p-2 w-full mb-1" value={deliveryCost} onChange={e => setDeliveryCost(e.target.value)} />
       <label className="block font-semibold">הנחה כללית (%):</label>
-      <input type="number" className="border rounded p-2 w-full mb-2" value={discountPercent} onChange={e => setDiscountPercent(e.target.value)} />
+      <input type="number" className="border rounded p-2 w-full mb-1" value={discountPercent} onChange={e => setDiscountPercent(e.target.value)} />
 
-      <div className="mt-2 text-sm">
+      <div className="mt-1 text-sm">
         <p><strong>סה"כ לאחר הנחה:</strong> ₪{(() => {
           // סכום כולל כל הפריטים
           const total = items.reduce((sum, item) => sum + (parseFloat(item.sale_price || item.price_per_unit) * item.quantity), 0);
@@ -120,8 +120,11 @@ const SaleEditForm = ({ sale, onSave, onCancel }) => {
         })()} <span className="text-xs text-gray-500">(כולל משלוח)</span></p>
       </div>
 
-      <h4 className="mt-4 font-semibold">📦 פריטים במכירה:</h4>
-      <table className="w-full text-sm mt-2 border rounded">
+      {/* כפתור הוסף פריט מוקטן ומיושר שמאלה */}
+     
+
+      <h4 className="mt-2 font-semibold">📦 פריטים במכירה:</h4>
+      <table className="w-full text-sm mt-1 border rounded">
         <thead>
           <tr className="bg-blue-100">
             <th>שם מוצר</th>
@@ -154,7 +157,6 @@ const SaleEditForm = ({ sale, onSave, onCancel }) => {
           ))}
         </tbody>
       </table>
-      <button className="mt-2 bg-blue-200 hover:bg-blue-300 text-blue-900 px-3 py-1 rounded" onClick={handleAddItem} type="button">הוסף פריט</button>
       {/* דיאלוג בחירת מוצר */}
       {showProductDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
@@ -176,9 +178,12 @@ const SaleEditForm = ({ sale, onSave, onCancel }) => {
         </div>
       )}
 
-      <div className="flex gap-2 mt-6">
+      <div className="flex gap-2 mt-4">
         <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={handleSave} disabled={saving}>שמור</button>
-        <button className="bg-gray-400 text-white px-4 py-2 rounded" onClick={onCancel} type="button">ביטול</button>
+        <button className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded font-bold" onClick={handleAddItem} type="button">הוסף פריט</button>
+        {typeof window !== 'undefined' && window.userRole === 'admin' && (
+          <button className="bg-red-600 text-white px-4 py-2 rounded font-bold" type="button">מחק מכירה</button>
+        )}
       </div>
     </div>
   );

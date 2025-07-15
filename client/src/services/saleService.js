@@ -46,6 +46,11 @@ const updateSaleFull = (saleId, updateData) => {
   return api.patch(`/sales/${saleId}/full-edit`, updateData);
 };
 
+const deleteSale = async (saleId) => {
+  const response = await api.delete(`${API_URL}/${saleId}`);
+  return response.data;
+};
+
 const getRecentSales = async () => { 
   const response = await api.get('/sales/recent');
   console.log(response.data);
@@ -62,6 +67,7 @@ const saleService = {
   updateSaleDetails,
   updateSaleFull,
   getRecentSales,
+  deleteSale,
 };
 
 export default saleService;

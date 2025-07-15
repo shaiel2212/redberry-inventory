@@ -20,6 +20,8 @@ const SalesAdminPage = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchSales = async () => {
@@ -95,6 +97,7 @@ const SalesAdminPage = () => {
   const closeModal = () => {
     setSelectedSaleDetails(null);
     setEditDiscount(false);
+    setIsEditMode(false); // איפוס מצב עריכה בסגירה
   };
 
   return (
@@ -252,8 +255,54 @@ const SalesAdminPage = () => {
                   >
                     סגור פרטים
                   </button>
+                  {user?.role === 'admin' && (
+                    <button
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="bg-red-600 hover:bg-red-700 text-white w-full py-2 rounded font-bold mt-2"
+                    >
+                      מחק מכירה
+                    </button>
+                  )}
                 </>
               )}
+            </DialogContent>
+          </Dialog>
+        )}
+        {/* דיאלוג אישור מחיקה */}
+        {showDeleteDialog && selectedSaleDetails && (
+          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <DialogContent dir="rtl" className="text-right max-w-md w-full p-6 rounded-3xl shadow-2xl bg-white border border-red-300">
+              <h3 className="text-lg font-bold text-red-700 mb-2">אזהרה!</h3>
+              <p className="mb-4">האם אתה בטוח שברצונך למחוק את המכירה #{selectedSaleDetails.id} של <b>{selectedSaleDetails.customer_name}</b>? פעולה זו בלתי הפיכה!</p>
+              <div className="flex gap-2 justify-end mt-4">
+                <button
+                  onClick={async () => {
+                    setDeleting(true);
+                    try {
+                      await saleService.deleteSale(selectedSaleDetails.id);
+                      setShowDeleteDialog(false);
+                      setSelectedSaleDetails(null);
+                      setSales(sales.filter(sale => sale.id !== selectedSaleDetails.id));
+                      alert('המכירה נמחקה בהצלחה');
+                    } catch (err) {
+                      alert('שגיאה במחיקת המכירה');
+                    } finally {
+                      setDeleting(false);
+                    }
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-bold"
+                  disabled={deleting}
+                >
+                  מחק
+                </button>
+                <button
+                  onClick={() => setShowDeleteDialog(false)}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded font-bold"
+                  disabled={deleting}
+                >
+                  בטל
+                </button>
+              </div>
             </DialogContent>
           </Dialog>
         )}
