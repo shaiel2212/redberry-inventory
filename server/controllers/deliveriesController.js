@@ -14,9 +14,9 @@ exports.getPendingDeliveries = async (req, res) => {
         s.total_amount,
         s.sale_date,
         u.username AS seller_name,
-        p.name AS product_name,
-        p.description AS size,
-        si.quantity,
+        GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names,
+        GROUP_CONCAT(p.description SEPARATOR ', ') AS sizes,
+        GROUP_CONCAT(si.quantity SEPARATOR ', ') AS quantities,
         d.status,
         d.assigned_to,
         d.delivered_at,
@@ -34,6 +34,7 @@ exports.getPendingDeliveries = async (req, res) => {
         JOIN sale_items si2 ON d2.sale_id = si2.sale_id
         WHERE si2.is_supplied = FALSE
       )
+      GROUP BY d.id
       ORDER BY d.sale_id DESC;
     `);
 
@@ -132,9 +133,9 @@ exports.getAllDeliveries = async (req, res) => {
         s.total_amount,
         s.sale_date,
         u.username AS seller_name,
-        p.name AS product_name,
-        p.description AS size,
-        si.quantity,
+        GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names,
+        GROUP_CONCAT(p.description SEPARATOR ', ') AS sizes,
+        GROUP_CONCAT(si.quantity SEPARATOR ', ') AS quantities,
         d.status,
         d.assigned_to,
         d.delivered_at,
@@ -145,6 +146,7 @@ exports.getAllDeliveries = async (req, res) => {
       JOIN users u ON s.user_id = u.id
       JOIN sale_items si ON si.sale_id = s.id
       JOIN products p ON p.id = si.product_id
+      GROUP BY d.id
       ORDER BY d.sale_id DESC;
     `);
 
@@ -247,9 +249,9 @@ exports.getAwaitingStockDeliveries = async (req, res) => {
         s.total_amount,
         s.sale_date,
         u.username AS seller_name,
-        p.name AS product_name,
-        p.description AS size,
-        si.quantity,
+        GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names,
+        GROUP_CONCAT(p.description SEPARATOR ', ') AS sizes,
+        GROUP_CONCAT(si.quantity SEPARATOR ', ') AS quantities,
         d.status,
         d.assigned_to,
         d.delivered_at,
@@ -261,6 +263,7 @@ exports.getAwaitingStockDeliveries = async (req, res) => {
       JOIN sale_items si ON si.sale_id = s.id
       JOIN products p ON p.id = si.product_id
       WHERE si.is_supplied = FALSE
+      GROUP BY d.id
       ORDER BY d.sale_id DESC;
     `);
 
