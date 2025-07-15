@@ -13,6 +13,7 @@ exports.getPendingDeliveries = async (req, res) => {
         s.address,
         s.total_amount,
         s.sale_date,
+        s.notes, -- הוסף שדה זה!
         u.username AS seller_name,
         GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names,
         GROUP_CONCAT(p.description SEPARATOR ', ') AS sizes,
@@ -132,6 +133,7 @@ exports.getAllDeliveries = async (req, res) => {
         s.address,
         s.total_amount,
         s.sale_date,
+        s.notes,
         u.username AS seller_name,
         GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names,
         GROUP_CONCAT(p.description SEPARATOR ', ') AS sizes,
@@ -248,6 +250,7 @@ exports.getAwaitingStockDeliveries = async (req, res) => {
         s.address,
         s.total_amount,
         s.sale_date,
+         s.notes,
         u.username AS seller_name,
         GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names,
         GROUP_CONCAT(p.description SEPARATOR ', ') AS sizes,

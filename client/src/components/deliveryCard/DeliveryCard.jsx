@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MapPin, CheckCircle2, FileText, FileCheck2 } from 'lucide-react';
 import { Button } from '../ui/button';
+import { Dialog, DialogContent } from '../ui/dialog';
 
 const getStatusLabel = (statusValue) => {
   switch (statusValue) {
@@ -14,6 +15,7 @@ const getStatusLabel = (statusValue) => {
 };
 
 const DeliveryCard = ({ delivery, user, openDetails }) => {
+  const [showSaleDetails, setShowSaleDetails] = useState(false);
   const hasUnsigned = Boolean(delivery.delivery_proof_url);
   const hasSigned = Boolean(delivery.delivery_proof_signed_url);
 
@@ -22,7 +24,10 @@ const DeliveryCard = ({ delivery, user, openDetails }) => {
   if (hasSigned) badgeColor = 'bg-green-100 border-green-300';
 
   return (
-    <div dir="rtl" className={`border-2 rounded-2xl shadow-md bg-white p-4 space-y-3 ${badgeColor} text-right flex flex-col justify-between h-full relative`}> {/* RTL container */}
+    <div
+      dir="rtl"
+      className={`border-2 rounded-2xl shadow-md bg-white p-4 space-y-3 ${badgeColor} text-right flex flex-col justify-between h-full relative min-h-[260px] md:min-h-[340px]`}
+    >
       <div>
         <div className="flex justify-between items-center flex-row-reverse"> {/* RTL row */}
           <h4 className="font-bold text-base">
@@ -65,17 +70,60 @@ const DeliveryCard = ({ delivery, user, openDetails }) => {
         </div>
       </div>
 
-      {/* כפתור פרטים תמיד בתחתית שמאל */}
-      <div className="mt-auto flex justify-start items-end w-full">
+      {/* כפתור פרטים תמיד בתחתית, כפתור פרטי העסקה מוצמד שמאלה */}
+      <div className="mt-auto flex justify-between items-end w-full gap-2">
         <Button
-          size="sm"
+          size="xs"
           variant="default"
           onClick={() => openDetails(delivery)}
-          className="rounded-md mt-2"
+          className="rounded-md mt-2 font-bold min-w-[80px] min-h-[28px] text-xs"
         >
-          פרטים
+          עדכון 
+        </Button>
+        <Button
+          size="xs"
+          variant="outline"
+          onClick={() => setShowSaleDetails(true)}
+          className="rounded-md mt-2 border-2 border-gray-500 text-gray-800 font-bold bg-white hover:bg-gray-100 hover:border-gray-700 transition min-w-[80px] min-h-[28px] text-xs"
+        >
+          פרטי העסקה
         </Button>
       </div>
+
+      {/* דיאלוג פרטי העסקה */}
+      {showSaleDetails && (
+        <Dialog open={showSaleDetails} onOpenChange={setShowSaleDetails}>
+          <DialogContent className="text-right space-y-3 p-6">
+            <h2 className="text-xl font-bold mb-2">
+              פרטי עסקה #{delivery.sale_id}
+            </h2>
+            <div className="space-y-2 text-base">
+              <div>
+                <span className="font-semibold">שם בית עסק:</span> {delivery.customer_name}
+              </div>
+              <div>
+                <span className="font-semibold">כתובת:</span> {delivery.address}
+              </div>
+              <div>
+                <span className="font-semibold">טלפון:</span> {delivery.phone || '-'}
+              </div>
+              <div>
+                <span className="font-semibold">הערות:</span> {delivery.notes || '-'}
+              </div>
+            </div>
+            <div className="flex justify-center mt-4">
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => setShowSaleDetails(false)}
+                className="rounded-md font-bold min-w-[80px] min-h-[28px] text-xs"
+              >
+                סגור
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
