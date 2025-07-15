@@ -205,94 +205,16 @@ const DeliveriesPage = () => {
           </button>
         </div>
 
-        <div className="block md:hidden space-y-4">
-          {filteredDeliveries.map(delivery => (
+        {/* Desktop & Mobile Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredDeliveries.map((delivery) => (
             <DeliveryCard
-              key={delivery.delivery_id}
+              key={delivery.id}
               delivery={delivery}
               user={user}
-              openDetails={openDetails} // שימוש בלוגיקה הכוללת הגנה
+              openDetails={openDetails}
             />
           ))}
-        </div>
-
-        <div className="hidden md:block" >
-          <table className="min-w-full text-sm border rounded overflow-hidden shadow">
-            <thead>
-              <tr className="bg-gray-100 text-right">
-                <th className="p-2 border">מס׳ הזמנה</th>
-                <th className="p-2 border">לקוח</th>
-                <th className="p-2 border">כתובת</th>
-                <th className="p-2 border hidden sm:table-cell">מוצר</th>
-                <th className="p-2 border hidden sm:table-cell">מידה</th>
-                <th className="p-2 border hidden sm:table-cell">כמות</th>
-                <th className="p-2 border hidden md:table-cell">נמכר ע״י</th>
-                <th className="p-2 border">תעודה</th>
-                <th className="p-2 border">תעודה חתומה</th>
-                <th className="p-2 border">סטטוס</th>
-                <th className="p-2 border">פעולה</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.isArray(filteredDeliveries) && filteredDeliveries.map((delivery) => (
-                <tr key={delivery.delivery_id} className="text-right">
-                  <td className="p-2 border">#{delivery.sale_id}</td>
-                  <td className="p-2 border">{delivery.customer_name}</td>
-                  <td className="p-2 border">
-                    {delivery.address ? (
-                      <a href={buildWazeLink(delivery.address)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                        <MapPin className="inline w-4 h-4 ml-1" />{delivery.address}
-                      </a>
-                    ) : ('-')}
-                  </td>
-                  <td className="p-2 border hidden sm:table-cell">{delivery.product_name}</td>
-                  <td className="p-2 border hidden sm:table-cell">{delivery.size}</td>
-                  <td className="p-2 border hidden sm:table-cell">{delivery.quantity}</td>
-                  <td className="p-2 border hidden md:table-cell">{delivery.seller_name}</td>
-                  <td className="p-2 border text-center">
-                    {delivery.delivery_proof_url ? <a href={delivery.delivery_proof_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">צפייה</a> : '-'}
-                  </td>
-                  <td className="p-2 border text-center">
-                    {delivery.delivery_proof_signed_url ? <a href={delivery.delivery_proof_signed_url} target="_blank" rel="noopener noreferrer" className="text-green-600 underline">צפייה</a> : '-'}
-                  </td>
-                  <td className="p-2 border">
-                    {deliveredId === delivery.id ? (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 0.4 }}
-                        className="flex items-center text-green-600 gap-1"
-                      >
-                        <CheckCircle2 className="w-4 h-4" /> סופק
-                      </motion.div>
-                    ) : updatedId === delivery.id ? (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                        className="text-yellow-600 font-medium"
-                      >
-                        הוקצה לשליח ✔
-                      </motion.div>
-                    ) : (
-                      
-                      getStatusLabel(delivery.status)
-                      
-                    )}
-                  </td>
-                  <td className="p-2 border">
-                    <button
-                      disabled={activeTab === 'awaiting_stock'}
-                      className={`bg-blue-600 text-white px-2 py-1 w-full text-sm ${activeTab === 'awaiting_stock' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      onClick={() => openDetails(delivery)}
-                    >
-                      פרטים
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
 
