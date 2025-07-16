@@ -288,9 +288,9 @@ exports.getAllSales = async (req, res) => {
     res.status(500).json({ message: 'שגיאה בטעינת רשימת מכירות' });
   }
 };
-exports.getSalesReport = async (req, res) => {
-  const { clientId, productId, startDate, endDate } = req.query;
 
+// פונקציה מחזירה enrichedRows לשימוש פנימי/חיצוני
+async function getSalesReportData({ clientId, productId, startDate, endDate }) {
   let query = `
     SELECT 
       s.id AS sale_id,
@@ -317,24 +317,19 @@ exports.getSalesReport = async (req, res) => {
     LEFT JOIN clients c ON s.client_id = c.id
     WHERE 1 = 1
   `;
-
   const params = [];
-
   if (clientId) {
     query += ` AND s.client_id = ?`;
     params.push(clientId);
   }
-
   if (productId) {
     query += ` AND si.product_id = ?`;
     params.push(productId);
   }
-
   if (startDate) {
     query += ` AND s.sale_date >= ?`;
     params.push(startDate);
   }
-
   if (endDate) {
     const nextDay = new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000)
       .toISOString()
@@ -342,63 +337,60 @@ exports.getSalesReport = async (req, res) => {
     query += ` AND s.sale_date < ?`;
     params.push(nextDay);
   }
-
   query += ` ORDER BY s.sale_date DESC`;
-
-  try {
-    const [rows] = await pool.query(query, params);
-
-    // קיבוץ כל הפריטים לכל עסקה
-    const salesMap = {};
-    rows.forEach(row => {
-      if (!salesMap[row.sale_id]) salesMap[row.sale_id] = [];
-      salesMap[row.sale_id].push(row);
-    });
-
-    const enrichedRows = [];
-    Object.values(salesMap).forEach(items => {
-      const totalAmount = Number(items[0].total_amount || 0);
-      const deliveryCost = Number(items[0].delivery_cost || 0);
-
-      // סכום כל הפריטים (לפני הנחות)
-      const totalItemsAmount = items.reduce((sum, item) =>
-        sum + (Number(item.price_per_unit) * Number(item.quantity)), 0);
-
-      // חישוב final_amount (אחרי הנחות)
-      let finalAmount = totalAmount;
-      const baseDiscount = Number(items[0].base_discount_percent || 0);
-      const cashDiscount = Number(items[0].cash_discount_percent || 0);
-      const extraDiscount = Number(items[0].discount_percent || 0);
-      const discountAmount = Number(items[0].discount_amount || 0);
-      if (baseDiscount > 0) finalAmount -= finalAmount * (baseDiscount / 100);
-      if (cashDiscount > 0) finalAmount -= finalAmount * (cashDiscount / 100);
-      if (extraDiscount > 0) finalAmount -= finalAmount * (extraDiscount / 100);
-      if (discountAmount > 0) finalAmount -= discountAmount;
-      finalAmount = Number(finalAmount.toFixed(2));
-
-      // סה\"כ הנחה
-      const totalDiscount = totalAmount - finalAmount;
-
-      items.forEach(item => {
-        const itemAmount = Number(item.price_per_unit) * Number(item.quantity);
-        const itemShare = totalItemsAmount > 0 ? itemAmount / totalItemsAmount : 0;
-        const itemDiscount = totalDiscount * itemShare;
-        const itemDelivery = deliveryCost * itemShare;
-        const costPrice = Number(item.cost_price) || 0;
-        const profitPerItem = (Number(item.price_per_unit) - costPrice) * Number(item.quantity);
-        const finalProfit = profitPerItem - itemDiscount - itemDelivery;
-
-        enrichedRows.push({
-          ...item,
-          final_amount: finalAmount,
-          final_profit: Number(finalProfit.toFixed(2)),
-          item_discount: Number(itemDiscount.toFixed(2)),
-          item_delivery: Number(itemDelivery.toFixed(2)),
-          has_unsupplied_items: !!item.has_unsupplied_items,
-        });
+  const [rows] = await pool.query(query, params);
+  // קיבוץ כל הפריטים לכל עסקה
+  const salesMap = {};
+  rows.forEach(row => {
+    if (!salesMap[row.sale_id]) salesMap[row.sale_id] = [];
+    salesMap[row.sale_id].push(row);
+  });
+  const enrichedRows = [];
+  Object.values(salesMap).forEach(items => {
+    const totalAmount = Number(items[0].total_amount || 0);
+    const deliveryCost = Number(items[0].delivery_cost || 0);
+    // סכום כל הפריטים (לפני הנחות)
+    const totalItemsAmount = items.reduce((sum, item) =>
+      sum + (Number(item.price_per_unit) * Number(item.quantity)), 0);
+    // חישוב final_amount (אחרי הנחות)
+    let finalAmount = totalAmount;
+    const baseDiscount = Number(items[0].base_discount_percent || 0);
+    const cashDiscount = Number(items[0].cash_discount_percent || 0);
+    const extraDiscount = Number(items[0].discount_percent || 0);
+    const discountAmount = Number(items[0].discount_amount || 0);
+    if (baseDiscount > 0) finalAmount -= finalAmount * (baseDiscount / 100);
+    if (cashDiscount > 0) finalAmount -= finalAmount * (cashDiscount / 100);
+    if (extraDiscount > 0) finalAmount -= finalAmount * (extraDiscount / 100);
+    if (discountAmount > 0) finalAmount -= discountAmount;
+    finalAmount = Number(finalAmount.toFixed(2));
+    // סה"כ הנחה
+    const totalDiscount = totalAmount - finalAmount;
+    items.forEach(item => {
+      const itemAmount = Number(item.price_per_unit) * Number(item.quantity);
+      const itemShare = totalItemsAmount > 0 ? itemAmount / totalItemsAmount : 0;
+      const itemDiscount = totalDiscount * itemShare;
+      const itemDelivery = deliveryCost * itemShare;
+      const costPrice = Number(item.cost_price) || 0;
+      const profitPerItem = (Number(item.price_per_unit) - costPrice) * Number(item.quantity);
+      const finalProfit = profitPerItem - itemDiscount - itemDelivery;
+      enrichedRows.push({
+        ...item,
+        final_amount: finalAmount,
+        final_profit: Number(finalProfit.toFixed(2)),
+        item_discount: Number(itemDiscount.toFixed(2)),
+        item_delivery: Number(itemDelivery.toFixed(2)),
+        has_unsupplied_items: !!item.has_unsupplied_items,
       });
     });
+  });
+  return enrichedRows;
+}
 
+exports.getSalesReportData = getSalesReportData;
+
+exports.getSalesReport = async (req, res) => {
+  try {
+    const enrichedRows = await getSalesReportData(req.query);
     res.json(enrichedRows);
   } catch (err) {
     console.error('❌ Error generating report:', err);

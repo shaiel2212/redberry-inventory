@@ -3,6 +3,7 @@ node_modules/
 .env
 .DS_Store
 *.log
+redberryapp-35f46918a6be.json
 
 # קליינט
 client/node_modules/
