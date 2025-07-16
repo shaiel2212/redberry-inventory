@@ -17,6 +17,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import SalesReportPage from './pages/ReportPage';
+import ClientsAdminPage from './pages/ClientsAdminPage';
 
 function App() {
   const { user } = useAuth();
@@ -52,6 +53,7 @@ function App() {
                 <Route path="/admin/products" element={<ProductsAdminPage />} />
                 <Route path="/admin/sales" element={<SalesAdminPage />} />
                 <Route path="/admin/users" element={<UsersAdminPage />} />
+                <Route path="/admin/clients" element={<ClientsAdminPage user={user} />} />
                 <Route path="/" element={<Navigate to="/dashboard" />} />
               </>
             )}

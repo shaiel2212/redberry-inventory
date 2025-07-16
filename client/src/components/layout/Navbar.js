@@ -30,6 +30,7 @@ const Navbar = () => {
               <li><Link to="/admin/products" className="hover:underline">ניהול מוצרים</Link></li>
               <li><Link to="/admin/sales" className="hover:underline">ניהול מכירות</Link></li>
               <li><Link to="/admin/users" className="hover:underline">ניהול משתמשים</Link></li>
+              <li><Link to="/admin/clients" className="hover:underline">ניהול לקוחות</Link></li>
                <li><Link to="/reports/sales" className="hover:underline">דוח מכירות</Link></li> 
             </>
           )}

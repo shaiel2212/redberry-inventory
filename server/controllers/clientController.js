@@ -42,3 +42,21 @@ exports.getClientsForBillingReminder = async (req, res) => {
     res.status(500).json({ error: 'שגיאה בשליפת לקוחות לתזכורת חיוב' });
   }
 };
+
+exports.updateClient = async (req, res) => {
+  const { id } = req.params;
+  const { full_name, base_discount_percent = 0, cash_discount_percent = 0, phone, email, billing_day } = req.body;
+  try {
+    const [result] = await pool.query(
+      `UPDATE clients SET full_name=?, base_discount_percent=?, cash_discount_percent=?, phone=?, email=?, billing_day=? WHERE id=?`,
+      [full_name, base_discount_percent, cash_discount_percent, phone, email, billing_day, id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    res.json({ id, full_name, base_discount_percent, cash_discount_percent, phone, email, billing_day });
+  } catch (error) {
+    console.error('Error updating client:', error);
+    res.status(500).json({ error: 'Server error while updating client' });
+  }
+};

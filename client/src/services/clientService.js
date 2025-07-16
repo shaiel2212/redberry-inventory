@@ -17,8 +17,14 @@ const getBillingReminders = async () => {
   return res.data;
 };
 
+const updateClient = async (id, clientData) => {
+  const res = await api.put(`/clients/${id}`, clientData);
+  return res.data;
+};
+
 export default {
   getAllClients,
   createClient,
   getBillingReminders,
+  updateClient,
 };

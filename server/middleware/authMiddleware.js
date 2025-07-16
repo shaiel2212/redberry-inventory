@@ -26,6 +26,7 @@ function requireAuth(req, res, next) {
 
 // Middleware: בדיקת הרשאה למנהל
 function requireAdmin(req, res, next) {
+  console.log('🔒 requireAdmin - req.user:', req.user);
   if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({ message: 'גישה נדחתה – מנהלים בלבד' });
   }
