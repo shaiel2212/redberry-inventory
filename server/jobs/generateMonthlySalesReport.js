@@ -172,7 +172,10 @@ async function generateMonthlySalesReport(month, year) {
   // שליחת המייל עם הדוח המצורף
   try {
     await sendReportEmail(
-      ['shay221290@gmail.com'],
+      ['shay221290@gmail.com',
+        'morhakim148@gmail.com',
+        'sofagallery21@gmail.com',
+      ],
       `דוח מכירות לחודש ${monthStr}/${year}`,
       `מצורף דוח המכירות לחודש ${monthStr}/${year} כקובץ Excel.`,
       filePath
