@@ -50,21 +50,20 @@ function sanitizeSheetName(name, fallback = 'לקוח') {
 
 // פונקציה עיקרית
 async function generateMonthlySalesReport(month, year) {
-  // חישוב חודש קודם אם לא הועברו ערכים
+  // חישוב חודש נוכחי אם לא הועברו ערכים
   const now = new Date();
   if (!month || !year) {
-    let prevMonth = now.getMonth();
-    let prevYear = now.getFullYear();
-    if (prevMonth === 0) {
-      prevMonth = 12;
-      prevYear -= 1;
-    }
-    month = prevMonth;
-    year = prevYear;
+    month = now.getMonth() + 1; // חודש נוכחי (1-12)
+    year = now.getFullYear();
   }
+  
+  // תאריך התחלה: היום הראשון של החודש הנוכחי
   const from = new Date(year, month - 1, 1).toISOString().slice(0, 10);
-  const to = new Date(year, month, 1).toISOString().slice(0, 10);
+  // תאריך סיום: היום הנוכחי
+  const to = now.toISOString().slice(0, 10);
   const monthStr = (month < 10 ? '0' : '') + month;
+
+  console.log(`📅 יצירת דוח מ-${from} עד ${to} (חודש ${monthStr}/${year})`);
 
   // שליפת נתונים
   const enrichedRows = await getSalesReportData({ startDate: from, endDate: to });
@@ -164,7 +163,8 @@ async function generateMonthlySalesReport(month, year) {
   }
 
   // שמירה לקובץ
-  const fileName = `דוח_מכירות_חודש_${monthStr}_${year}.xlsx`;
+  const currentDate = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const fileName = `דוח_מכירות_${from}_עד_${to}.xlsx`;
   const filePath = path.join(__dirname, fileName);
   await workbook.xlsx.writeFile(filePath);
   console.log('✅ דוח נוצר:', filePath);
@@ -173,11 +173,11 @@ async function generateMonthlySalesReport(month, year) {
   try {
     await sendReportEmail(
       ['shay221290@gmail.com',
-        'morhakim148@gmail.com',
-        'sofagallery21@gmail.com',
+        // 'morhakim148@gmail.com',
+        // 'sofagallery21@gmail.com',
       ],
-      `דוח מכירות לחודש ${monthStr}/${year}`,
-      `מצורף דוח המכירות לחודש ${monthStr}/${year} כקובץ Excel.`,
+      `דוח מכירות מ-${from} עד ${to}`,
+      `מצורף דוח המכירות מ-${from} עד ${to} כקובץ Excel.`,
       filePath
     );
     console.log('המייל נשלח בהצלחה!');

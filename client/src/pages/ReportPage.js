@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import saleService from '../services/saleService';
+import jobsService from '../services/jobsService';
 import MainLayout from '../components/layout/MainLayout';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
+import { FileText, RefreshCw } from 'lucide-react';
 
 const SalesReportPage = () => {
     const [reportData, setReportData] = useState([]);
@@ -19,6 +23,9 @@ const SalesReportPage = () => {
     const [mattressSummaryData, setMattressSummaryData] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
+    const [globalLoading, setGlobalLoading] = useState(false);
+
+    const { user } = useAuth();
 
 
     useEffect(() => {
@@ -144,13 +151,34 @@ const SalesReportPage = () => {
     };
 
     const calculateMattressSummary = () => {
+        const mattressData = filteredData.filter(row => 
+            row.product_name && row.product_name.toLowerCase().includes('מזרן')
+        );
         const summary = {};
-        filteredData.forEach(item => {
+        mattressData.forEach(item => {
             const key = item.product_name || 'לא ידוע';
             summary[key] = (summary[key] || 0) + (Number(item.quantity) || 0);
         });
         setMattressSummaryData(summary);
         setViewMode("mattressSummary");
+    };
+
+    const handleGenerateMonthlyReport = async () => {
+        try {
+            setGlobalLoading(true);
+            const result = await jobsService.runGenerateMonthlyReport();
+            
+            if (result.success) {
+                toast.success(result.message || 'דוח חודשי נוצר ונשלח בהצלחה');
+            } else {
+                toast.error(result.message || 'שגיאה ביצירת דוח חודשי');
+            }
+        } catch (err) {
+            console.error('שגיאה ביצירת דוח חודשי:', err);
+            toast.error('שגיאה ביצירת דוח חודשי');
+        } finally {
+            setGlobalLoading(false);
+        }
     };
 
 
@@ -196,6 +224,26 @@ const SalesReportPage = () => {
                     <button onClick={calculateMattressSummary} className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded">סיכום לפי סוגי מזרנים</button>
                     {viewMode === 'mattressSummary' && (
                         <button onClick={() => setViewMode("default")} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">חזור לדוח המלא</button>
+                    )}
+                    {/* כפתור יצירת דוח חודשי - רק למנהלים */}
+                    {user?.role === 'admin' && (
+                        <button 
+                            onClick={handleGenerateMonthlyReport}
+                            disabled={globalLoading}
+                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
+                        >
+                            {globalLoading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    יוצר דוח...
+                                </>
+                            ) : (
+                                <>
+                                    <FileText className="w-4 h-4" />
+                                    צור דוח חודשי
+                                </>
+                            )}
+                        </button>
                     )}
                 </div>
 

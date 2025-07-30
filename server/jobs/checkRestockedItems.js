@@ -7,6 +7,7 @@ const pool = require('../config/db'); // ייבא את מאגר הנתונים �
 const cron = require('node-cron');
 console.log('🌍 Loaded environment:', process.env.NODE_ENV);
 console.log('📦 DB Name:', process.env.DB_NAME);
+
 async function checkRestockedItems() {
   try {
     // שלב 1: מציאת רשומות חסרות במלאי שחזרו
@@ -54,10 +55,16 @@ async function checkRestockedItems() {
     console.error('❌ שגיאה בבדיקת מלאי:', error);
   }
 }
-checkRestockedItems();
+
+// הפעלת הסקריפט אם הוא רץ ישירות
+if (require.main === module) {
+  checkRestockedItems();
+}
 
 // // הפעלת הסקריפט אחת לשבוע – כל יום ראשון ב־03:00 בלילה
 // cron.schedule('0 3 * * 0', () => {
 //   console.log('🕒 הפעלת סקריפט בדיקת מלאי...');
 //   checkRestockedItems();
 // });
+
+module.exports = checkRestockedItems;

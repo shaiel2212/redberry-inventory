@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import deliveryService from '../services/deliveryService';
+import jobsService from '../services/jobsService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '../components/ui/dialog';
-import { Loader2, CheckCircle2, MapPin, X, UserPlus2 } from 'lucide-react';
+import { Loader2, CheckCircle2, MapPin, X, UserPlus2, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MainLayout from '../components/layout/MainLayout';
 import { DELIVERY_STATUSES } from '../constants/deliveryStatuses';
@@ -181,7 +182,31 @@ const DeliveriesPage = () => {
   const filteredDeliveries = deliveries || [];
 
   const handleSaleClick = (saleId) => {
-    navigate(`/deliveries?focus=${saleId}`);
+    navigate(`/admin/sales?focus=${saleId}`);
+  };
+
+  const handleDeliveryClick = (deliveryId, status) => {
+    navigate(`/deliveries?focus=${deliveryId}&status=${status}`);
+  };
+
+  const handleCheckRestockedItems = async () => {
+    try {
+      setGlobalLoading(true);
+      const result = await jobsService.runCheckRestockedItems();
+      
+      if (result.success) {
+        toast.success(result.message || 'בדיקת מלאי הושלמה בהצלחה');
+        // רענון הנתונים
+        loadDeliveriesForTab(activeTab);
+      } else {
+        toast.error(result.message || 'שגיאה בבדיקת מלאי');
+      }
+    } catch (err) {
+      console.error('שגיאה בבדיקת מלאי:', err);
+      toast.error('שגיאה בבדיקת מלאי');
+    } finally {
+      setGlobalLoading(false);
+    }
   };
 
   return (
@@ -203,6 +228,26 @@ const DeliveriesPage = () => {
           <button onClick={() => setActiveTab('all')} className={`px-4 py-1 rounded ${activeTab === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
             כל המשלוחים
           </button>
+          {/* כפתור בדיקת מלאי - רק למנהלים */}
+          {user?.role === 'admin' && (
+            <button 
+              onClick={handleCheckRestockedItems}
+              disabled={globalLoading}
+              className="px-4 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
+            >
+              {globalLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  בודק...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  בדוק מלאי
+                </>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Desktop & Mobile Cards */}

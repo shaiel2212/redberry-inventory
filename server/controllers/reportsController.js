@@ -1,4 +1,6 @@
 const pool = require('../config/db');
+const generateMonthlySalesReport = require('../jobs/generateMonthlySalesReport');
+const checkRestockedItems = require('../jobs/checkRestockedItems');
 
 // סיכום מכירות - כולל יומי, שבועי, חודשי
 exports.getSalesSummary = async (req, res) => {
@@ -59,6 +61,32 @@ exports.getSalesByDay = async (req, res) => {
   } catch (err) {
     console.error('Sales by day error:', err.message);
     res.status(500).send('Error fetching sales by day');
+  }
+};
+
+// יצירת דוח חודשי אוטומטי
+exports.generateMonthlyReport = async (req, res) => {
+  try {
+    console.log('🚀 מתחיל יצירת דוח חודשי אוטומטי...');
+    await generateMonthlySalesReport();
+    console.log('✅ דוח חודשי נוצר ונשלח בהצלחה!');
+    res.json({ success: true, message: 'דוח חודשי נוצר ונשלח בהצלחה!' });
+  } catch (error) {
+    console.error('❌ שגיאה ביצירת דוח חודשי:', error);
+    res.status(500).json({ success: false, message: 'שגיאה ביצירת הדוח', error: error.message });
+  }
+};
+
+// בדיקת פריטים שחזרו למלאי
+exports.checkRestockedItems = async (req, res) => {
+  try {
+    console.log('🚀 מתחיל בדיקת פריטים שחזרו למלאי...');
+    await checkRestockedItems();
+    console.log('✅ בדיקת מלאי הושלמה בהצלחה!');
+    res.json({ success: true, message: 'בדיקת מלאי הושלמה בהצלחה!' });
+  } catch (error) {
+    console.error('❌ שגיאה בבדיקת מלאי:', error);
+    res.status(500).json({ success: false, message: 'שגיאה בבדיקת מלאי', error: error.message });
   }
 };
 
