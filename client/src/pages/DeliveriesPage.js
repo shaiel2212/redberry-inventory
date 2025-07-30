@@ -195,7 +195,11 @@ const DeliveriesPage = () => {
       const result = await jobsService.runCheckRestockedItems();
       
       if (result.success) {
-        toast.success(result.message || 'בדיקת מלאי הושלמה בהצלחה');
+        if (result.updatedItems > 0 || result.updatedDeliveries > 0) {
+          toast.success(`${result.message} - הנתונים עודכנו בהצלחה!`);
+        } else {
+          toast.info('בדיקת מלאי הושלמה - לא נמצאו פריטים שחזרו למלאי');
+        }
         // רענון הנתונים
         loadDeliveriesForTab(activeTab);
       } else {

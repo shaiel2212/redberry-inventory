@@ -81,9 +81,24 @@ exports.generateMonthlyReport = async (req, res) => {
 exports.checkRestockedItems = async (req, res) => {
   try {
     console.log('🚀 מתחיל בדיקת פריטים שחזרו למלאי...');
-    await checkRestockedItems();
+    const result = await checkRestockedItems();
     console.log('✅ בדיקת מלאי הושלמה בהצלחה!');
-    res.json({ success: true, message: 'בדיקת מלאי הושלמה בהצלחה!' });
+    
+    if (result.updatedItems > 0 || result.updatedDeliveries > 0) {
+      res.json({ 
+        success: true, 
+        message: result.message,
+        updatedItems: result.updatedItems,
+        updatedDeliveries: result.updatedDeliveries
+      });
+    } else {
+      res.json({ 
+        success: true, 
+        message: 'בדיקת מלאי הושלמה - לא נמצאו פריטים שחזרו למלאי',
+        updatedItems: 0,
+        updatedDeliveries: 0
+      });
+    }
   } catch (error) {
     console.error('❌ שגיאה בבדיקת מלאי:', error);
     res.status(500).json({ success: false, message: 'שגיאה בבדיקת מלאי', error: error.message });

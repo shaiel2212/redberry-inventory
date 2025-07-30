@@ -38,7 +38,6 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/deliveries', deliveriesRoutes);
 app.use('/api/clients', clientRoutes);
 
-
 app.get('/', (req, res) => {
   res.json({ message: 'Server is running...', cors: 'enabled' });
 });
@@ -55,4 +54,6 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+  console.log(`📦 Database: ${process.env.DB_HOST}/${process.env.DB_NAME}`);
 });

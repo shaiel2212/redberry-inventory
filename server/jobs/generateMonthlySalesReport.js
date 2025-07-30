@@ -140,7 +140,13 @@ async function generateMonthlySalesReport(month, year) {
     const totalAmount = uniqueSalesArr.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
     const totalFinalAmount = uniqueSalesArr.reduce((sum, s) => sum + Number(s.final_amount || 0), 0);
     const totalDelivery = uniqueSalesArr.reduce((sum, s) => sum + Number(s.delivery_cost || 0), 0);
-    const totalProfit = uniqueSalesArr.reduce((sum, s) => sum + Number(s.final_profit || 0), 0);
+    
+    // חישוב רווח כולל מכל הפריטים - לא רק מהשורה הראשונה
+    const totalProfit = sales.reduce((sum, s) => {
+      const itemProfit = (Number(s.price_per_unit || 0) - Number(s.cost_price || 0)) * Number(s.quantity || 0);
+      return sum + itemProfit;
+    }, 0);
+    
     const totalDiscount = totalAmount - totalFinalAmount;
     
     // הוספה לסיכום כולל
