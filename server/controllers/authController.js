@@ -53,7 +53,7 @@ exports.registerUser = async (req, res) => {
       role: newUser.role
     };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30d' });
 
     res.status(201).json({
       token,
@@ -102,7 +102,7 @@ exports.loginUser = async (req, res) => {
       role: user.role
     };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
 
     res.json({
       token,
