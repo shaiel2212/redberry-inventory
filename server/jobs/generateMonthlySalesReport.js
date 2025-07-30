@@ -117,11 +117,23 @@ async function generateMonthlySalesReport(month, year) {
   for (const clientName in clientsMap) {
     const sales = clientsMap[clientName];
     const uniqueSales = new Set(sales.map(s => s.sale_id));
-    const totalAmount = sales.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
-    const totalFinalAmount = sales.reduce((sum, s) => sum + Number(s.final_amount || 0), 0);
-    const totalDelivery = sales.reduce((sum, s) => sum + Number(s.delivery_cost || 0), 0);
-    const totalProfit = sales.reduce((sum, s) => sum + Number(s.final_profit || 0), 0);
+    
+    // סכום רק פעם אחת לכל sale_id
+    const uniqueSalesArr = [];
+    const seenSales = new Set();
+    for (const s of sales) {
+      if (!seenSales.has(s.sale_id)) {
+        uniqueSalesArr.push(s);
+        seenSales.add(s.sale_id);
+      }
+    }
+    
+    const totalAmount = uniqueSalesArr.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
+    const totalFinalAmount = uniqueSalesArr.reduce((sum, s) => sum + Number(s.final_amount || 0), 0);
+    const totalDelivery = uniqueSalesArr.reduce((sum, s) => sum + Number(s.delivery_cost || 0), 0);
+    const totalProfit = uniqueSalesArr.reduce((sum, s) => sum + Number(s.final_profit || 0), 0);
     const totalDiscount = totalAmount - totalFinalAmount;
+    
     summarySheet.addRow({
       month: monthStr + '/' + year,
       client_name: clientName,

@@ -596,32 +596,48 @@ exports.getSaleEditHistory = async (req, res) => {
 
 exports.deleteSale = async (req, res) => {
   const saleId = req.params.id;
+  console.log('🗑️ Attempting to delete sale ID:', saleId);
+  console.log('👤 User:', req.user);
+  
   const conn = await pool.getConnection();
   try {
+    console.log('🔗 Database connection established');
     await conn.beginTransaction();
+    console.log('🔄 Transaction started');
 
     // שלוף את כל הפריטים במכירה
     const [items] = await conn.query('SELECT product_id, quantity FROM sale_items WHERE sale_id = ?', [saleId]);
+    console.log('📦 Found items to restore:', items.length);
 
     // החזר מלאי לכל מוצר
     for (const item of items) {
+      console.log(`🔄 Restoring ${item.quantity} units to product ${item.product_id}`);
       await conn.query('UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?', [item.quantity, item.product_id]);
     }
 
     // מחק את הפריטים
+    console.log('🗑️ Deleting sale items');
     await conn.query('DELETE FROM sale_items WHERE sale_id = ?', [saleId]);
+    
     // מחק משלוחים
+    console.log('🗑️ Deleting deliveries');
     await conn.query('DELETE FROM deliveries WHERE sale_id = ?', [saleId]);
+    
     // מחק את המכירה
-    await conn.query('DELETE FROM sales WHERE id = ?', [saleId]);
+    console.log('🗑️ Deleting sale');
+    const [deleteResult] = await conn.query('DELETE FROM sales WHERE id = ?', [saleId]);
+    console.log('✅ Sale deleted, rows affected:', deleteResult.affectedRows);
 
     await conn.commit();
+    console.log('✅ Transaction committed successfully');
     res.json({ message: 'המכירה נמחקה בהצלחה' });
   } catch (err) {
     await conn.rollback();
-    console.error('שגיאה במחיקת מכירה:', err);
-    res.status(500).json({ message: 'שגיאה במחיקת מכירה' });
+    console.error('❌ Error deleting sale:', err);
+    console.error('❌ Error stack:', err.stack);
+    res.status(500).json({ message: 'שגיאה במחיקת מכירה', error: err.message });
   } finally {
     conn.release();
+    console.log('🔗 Database connection released');
   }
 };
