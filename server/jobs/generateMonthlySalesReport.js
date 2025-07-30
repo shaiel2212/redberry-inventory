@@ -3,7 +3,16 @@
 const path = require('path');
 const fs = require('fs');
 const ExcelJS = require('exceljs');
-const nodemailer = require('nodemailer');
+
+// בדיקה אם nodemailer זמין
+let nodemailer;
+try {
+  nodemailer = require('nodemailer');
+} catch (error) {
+  console.error('❌ nodemailer לא מותקן:', error.message);
+  console.log('📦 התקן עם: npm install nodemailer');
+}
+
 const { getSalesReportData } = require('../controllers/salesController');
 
 // הגדרות שליחת מייל
@@ -17,6 +26,20 @@ const transporter = nodemailer.createTransport({
 
 // שליחת מייל עם קובץ מצורף
 async function sendReportEmail(to, subject, text, attachmentPath) {
+  if (!nodemailer) {
+    console.error('❌ nodemailer לא זמין - לא ניתן לשלוח מייל');
+    return;
+  }
+
+  // הגדרות שליחת מייל
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'shay221290@gmail.com',
+      pass: 'dlfz tdiw usfm toba', // App Password בלבד!
+    },
+  });
+
   const mailOptions = {
     from: 'shay221290@gmail.com',
     to,
@@ -171,18 +194,23 @@ async function generateMonthlySalesReport(month, year) {
 
   // שליחת המייל עם הדוח המצורף
   try {
-    await sendReportEmail(
-      ['shay221290@gmail.com',
-        // 'morhakim148@gmail.com',
-        // 'sofagallery21@gmail.com',
-      ],
-      `דוח מכירות מ-${from} עד ${to}`,
-      `מצורף דוח המכירות מ-${from} עד ${to} כקובץ Excel.`,
-      filePath
-    );
-    console.log('המייל נשלח בהצלחה!');
+    if (nodemailer) {
+      await sendReportEmail(
+        ['shay221290@gmail.com',
+          // 'morhakim148@gmail.com',
+          // 'sofagallery21@gmail.com',
+        ],
+        `דוח מכירות מ-${from} עד ${to}`,
+        `מצורף דוח המכירות מ-${from} עד ${to} כקובץ Excel.`,
+        filePath
+      );
+      console.log('✅ המייל נשלח בהצלחה!');
+    } else {
+      console.log('⚠️ המייל לא נשלח - nodemailer לא זמין');
+    }
   } catch (err) {
-    console.error('שגיאה בשליחת המייל:', err);
+    console.error('❌ שגיאה בשליחת המייל:', err);
+    console.log('📁 הדוח נוצר בהצלחה ב:', filePath);
   }
 
   return filePath;
