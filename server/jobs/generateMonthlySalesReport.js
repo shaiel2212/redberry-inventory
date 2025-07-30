@@ -261,10 +261,9 @@ async function generateMonthlySalesReport(month, year) {
     if (nodemailer) {
       await sendReportEmail(
         ['shay221290@gmail.com',
-          // 'morhakim148@gmail.com',
-          // 'sofagallery21@gmail.com',
-          // 'Redbearycomfort@gmail.com',
-
+          'morhakim148@gmail.com',
+          'sofagallery21@gmail.com',
+          'Redbearycomfort@gmail.com',
         ],
         `דוח מכירות מ-${from} עד ${to}`,
         `מצורף דוח המכירות מ-${from} עד ${to} כקובץ Excel.`,
