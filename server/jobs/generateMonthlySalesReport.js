@@ -114,6 +114,15 @@ async function generateMonthlySalesReport(month, year) {
     { header: 'רווח נטו', key: 'total_profit', width: 15 },
     { header: 'בסך הכל הנחות שניתנו', key: 'total_discount', width: 20 },
   ];
+  
+  // משתנים לסיכום כולל
+  let grandTotalAmount = 0;
+  let grandTotalFinalAmount = 0;
+  let grandTotalDelivery = 0;
+  let grandTotalProfit = 0;
+  let grandTotalDiscount = 0;
+  let grandTotalSales = 0;
+  
   for (const clientName in clientsMap) {
     const sales = clientsMap[clientName];
     const uniqueSales = new Set(sales.map(s => s.sale_id));
@@ -134,6 +143,14 @@ async function generateMonthlySalesReport(month, year) {
     const totalProfit = uniqueSalesArr.reduce((sum, s) => sum + Number(s.final_profit || 0), 0);
     const totalDiscount = totalAmount - totalFinalAmount;
     
+    // הוספה לסיכום כולל
+    grandTotalAmount += totalAmount;
+    grandTotalFinalAmount += totalFinalAmount;
+    grandTotalDelivery += totalDelivery;
+    grandTotalProfit += totalProfit;
+    grandTotalDiscount += totalDiscount;
+    grandTotalSales += uniqueSales.size;
+    
     summarySheet.addRow({
       month: monthStr + '/' + year,
       client_name: clientName,
@@ -145,6 +162,28 @@ async function generateMonthlySalesReport(month, year) {
       total_discount: totalDiscount.toFixed(2),
     });
   }
+  
+  // הוספת שורת סיכום
+  summarySheet.addRow({
+    month: monthStr + '/' + year,
+    client_name: 'בסך הכל',
+    num_sales: grandTotalSales,
+    total_amount: grandTotalAmount.toFixed(2),
+    total_final_amount: grandTotalFinalAmount.toFixed(2),
+    total_delivery: grandTotalDelivery.toFixed(2),
+    total_profit: grandTotalProfit.toFixed(2),
+    total_discount: grandTotalDiscount.toFixed(2),
+  });
+  
+  // עיצוב שורת הסיכום
+  const summaryRow = summarySheet.getRow(summarySheet.rowCount);
+  summaryRow.font = { bold: true };
+  summaryRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFFFD700' } // צהוב
+  };
+  
   summarySheet.views = [{ rightToLeft: true }];
 
   // גיליון לכל לקוח
@@ -211,6 +250,8 @@ async function generateMonthlySalesReport(month, year) {
         ['shay221290@gmail.com',
           'morhakim148@gmail.com',
           'sofagallery21@gmail.com',
+          'Redbearycomfort@gmail.com',
+
         ],
         `דוח מכירות מ-${from} עד ${to}`,
         `מצורף דוח המכירות מ-${from} עד ${to} כקובץ Excel.`,
