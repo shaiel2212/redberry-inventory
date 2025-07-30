@@ -602,6 +602,15 @@ exports.deleteSale = async (req, res) => {
   const conn = await pool.getConnection();
   try {
     console.log('🔗 Database connection established');
+    
+    // בדוק אם המכירה קיימת
+    const [[sale]] = await conn.query('SELECT id FROM sales WHERE id = ?', [saleId]);
+    if (!sale) {
+      console.log('❌ Sale not found:', saleId);
+      return res.status(404).json({ message: 'המכירה לא נמצאה' });
+    }
+    console.log('✅ Sale found:', saleId);
+    
     await conn.beginTransaction();
     console.log('🔄 Transaction started');
 
@@ -614,6 +623,10 @@ exports.deleteSale = async (req, res) => {
       console.log(`🔄 Restoring ${item.quantity} units to product ${item.product_id}`);
       await conn.query('UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?', [item.quantity, item.product_id]);
     }
+
+    // מחק את היסטוריית העריכות (חדש!)
+    console.log('🗑️ Deleting sales edit history');
+    await conn.query('DELETE FROM sales_edit_history WHERE sale_id = ?', [saleId]);
 
     // מחק את הפריטים
     console.log('🗑️ Deleting sale items');
