@@ -266,6 +266,8 @@ exports.getAwaitingStockDeliveries = async (req, res) => {
       JOIN sale_items si ON si.sale_id = s.id
       JOIN products p ON p.id = si.product_id
       WHERE si.is_supplied = FALSE
+      AND d.status != 'delivered'  -- הוספת סינון: לא להציג משלוחים שכבר סופקו
+      AND d.status != 'cancelled'  -- הוספת סינון: לא להציג משלוחים שבוטלו
       GROUP BY d.id
       ORDER BY d.sale_id DESC;
     `);
