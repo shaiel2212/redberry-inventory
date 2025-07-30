@@ -143,7 +143,14 @@ async function generateMonthlySalesReport(month, year) {
     
     // חישוב רווח כולל מכל הפריטים - לא רק מהשורה הראשונה
     const totalProfit = sales.reduce((sum, s) => {
-      const itemProfit = (Number(s.price_per_unit || 0) - Number(s.cost_price || 0)) * Number(s.quantity || 0);
+      // חישוב רווח נכון: סכום לאחר הנחה - עלות מוצר
+      const itemAmount = Number(s.price_per_unit || 0) * Number(s.quantity || 0);
+      const itemDiscount = Number(s.item_discount || 0);
+      const itemDelivery = Number(s.item_delivery || 0);
+      const itemFinalAmount = itemAmount - itemDiscount - itemDelivery; // סכום לאחר הנחה ומשלוח
+      const itemCost = Number(s.cost_price || 0) * Number(s.quantity || 0); // עלות מוצר כוללת
+      const itemProfit = itemFinalAmount - itemCost; // רווח נטו
+      
       return sum + itemProfit;
     }, 0);
     
@@ -254,9 +261,9 @@ async function generateMonthlySalesReport(month, year) {
     if (nodemailer) {
       await sendReportEmail(
         ['shay221290@gmail.com',
-          'morhakim148@gmail.com',
-          'sofagallery21@gmail.com',
-          'Redbearycomfort@gmail.com',
+          // 'morhakim148@gmail.com',
+          // 'sofagallery21@gmail.com',
+          // 'Redbearycomfort@gmail.com',
 
         ],
         `דוח מכירות מ-${from} עד ${to}`,
