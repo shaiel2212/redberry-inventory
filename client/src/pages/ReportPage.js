@@ -151,14 +151,35 @@ const SalesReportPage = () => {
     };
 
     const calculateMattressSummary = () => {
-        const mattressData = filteredData.filter(row => 
-            row.product_name && row.product_name.toLowerCase().includes('מזרן')
-        );
+        console.log('🔍 Starting mattress summary calculation...');
+        console.log('📊 Total filtered data:', filteredData.length);
+        
+        const mattressData = filteredData.filter(row => {
+            const productName = row.product_name?.toLowerCase() || '';
+            const hasMattress = productName.includes('מזרן') || 
+                               productName.includes('הייבריד') || 
+                               productName.includes('ספייס') || 
+                               productName.includes('סופט') || 
+                               productName.includes('קווין') ||
+                               productName.includes('king') ||
+                               productName.includes('queen') ||
+                               productName.includes('hybrid') ||
+                               productName.includes('space');
+            
+            console.log(`📦 Product: ${row.product_name}, Has mattress: ${hasMattress}`);
+            return hasMattress;
+        });
+        
+        console.log('🛏️ Found mattress products:', mattressData.length);
+        
         const summary = {};
         mattressData.forEach(item => {
             const key = item.product_name || 'לא ידוע';
             summary[key] = (summary[key] || 0) + (Number(item.quantity) || 0);
+            console.log(`➕ Added ${item.quantity} to ${key}`);
         });
+        
+        console.log('📋 Final summary:', summary);
         setMattressSummaryData(summary);
         setViewMode("mattressSummary");
     };

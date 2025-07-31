@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, CheckCircle2, FileText, FileCheck2 } from 'lucide-react';
+import { MapPin, CheckCircle2, FileText, FileCheck2, Edit } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent } from '../ui/dialog';
 
@@ -14,7 +14,7 @@ const getStatusLabel = (statusValue) => {
   }
 };
 
-const DeliveryCard = ({ delivery, user, openDetails }) => {
+const DeliveryCard = ({ delivery, user, openDetails, onEditSale }) => {
   const [showSaleDetails, setShowSaleDetails] = useState(false);
   const hasUnsigned = Boolean(delivery.delivery_proof_url);
   const hasSigned = Boolean(delivery.delivery_proof_signed_url);
@@ -26,7 +26,7 @@ const DeliveryCard = ({ delivery, user, openDetails }) => {
   return (
     <div
       dir="rtl"
-      className={`border-2 rounded-2xl shadow-md bg-white p-4 space-y-3 ${badgeColor} text-right flex flex-col justify-between h-full relative min-h-[260px] md:min-h-[340px]`}
+      className={`border-2 rounded-2xl shadow-md bg-white p-4 space-y-3 ${badgeColor} text-right flex flex-col justify-between h-full relative min-h-[280px] md:min-h-[360px]`}
     >
       <div>
         <div className="flex justify-between items-center flex-row-reverse"> {/* RTL row */}
@@ -71,23 +71,41 @@ const DeliveryCard = ({ delivery, user, openDetails }) => {
       </div>
 
       {/* כפתור פרטים תמיד בתחתית, כפתור פרטי העסקה מוצמד שמאלה */}
-      <div className="mt-auto flex justify-between items-end w-full gap-2">
-        <Button
-          size="xs"
-          variant="default"
-          onClick={() => openDetails(delivery)}
-          className="rounded-md mt-2 font-bold min-w-[80px] min-h-[28px] text-xs"
-        >
-          עדכון 
-        </Button>
-        <Button
-          size="xs"
-          variant="outline"
-          onClick={() => setShowSaleDetails(true)}
-          className="rounded-md mt-2 border-2 border-gray-500 text-gray-800 font-bold bg-white hover:bg-gray-100 hover:border-gray-700 transition min-w-[80px] min-h-[28px] text-xs"
-        >
-          פרטי העסקה
-        </Button>
+      <div className="mt-auto space-y-2">
+        {/* שורה ראשונה - כפתורי עדכון ופרטי העסקה */}
+        <div className="flex justify-between items-center w-full gap-2">
+          <Button
+            size="xs"
+            variant="default"
+            onClick={() => openDetails(delivery)}
+            className="rounded-md font-bold min-w-[80px] min-h-[28px] text-xs flex-1"
+          >
+            עדכון משלוח
+          </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            onClick={() => setShowSaleDetails(true)}
+            className="rounded-md border-2 border-gray-500 text-gray-800 font-bold bg-white hover:bg-gray-100 hover:border-gray-700 transition min-w-[80px] min-h-[28px] text-xs flex-1"
+          >
+            פרטי העסקה
+          </Button>
+        </div>
+        
+        {/* שורה שנייה - כפתור עריכה מכירה - רק למנהלים */}
+        {user?.role === 'admin' && onEditSale && (
+          <div className="w-full">
+            <Button
+              size="xs"
+              variant="outline"
+              onClick={() => onEditSale(delivery.sale_id)}
+              className="w-full rounded-md border-2 border-blue-500 text-blue-700 font-bold bg-blue-50 hover:bg-blue-100 hover:border-blue-600 transition min-h-[28px] text-xs flex items-center justify-center gap-1"
+            >
+              <Edit className="w-3 h-3" />
+              ערוך מכירה
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* דיאלוג פרטי העסקה */}

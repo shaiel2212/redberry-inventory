@@ -189,6 +189,10 @@ const DeliveriesPage = () => {
     navigate(`/deliveries?focus=${deliveryId}&status=${status}`);
   };
 
+  const handleEditSale = (saleId) => {
+    navigate(`/admin/sales?focus=${saleId}`);
+  };
+
   const handleCheckRestockedItems = async () => {
     try {
       setGlobalLoading(true);
@@ -232,12 +236,15 @@ const DeliveriesPage = () => {
           <button onClick={() => setActiveTab('all')} className={`px-4 py-1 rounded ${activeTab === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
             כל המשלוחים
           </button>
-          {/* כפתור בדיקת מלאי - רק למנהלים */}
-          {user?.role === 'admin' && (
+        </div>
+
+        {/* כפתור בדיקת מלאי - רק למנהלים - מתחת לטאבים */}
+        {user?.role === 'admin' && (
+          <div className="flex justify-center mb-4">
             <button 
               onClick={handleCheckRestockedItems}
               disabled={globalLoading}
-              className="px-4 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
+              className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
             >
               {globalLoading ? (
                 <>
@@ -251,17 +258,18 @@ const DeliveriesPage = () => {
                 </>
               )}
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Desktop & Mobile Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredDeliveries.map((delivery) => (
             <DeliveryCard
               key={delivery.id}
               delivery={delivery}
               user={user}
               openDetails={openDetails}
+              onEditSale={handleEditSale}
             />
           ))}
         </div>
