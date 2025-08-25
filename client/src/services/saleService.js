@@ -57,6 +57,34 @@ const getRecentSales = async () => {
   return response.data;
 };
 
+export const uploadOrderForm = async (saleId, file) => {
+  console.log('🚀 Starting uploadOrderForm:', { saleId, fileName: file.name, fileSize: file.size });
+  
+  try {
+    const formData = new FormData();
+    formData.append('orderForm', file);
+    
+    console.log('📤 Sending request to:', `/sales/${saleId}/order-form`);
+    
+    const response = await api.post(`/sales/${saleId}/order-form`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    console.log('✅ Upload successful:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Upload failed:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    throw error;
+  }
+};
+
 const saleService = {
   createSale,
   getAllSales,
@@ -68,6 +96,7 @@ const saleService = {
   updateSaleFull,
   getRecentSales,
   deleteSale,
+  uploadOrderForm,
 };
 
 export default saleService;

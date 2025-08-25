@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import MainLayout from '../components/layout/MainLayout';
 import axios from 'axios';
@@ -8,7 +8,7 @@ import {
 import api from '../services/api';
 import { Dialog, DialogContent, DialogTitle } from '../components/ui/dialog';
 import clientService from '../services/clientService';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Bell } from 'lucide-react';
 import {
   Dialog as RadixDialog,
   DialogContent as RadixDialogContent,
@@ -39,13 +39,19 @@ const DashboardPage = () => {
   });
   const [activeTab, setActiveTab] = useState('awaitingDraft');
   const navigate = useNavigate();
-
+  
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "בוקר טוב";
     if (hour < 18) return "צהריים טובים";
     return "ערב טוב";
   };
+
+  // פונקציה לטעינת משלוחים עם useCallback
+  const fetchPendingDeliveries = useCallback(async () => {
+    const data = await deliveryService.getDashboardDeliveriesByStatus();
+    setPendingDeliveries(data);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,12 +77,8 @@ const DashboardPage = () => {
   }, []);
 
   useEffect(() => {
-    async function fetchPendingDeliveries() {
-      const data = await deliveryService.getDashboardDeliveriesByStatus();
-      setPendingDeliveries(data);
-    }
     fetchPendingDeliveries();
-  }, []);
+  }, [fetchPendingDeliveries]);
 
   
   useEffect(() => {
@@ -96,6 +98,11 @@ const DashboardPage = () => {
 
   const handleDeliveryClick = (deliveryId, status) => {
     navigate(`/deliveries?focus=${deliveryId}&status=${status}`);
+  };
+
+  // פונקציה לטיפול בלחיצה על טאב
+  const handleTabClick = (tabKey) => {
+    setActiveTab(tabKey);
   };
 
   if (loading) return <MainLayout><p className="p-6 text-center mt-10">טוען נתונים...</p></MainLayout>;
@@ -158,35 +165,53 @@ const DashboardPage = () => {
               <h3 className="text-lg font-semibold mb-2">סטטוס משלוחים</h3>
               <div className="flex gap-4 mb-2 text-sm">
                 <span
-                  className={`cursor-pointer pb-1 border-b-2 transition ${activeTab === 'awaitingDraft' ? 'border-blue-500 text-blue-700 font-bold' : 'border-transparent text-gray-500'}`}
-                  onClick={() => setActiveTab('awaitingDraft')}
+                  className={`cursor-pointer pb-1 border-b-2 transition relative ${activeTab === 'awaitingDraft' ? 'border-blue-500 text-blue-700 font-bold' : 'border-transparent text-gray-500'}`}
+                  onClick={() => handleTabClick('awaitingDraft')}
                 >
                   ממתין לטיוטה
+                  {(pendingDeliveries.awaitingDraft || []).length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 w-3 h-3 rounded-full animate-pulse"></span>
+                  )}
                 </span>
                 <span
-                  className={`cursor-pointer pb-1 border-b-2 transition ${activeTab === 'awaitingAssignment' ? 'border-blue-500 text-blue-700 font-bold' : 'border-transparent text-gray-500'}`}
-                  onClick={() => setActiveTab('awaitingAssignment')}
+                  className={`cursor-pointer pb-1 border-b-2 transition relative ${activeTab === 'awaitingAssignment' ? 'border-blue-500 text-blue-700 font-bold' : 'border-transparent text-gray-500'}`}
+                  onClick={() => handleTabClick('awaitingAssignment')}
                 >
                   ממתין להקצאת שליח
+                  {(pendingDeliveries.awaitingAssignment || []).length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 w-3 h-3 rounded-full animate-pulse"></span>
+                  )}
                 </span>
                 <span
-                  className={`cursor-pointer pb-1 border-b-2 transition ${activeTab === 'awaitingDelivery' ? 'border-blue-500 text-blue-700 font-bold' : 'border-transparent text-gray-500'}`}
-                  onClick={() => setActiveTab('awaitingDelivery')}
+                  className={`cursor-pointer pb-1 border-b-2 transition relative ${activeTab === 'awaitingDelivery' ? 'border-blue-500 text-blue-700 font-bold' : 'border-transparent text-gray-500'}`}
+                  onClick={() => handleTabClick('awaitingDelivery')}
                 >
                   ממתין למסירה
+                  {(pendingDeliveries.awaitingDelivery || []).length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 w-3 h-3 rounded-full animate-pulse"></span>
+                  )}
                 </span>
                 <span
-                  className={`cursor-pointer pb-1 border-b-2 transition ${activeTab === 'delivered' ? 'border-blue-500 text-blue-700 font-bold' : 'border-transparent text-gray-500'}`}
-                  onClick={() => setActiveTab('delivered')}
+                  className={`cursor-pointer pb-1 border-b-2 transition relative ${activeTab === 'delivered' ? 'border-blue-500 text-blue-700 font-bold' : 'border-transparent text-gray-500'}`}
+                  onClick={() => handleTabClick('delivered')}
                 >
                   נמסר
+                  {(pendingDeliveries.delivered || []).length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-green-500 w-3 h-3 rounded-full animate-pulse"></span>
+                  )}
                 </span>
+                
+                  
+          
               </div>
               <div className="max-h-56 overflow-y-auto divide-y">
                 {(pendingDeliveries[activeTab] || []).length === 0 ? (
                   <p className="text-gray-500 text-sm">אין משלוחים ממתינים</p>
                 ) : (
-                  pendingDeliveries[activeTab].map((delivery) => (
+                  (activeTab === 'delivered' 
+                    ? pendingDeliveries[activeTab].slice(0, 5) 
+                    : pendingDeliveries[activeTab]
+                  ).map((delivery) => (
                     <div
                       key={delivery.id}
                       className="py-2 flex flex-col md:flex-row md:items-center md:gap-4 text-sm cursor-pointer hover:bg-blue-50 transition"

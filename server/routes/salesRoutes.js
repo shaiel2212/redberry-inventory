@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const salesController = require('../controllers/salesController');
+const { uploadOrderForm } = require('../middleware/uploadMiddleware');
 const {
     requireAuth,
     requireAdmin,
@@ -10,6 +11,7 @@ const {
 router.get('/report', requireAuth, requireAdmin, salesController.getSalesReport);
 // server/routes/salesRoutes.js
 router.post('/', requireAuth,requireSellerOrHigher, salesController.createSale);
+router.post('/:id/order-form', requireAuth, requireSellerOrHigher, uploadOrderForm.single('orderForm'), salesController.uploadOrderForm);
 router.get('/', requireAuth, requireAdmin, salesController.getAllSales);
 router.get('/mine', requireAuth, requireSellerOrHigher, salesController.getSalesForCurrentSeller);
 router.get('/recent',requireAuth ,salesController.getRecentSales);  

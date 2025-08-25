@@ -1,7 +1,13 @@
 const multer = require('multer');
-const { storage } = require('../config/cloudinary'); // שימוש ב-storage מ־Cloudinary
+const { storage, orderFormStorage } = require('../config/cloudinary');
 
-// אין צורך בתיקיית uploads מקומית
+// העלאה כללית
 const upload = multer({ storage });
 
-module.exports = upload;
+// העלאה ייעודית לטופסי הזמנה
+const uploadOrderForm = multer({ storage: orderFormStorage });
+
+module.exports = {
+  upload,
+  uploadOrderForm
+};

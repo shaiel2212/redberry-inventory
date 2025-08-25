@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const deliveriesController = require('../controllers/deliveriesController');
 const { requireAuth, requireUserOrAdmin } = require('../middleware/authMiddleware');
-const upload = require('../middleware/uploadMiddleware'); // ✅ כאן השימוש נקי
+const { upload } = require('../middleware/uploadMiddleware'); // שימוש ב-upload הכללי
 
 router.get('/all', requireAuth, requireUserOrAdmin, deliveriesController.getAllDeliveries);
 

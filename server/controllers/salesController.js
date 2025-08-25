@@ -654,3 +654,52 @@ exports.deleteSale = async (req, res) => {
     console.log('🔗 Database connection released');
   }
 };
+
+exports.uploadOrderForm = async (req, res) => {
+  const saleId = parseInt(req.params.id, 10);
+  const userId = req.user?.id;
+
+  if (isNaN(saleId)) {
+    return res.status(400).json({ message: 'מזהה מכירה לא תקין' });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'לא נבחר קובץ להעלאה' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    // בדוק אם המכירה קיימת ושייכת למשתמש הנוכחי
+    const [[sale]] = await connection.query(
+      'SELECT id, user_id FROM sales WHERE id = ?',
+      [saleId]
+    );
+
+    if (!sale) {
+      return res.status(404).json({ message: 'המכירה לא נמצאה' });
+    }
+
+    // רק המוכר שיצר את המכירה או מנהל יכול להעלות תמונה
+    if (sale.user_id !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'אין לך הרשאה להעלות תמונה למכירה זו' });
+    }
+
+    // עדכן את המכירה עם URL התמונה
+    const imageUrl = req.file.path;
+    await connection.query(
+      'UPDATE sales SET order_form_image = ? WHERE id = ?',
+      [imageUrl, saleId]
+    );
+
+    res.json({ 
+      message: 'תמונת הזמנה מקורי הועלתה בהצלחה',
+      imageUrl: imageUrl
+    });
+
+  } catch (err) {
+    console.error('Error uploading order form:', err);
+    res.status(500).json({ message: 'שגיאה בהעלאת תמונת הזמנה מקורי' });
+  } finally {
+    connection.release();
+  }
+};
