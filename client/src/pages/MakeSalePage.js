@@ -18,6 +18,11 @@ const MakeSalePage = () => {
   const [selectedClientId, setSelectedClientId] = useState(null);
   const [orderFormFile, setOrderFormFile] = useState(null);
   const [orderFormPreview, setOrderFormPreview] = useState(null);
+  const [documentsProcessing, setDocumentsProcessing] = useState(false);
+  const [documentsStatus, setDocumentsStatus] = useState(null);
+  const [lastSaleId, setLastSaleId] = useState(null);
+  const [invoicePath, setInvoicePath] = useState(null);
+  const [shippingPath, setShippingPath] = useState(null);
 
   const navigate = useNavigate();
   const { user } = useAuth(); // הוסף זאת לפני useEffect
@@ -106,6 +111,10 @@ const MakeSalePage = () => {
       return;
     }
 
+    // ניקוי סטטוס מסמכים קודם
+    setDocumentsStatus(null);
+    setLastSaleId(null);
+
     const saleData = {
       client_id: selectedClientId,
       address: form.address.trim(),
@@ -138,6 +147,11 @@ const MakeSalePage = () => {
       }
 
       toast.success(`מכירה בוצעה בהצלחה! מספר מכירה: ${result.sale_id}`);
+      
+      // שמירת מזהה המכירה והצגת אפשרות להפקת מסמכים
+      setLastSaleId(result.sale_id);
+      setDocumentsStatus('available');
+      
       setCart([]);
       setSelectedClientId(null);
       setForm({ address: '', notes: '' });
@@ -155,6 +169,92 @@ const MakeSalePage = () => {
 
   const handleClientSelect = (clientId) => {
     setSelectedClientId(clientId);
+  };
+
+  // פונקציה להפקת מסמכים (חשבונית ותעודת משלוח)
+  const handleGenerateDocuments = async (saleId) => {
+    try {
+      setDocumentsProcessing(true);
+      setDocumentsStatus('processing');
+      
+      const response = await fetch(`/api/invoice-shipping/process-sale/${saleId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setDocumentsStatus('success');
+        setInvoicePath(result.invoicePath);
+        setShippingPath(result.shippingPath);
+        
+        if (result.data?.emailSent) {
+          toast.success('המסמכים נוצרו ונשלחו בהצלחה!');
+        } else {
+          toast.success('המסמכים נוצרו בהצלחה! (מייל לא נשלח - אין כתובת מייל)');
+        }
+      } else {
+        setDocumentsStatus('error');
+        toast.error(result.message || 'שגיאה בהפקת המסמכים');
+      }
+    } catch (error) {
+      console.error('שגיאה בהפקת מסמכים:', error);
+      setDocumentsStatus('error');
+      toast.error('שגיאה בהפקת המסמכים');
+    } finally {
+      setDocumentsProcessing(false);
+    }
+  };
+
+  const handleDownloadDocument = async (type) => {
+    try {
+      let filePath;
+      let fileName;
+      
+      if (type === 'invoice') {
+        filePath = invoicePath;
+        fileName = `invoice_${lastSaleId}.pdf`;
+      } else {
+        filePath = shippingPath;
+        fileName = `shipping_${lastSaleId}.pdf`;
+      }
+
+      if (!filePath) {
+        toast.error('נתיב הקובץ לא זמין');
+        return;
+      }
+
+      // קריאה לשרת להורדת הקובץ
+      const response = await fetch(`/api/invoice-shipping/download?filePath=${encodeURIComponent(filePath)}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('שגיאה בהורדת הקובץ');
+      }
+
+      // יצירת קישור הורדה
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`${type === 'invoice' ? 'החשבונית' : 'תעודת המשלוח'} הורדה בהצלחה!`);
+    } catch (error) {
+      toast.error(`שגיאה בהורדת ${type === 'invoice' ? 'החשבונית' : 'תעודת המשלוח'}`);
+      console.error('Download error:', error);
+    }
   };
 
   const handleFileChange = (e) => {
@@ -446,6 +546,85 @@ const MakeSalePage = () => {
         >
           {loading ? 'מעבד...' : 'בצע מכירה'}
         </button>
+
+        {/* הצגת סטטוס המסמכים */}
+        {documentsStatus === 'available' && (
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <h3 className="font-bold text-blue-800 mb-2">הפקת מסמכים</h3>
+            <p className="text-blue-700 text-sm mb-3">
+              המכירה בוצעה בהצלחה! כעת תוכל ליצור חשבונית ותעודת משלוח ולשלוח אותם ללקוח במייל.
+            </p>
+            <button
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold"
+              onClick={() => handleGenerateDocuments(lastSaleId)}
+              disabled={documentsProcessing}
+            >
+              {documentsProcessing ? 'מעבד...' : 'צור חשבונית ותעודת משלוח'}
+            </button>
+          </div>
+        )}
+
+        {documentsStatus === 'processing' && (
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
+              <span className="text-yellow-800 font-semibold">יוצרים מסמכים ושולחים מייל...</span>
+            </div>
+          </div>
+        )}
+
+        {documentsStatus === 'success' && (
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+            <div className="flex items-center space-x-2">
+              <span className="text-green-600 text-xl">✅</span>
+              <div className="flex-1">
+                <h3 className="font-bold text-green-800">המסמכים נוצרו בהצלחה!</h3>
+                <p className="text-green-700 text-sm">
+                  {lastSaleId && documentsStatus === 'success' && documentsProcessing === false ? 
+                    'החשבונית ותעודת המשלוח נוצרו בהצלחה!' : 
+                    'החשבונית ותעודת המשלוח נשלחו ללקוח במייל.'
+                  }
+                </p>
+                
+                {/* כפתורי הורדה */}
+                <div className="mt-3 flex space-x-2 space-x-reverse">
+                  <button
+                    onClick={() => handleDownloadDocument('invoice')}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    📄 הורד חשבונית
+                  </button>
+                  <button
+                    onClick={() => handleDownloadDocument('shipping')}
+                    className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    📋 הורד תעודת משלוח
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {documentsStatus === 'error' && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="flex items-center space-x-2">
+              <span className="text-red-600 text-xl">❌</span>
+              <div>
+                <h3 className="font-bold text-red-800">שגיאה בהפקת המסמכים</h3>
+                <p className="text-red-700 text-sm">
+                  הייתה בעיה ביצירת המסמכים. אנא נסה שוב או פנה לתמיכה.
+                </p>
+                <button
+                  className="mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm"
+                  onClick={() => handleGenerateDocuments(lastSaleId)}
+                >
+                  נסה שוב
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {loading && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">

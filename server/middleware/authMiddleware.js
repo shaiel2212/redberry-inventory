@@ -60,8 +60,55 @@ function requireUserOrAdmin(req, res, next) {
   return res.status(403).json({ message: 'גישה נדחתה – משתמש או מנהל בלבד' });
 }
 
+// Middleware: אימות JWT
+function authenticateToken(req, res, next) {
+  console.log('🔐 authenticateToken - headers:', req.headers);
+  console.log('🔐 authenticateToken - authorization header:', req.header('Authorization'));
+  
+  const authHeader = req.header('Authorization');
+  if (!authHeader) {
+    console.log('❌ No authorization header found');
+    return res.status(401).json({ message: 'No token, authorization denied' });
+  }
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    console.log('❌ Invalid token format');
+    return res.status(401).json({ message: 'Token format is "Bearer <token>"' });
+  }
+
+  const token = parts[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // מכיל id, username, role
+    console.log('✅ Token verified successfully, user:', req.user);
+    next();
+  } catch (err) {
+    console.error('❌ Token verification error:', err.message);
+    res.status(401).json({ message: 'Token is not valid' });
+  }
+}
+
+// Middleware: בדיקת הרשאה לפי תפקיד
+function requireRole(allowedRoles) {
+  return function(req, res, next) {
+    console.log('🔒 requireRole - req.user:', req.user);
+    console.log('🔒 requireRole - user role:', req.user?.role);
+    console.log('🔒 requireRole - allowed roles:', allowedRoles);
+    
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      console.log('❌ Access denied - user role not in allowed roles');
+      return res.status(403).json({ message: 'גישה נדחתה – הרשאה לא מספקת' });
+    }
+    console.log('✅ Role access granted');
+    next();
+  };
+}
+
 module.exports = {
   requireAuth,
+  authenticateToken,
+  requireRole,
   requireSellerOrHigher,
   requireUserOrAdmin,
   requireAdmin

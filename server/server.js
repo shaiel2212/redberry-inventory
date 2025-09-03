@@ -10,11 +10,15 @@ const salesRoutes = require('./routes/salesRoutes');
 const reportsRoutes = require('./routes/reportsRoutes');
 const deliveriesRoutes = require('./routes/deliveriesRoutes');
 const clientRoutes = require('./routes/clientRoutes');
+const invoiceShippingRoutes = require('./routes/invoiceShippingRoutes');
 
 const envPath = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
 dotenv.config({ path: envPath });
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 8080;
+
+// הגדרת שירות המייל בעת הפעלה
+const EmailService = require('./services/emailService');
 
 
 
@@ -37,6 +41,7 @@ app.use('/api/sales', salesRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/deliveries', deliveriesRoutes);
 app.use('/api/clients', clientRoutes);
+app.use('/api/invoice-shipping', invoiceShippingRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Server is running...', cors: 'enabled' });
@@ -52,8 +57,16 @@ app.use((err, req, res, next) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
   console.log(`📦 Database: ${process.env.DB_HOST}/${process.env.DB_NAME}`);
+  
+  // הגדרת שירות המייל
+  try {
+    await EmailService.configure();
+    console.log('✅ שירות המייל הוגדר בהצלחה');
+  } catch (error) {
+    console.warn('⚠️ שירות המייל לא הוגדר:', error.message);
+  }
 });

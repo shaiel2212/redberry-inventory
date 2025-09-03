@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import clientService from '../services/clientService';
-import { Dialog, DialogContent } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '../components/ui/dialog';
 import MainLayout from '../components/layout/MainLayout';
 
 const emptyClient = {
@@ -64,6 +64,17 @@ const ClientsAdminPage = ({ user }) => {
   };
   const handleChange = e => {
     const { name, value } = e.target;
+    if (name === 'billing_day') {
+      // Coerce to number or empty
+      const v = value === '' ? '' : String(Math.max(1, Math.min(31, parseInt(value, 10) || 0)));
+      setForm(f => ({ ...f, [name]: v }));
+      return;
+    }
+    if (name === 'base_discount_percent' || name === 'cash_discount_percent') {
+      const num = Number.isFinite(Number(value)) ? Number(value) : 0;
+      setForm(f => ({ ...f, [name]: num }));
+      return;
+    }
     setForm(f => ({ ...f, [name]: value }));
   };
   const handleSave = async () => {
@@ -75,10 +86,14 @@ const ClientsAdminPage = ({ user }) => {
         setSaving(false);
         return;
       }
+      const payload = {
+        ...form,
+        billing_day: form.billing_day === '' ? null : Number(form.billing_day)
+      };
       if (editClient) {
-        await clientService.updateClient(editClient.id, form);
+        await clientService.updateClient(editClient.id, payload);
       } else {
-        await clientService.createClient(form);
+        await clientService.createClient(payload);
       }
       await fetchClients();
       closeDialog();
@@ -184,7 +199,9 @@ const ClientsAdminPage = ({ user }) => {
         {/* דיאלוג הוספה/עריכה */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent dir="rtl" className="text-right max-w-md w-full p-6 rounded-3xl shadow-2xl bg-white border border-blue-200">
-            <h3 className="text-lg font-bold mb-2">{editClient ? 'עריכת לקוח' : 'הוספת לקוח'}</h3>
+            <DialogTitle asChild>
+              <h3 className="text-lg font-bold mb-2">{editClient ? 'עריכת לקוח' : 'הוספת לקוח'}</h3>
+            </DialogTitle>
             {error && <div className="text-red-600 mb-2">{error}</div>}
             <label className="block font-semibold">שם מלא*:</label>
             <input name="full_name" className="border rounded p-2 w-full mb-2 text-right" value={form.full_name} onChange={handleChange} required />
