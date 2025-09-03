@@ -9,8 +9,16 @@ const createSale = async (saleData) => {
   return response.data;
 };
 
-const getAllSales = async () => {
-  const response = await api.get(API_URL);
+const getAllSales = async (filters = {}) => {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, val]) => {
+    if (val !== undefined && val !== null && val !== '') {
+      params.append(key, val);
+    }
+  });
+  const qs = params.toString();
+  const url = qs ? `${API_URL}?${qs}` : API_URL;
+  const response = await api.get(url);
   return response.data;
 };
 

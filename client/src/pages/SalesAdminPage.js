@@ -24,12 +24,24 @@ const SalesAdminPage = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const [filters, setFilters] = useState({
+    q: '',
+    clientId: '',
+    sellerId: '',
+    status: '',
+    hasUnsupplied: '',
+    startDate: '',
+    endDate: '',
+    minTotal: '',
+    maxTotal: '',
+  });
+
   useEffect(() => {
     const fetchSales = async () => {
       try {
         setLoading(true);
         setError('');
-        const data = await saleService.getAllSales();
+        const data = await saleService.getAllSales(filters);
         setSales(data);
       } catch (err) {
         setError('שגיאה בטעינת היסטוריית המכירות.');
@@ -39,7 +51,8 @@ const SalesAdminPage = () => {
       }
     };
     fetchSales();
-  }, []);
+    // eslint-disable-next-line
+  }, [filters]);
 
   useEffect(() => {
     if (!loading && sales.length > 0) {
@@ -107,6 +120,38 @@ const SalesAdminPage = () => {
         <h2 className="text-2xl font-bold">ניהול מכירות</h2>
         {error && <p className="text-red-600">{error}</p>}
         {sales.length === 0 && !loading && <p>לא נמצאו מכירות.</p>}
+
+        {/* Filters Bar */}
+        <div className="mb-3 p-3 bg-white rounded-xl shadow text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <input
+              placeholder="חיפוש (שם לקוח / הערות / מספר מכירה)"
+              className="border rounded p-2"
+              value={filters.q}
+              onChange={(e) => setFilters(f => ({ ...f, q: e.target.value }))}
+            />
+            <input
+              type="date"
+              className="border rounded p-2"
+              value={filters.startDate}
+              onChange={(e) => setFilters(f => ({ ...f, startDate: e.target.value }))}
+            />
+            <input
+              type="date"
+              className="border rounded p-2"
+              value={filters.endDate}
+              onChange={(e) => setFilters(f => ({ ...f, endDate: e.target.value }))}
+            />
+          </div>
+          <div className="flex gap-2 justify-end mt-2">
+            <button
+              className="px-3 py-1 bg-gray-200 rounded"
+              onClick={() => setFilters({ ...filters, q: '', startDate: '', endDate: '' })}
+            >
+              אפס
+            </button>
+          </div>
+        </div>
 
         {/* Desktop Table */}
         <div className="hidden md:block overflow-x-auto">

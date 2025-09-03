@@ -272,7 +272,19 @@ exports.updateSaleDiscount = async (req, res) => {
 };
 exports.getAllSales = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const {
+      q,
+      clientId,
+      sellerId,
+      status,
+      hasUnsupplied, // 'true' | 'false'
+      startDate,     // 'YYYY-MM-DD'
+      endDate,       // 'YYYY-MM-DD'
+      minTotal,
+      maxTotal
+    } = req.query;
+
+    let query = `
       SELECT 
         s.*, 
         c.full_name AS customer_name,
@@ -284,8 +296,61 @@ exports.getAllSales = async (req, res) => {
       LEFT JOIN clients c ON s.client_id = c.id
       LEFT JOIN users u ON s.user_id = u.id
       LEFT JOIN users admin ON s.discount_given_by = admin.id
-      ORDER BY s.sale_date DESC
-    `);
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (clientId && !isNaN(parseInt(clientId))) {
+      query += ' AND s.client_id = ?';
+      params.push(parseInt(clientId));
+    }
+    if (sellerId && !isNaN(parseInt(sellerId))) {
+      query += ' AND s.user_id = ?';
+      params.push(parseInt(sellerId));
+    }
+    if (typeof status === 'string' && status.trim()) {
+      query += ' AND s.status = ?';
+      params.push(status.trim());
+    }
+    if (hasUnsupplied === 'true') {
+      query += ' AND s.has_unsupplied_items = TRUE';
+    } else if (hasUnsupplied === 'false') {
+      query += ' AND (s.has_unsupplied_items = FALSE OR s.has_unsupplied_items IS NULL)';
+    }
+    if (startDate) {
+      query += ' AND s.sale_date >= ?';
+      params.push(startDate);
+    }
+    if (endDate) {
+      const nextDay = new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
+      query += ' AND s.sale_date < ?';
+      params.push(nextDay);
+    }
+    if (minTotal && !isNaN(parseFloat(minTotal))) {
+      query += ' AND s.total_amount >= ?';
+      params.push(parseFloat(minTotal));
+    }
+    if (maxTotal && !isNaN(parseFloat(maxTotal))) {
+      query += ' AND s.total_amount <= ?';
+      params.push(parseFloat(maxTotal));
+    }
+    if (typeof q === 'string' && q.trim()) {
+      const text = `%${q.trim()}%`;
+      query += ' AND (c.full_name LIKE ? OR s.notes LIKE ?';
+      params.push(text, text);
+      const qNum = parseInt(q, 10);
+      if (!isNaN(qNum)) {
+        query += ' OR s.id = ?';
+        params.push(qNum);
+      }
+      query += ')';
+    }
+
+    query += ' ORDER BY s.sale_date DESC';
+
+    const [rows] = await pool.query(query, params);
 
     // עבור כל מכירה נחזיר גם final_amount, total_profit וגם הדגל has_unsupplied_items
     const enhancedRows = await Promise.all(rows.map(async (sale) => {
@@ -301,7 +366,7 @@ exports.getAllSales = async (req, res) => {
         ...sale,
         final_amount: calculateFinalAmount(sale),
         total_profit: Number((productProfit - deliveryCost).toFixed(2)),
-        has_unsupplied_items: !!sale.has_unsupplied_items // ודא שזה יופיע כתאריך בוליאני
+        has_unsupplied_items: !!sale.has_unsupplied_items
       };
     }));
 
