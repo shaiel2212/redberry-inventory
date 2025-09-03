@@ -444,7 +444,7 @@ const SalesAdminPage = () => {
 
         {selectedSaleDetails && (
           <Dialog open={!!selectedSaleDetails} onClose={closeModal}>
-            <DialogContent dir="rtl" className="text-right max-w-lg w-full p-6 rounded-3xl shadow-2xl bg-gradient-to-br from-blue-50 via-white to-blue-100 border border-blue-200">
+            <DialogContent dir="rtl" className="text-right max-w-lg w-full p-6 rounded-3xl shadow-2xl bg-gradient-to-br from-blue-50 via-white to-blue-100 border border-blue-200 max-h-[85vh] overflow-y-auto">
               <div className="flex items-center justify-center mb-4 relative">
                 {/* כפתור X – בצד שמאל */}
                 <button
@@ -632,7 +632,7 @@ const SalesAdminPage = () => {
         {/* דיאלוג אישור מחיקה */}
         {showDeleteDialog && selectedSaleDetails && (
           <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-            <DialogContent dir="rtl" className="text-right max-w-md w-full p-6 rounded-3xl shadow-2xl bg-white border border-red-300">
+            <DialogContent dir="rtl" className="text-right max-w-md w-full p-6 rounded-3xl shadow-2xl bg-white border border-red-300 max-h-[85vh] overflow-y-auto">
               <h3 className="text-lg font-bold text-red-700 mb-2">אזהרה!</h3>
               <p className="mb-4">האם אתה בטוח שברצונך למחוק את המכירה #{selectedSaleDetails.id} של <b>{selectedSaleDetails.customer_name}</b>? פעולה זו בלתי הפיכה!</p>
               <div className="flex gap-2 justify-end mt-4">
