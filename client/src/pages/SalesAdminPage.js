@@ -517,51 +517,19 @@ const SalesAdminPage = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-3 space-x-reverse">
-                        {selectedSaleDetails.order_form_image.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                          // תצוגה מקדימה לתמונות
-                          <div className="relative">
-                            <img
-                              src={selectedSaleDetails.order_form_image}
-                              alt="טופס הזמנה מקורי"
-                              className="max-w-full h-auto max-h-32 rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                              onClick={() => window.open(selectedSaleDetails.order_form_image, '_blank')}
-                              title="לחץ להגדלה"
-                            />
-                            <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                              תמונה
-                            </div>
-                          </div>
-                        ) : selectedSaleDetails.order_form_image.match(/\.pdf$/i) ? (
-                          // תצוגה מקדימה ל-PDF
-                          <div className="flex items-center justify-center w-24 h-24 bg-red-100 rounded border border-red-200">
-                            <svg className="w-12 h-12 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                            </svg>
-                          </div>
-                        ) : (
-                          // תצוגה מקדימה לקבצים אחרים
-                          <div className="flex items-center justify-center w-24 h-24 bg-gray-100 rounded border">
-                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <a
-                            href={selectedSaleDetails.order_form_image}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium underline"
-                          >
-                            {selectedSaleDetails.order_form_image.match(/\.pdf$/i) ? 'צפה ב-PDF' : 'צפה בקובץ המלא'}
-                          </a>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {selectedSaleDetails.order_form_image.match(/\.pdf$/i) 
-                              ? 'לחץ על הקישור כדי להוריד או לצפות בקובץ ה-PDF'
-                              : 'לחץ על הקישור או התמונה כדי לצפות בקובץ המלא'
-                            }
-                          </p>
-                        </div>
+                        <a
+                          href={selectedSaleDetails.order_form_image}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          title={selectedSaleDetails.order_form_image.match(/\.pdf$/i) ? 'צפה ב-PDF' : 'צפה בתמונה'}
+                        >
+                          <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          {selectedSaleDetails.order_form_image.match(/\.pdf$/i) ? 'צפה ב-PDF' : 'צפה בתמונה'}
+                        </a>
                       </div>
                       
                       {/* קובץ נסתר לעריכה */}
