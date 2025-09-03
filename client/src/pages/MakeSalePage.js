@@ -23,6 +23,7 @@ const MakeSalePage = () => {
   const [lastSaleId, setLastSaleId] = useState(null);
   const [invoicePath, setInvoicePath] = useState(null);
   const [shippingPath, setShippingPath] = useState(null);
+  const documentsFeatureEnabled = false; // מוסתר זמנית בקליינט
 
   const navigate = useNavigate();
   const { user } = useAuth(); // הוסף זאת לפני useEffect
@@ -150,7 +151,9 @@ const MakeSalePage = () => {
       
       // שמירת מזהה המכירה והצגת אפשרות להפקת מסמכים
       setLastSaleId(result.sale_id);
-      setDocumentsStatus('available');
+      if (documentsFeatureEnabled) {
+        setDocumentsStatus('available');
+      }
       
       setCart([]);
       setSelectedClientId(null);
@@ -548,7 +551,7 @@ const MakeSalePage = () => {
         </button>
 
         {/* הצגת סטטוס המסמכים */}
-        {documentsStatus === 'available' && (
+        {documentsFeatureEnabled && documentsStatus === 'available' && (
           <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
             <h3 className="font-bold text-blue-800 mb-2">הפקת מסמכים</h3>
             <p className="text-blue-700 text-sm mb-3">
@@ -564,7 +567,7 @@ const MakeSalePage = () => {
           </div>
         )}
 
-        {documentsStatus === 'processing' && (
+        {documentsFeatureEnabled && documentsStatus === 'processing' && (
           <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
             <div className="flex items-center justify-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
@@ -573,7 +576,7 @@ const MakeSalePage = () => {
           </div>
         )}
 
-        {documentsStatus === 'success' && (
+        {documentsFeatureEnabled && documentsStatus === 'success' && (
           <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
             <div className="flex items-center space-x-2">
               <span className="text-green-600 text-xl">✅</span>
@@ -606,7 +609,7 @@ const MakeSalePage = () => {
           </div>
         )}
 
-        {documentsStatus === 'error' && (
+        {documentsFeatureEnabled && documentsStatus === 'error' && (
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
             <div className="flex items-center space-x-2">
               <span className="text-red-600 text-xl">❌</span>
