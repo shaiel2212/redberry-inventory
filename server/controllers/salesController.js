@@ -46,6 +46,16 @@ exports.createSale = async (req, res) => {
 
     const [[client]] = await connection.query('SELECT full_name FROM clients WHERE id = ?', [clientId]);
     const customerName = client?.full_name || 'ללא שם';
+    const normalizedCustomerName = (customerName || '').replace(/\s+/g, ' ').trim();
+    const isCostPlusClient = (
+      normalizedCustomerName === 'סופה גלרי' ||
+      normalizedCustomerName === 'סופה גלריה' ||
+      (/סופה/.test(normalizedCustomerName) && /גלר/.test(normalizedCustomerName))
+    );
+    if (isCostPlusClient) {
+      console.log('💡 Applying cost+500 pricing for client:', normalizedCustomerName);
+    }
+    const costPlusAddition = 500; // ₪ תוספת קבועה מעל עלות
 
     const [saleResult] = await connection.query(
       `INSERT INTO sales (total_amount, user_id, address, client_id, delivery_cost, notes, customer_name, has_unsupplied_items)
@@ -55,6 +65,7 @@ exports.createSale = async (req, res) => {
     const saleId = saleResult.insertId;
 
     let hasUnsupplied = false;
+    let computedTotal = 0;
 
     for (const item of items) {
       const [[product]] = await connection.query(
@@ -63,8 +74,11 @@ exports.createSale = async (req, res) => {
       );
       if (!product) throw new Error(`Product ID ${item.product_id} not found`);
 
-      const pricePerUnit = parseFloat(product.sale_price);
+      const dbSalePrice = parseFloat(product.sale_price);
       const costPrice = parseFloat(product.cost_price);
+      const pricePerUnit = isCostPlusClient 
+        ? Number((costPrice + costPlusAddition).toFixed(2))
+        : dbSalePrice;
       const profitPerItem = pricePerUnit - costPrice;
       const totalProfit = profitPerItem * item.quantity;
       const stockAvailable = parseInt(product.stock_quantity);
@@ -83,6 +97,9 @@ exports.createSale = async (req, res) => {
         [saleId, item.product_id, item.quantity, pricePerUnit, costPrice, profitPerItem, totalProfit, isSupplied]
       );
 
+      // צבירת סכום מכירה בפועל
+      computedTotal += pricePerUnit * item.quantity;
+
       if (!isSupplied) {
         hasUnsupplied = true;
         await connection.query(
@@ -94,6 +111,14 @@ exports.createSale = async (req, res) => {
     }
 
     const deliveryStatus = hasUnsupplied ? 'awaiting_stock' : 'pending';
+
+    // עדכון סך המכירה במידת הצורך לפי הלוגיקה המיוחדת
+    if (isCostPlusClient) {
+      await connection.query(
+        'UPDATE sales SET total_amount = ? WHERE id = ?',
+        [Number(computedTotal.toFixed(2)), saleId]
+      );
+    }
 
     await connection.query(
       `INSERT INTO deliveries (sale_id, status, assigned_to, picked_up_at, is_awaiting_stock)
